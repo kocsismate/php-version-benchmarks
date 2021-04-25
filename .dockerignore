@@ -1,0 +1,6 @@
+*.md
+*.yml
+*.xml
+*.phpt
+Dockerfile
+LICENSE

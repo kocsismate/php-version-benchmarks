@@ -1,0 +1,16 @@
+vendor/
+.terraform/
+/app/*/*
+!/app/zend/opcache.php
+!/app/zend/phpinfo.php
+/config/*.ini
+tmp/
+
+.terraform*
+.env
+.phpcs-cache
+*.pem
+*.tfplan
+*.tfstate
+*.tfstate.backup
+*.tfvars
