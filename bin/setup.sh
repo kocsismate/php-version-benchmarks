@@ -40,6 +40,9 @@ if [[ "$1" == "local-docker" ]]; then
             curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/micro_bench.php --output /code/app/zend/micro_bench.php
     fi
 
+    mkdir -p $PROJECT_ROOT/tmp/result
+    rm -f $PROJECT_ROOT/tmp/result/*
+
 elif [[ "$1" == "aws" ]]; then
 
     cd $PROJECT_ROOT/build/infrastructure/aws/

@@ -72,11 +72,9 @@ RUN set -eux; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
-		libargon2-dev \
 		libcurl4-openssl-dev \
 		libedit-dev \
 		libonig-dev \
-		libsodium-dev \
 		libsqlite3-dev \
 		libssl-dev \
 		libxml2-dev \
@@ -104,21 +102,11 @@ RUN set -eux; \
 		\
 # make sure invalid --configure-flags are fatal errors instead of just warnings
 		--enable-option-checking=fatal \
-		\
-# https://github.com/docker-library/php/issues/439
-		--with-mhash \
-		\
-# --enable-ftp is included here because ftp_ssl_connect() needs ftp to be compiled statically (see https://github.com/docker-library/php/issues/236)
-		--enable-ftp \
 # --enable-mbstring is included here because otherwise there's no way to get pecl to use it properly (see https://github.com/docker-library/php/issues/195)
 		--enable-mbstring \
 # --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
 		--enable-mysqlnd \
 		--enable-opcache \
-# https://wiki.php.net/rfc/argon2_password_hash (7.2+)
-		--with-password-argon2 \
-# https://wiki.php.net/rfc/libsodium
-		--with-sodium \
 # always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
 		--with-pdo-sqlite=/usr \
 		--with-sqlite3=/usr \

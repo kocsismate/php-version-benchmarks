@@ -2,6 +2,8 @@ NAME=master
 
 GIT_REPO=git@github.com:php/php-src.git
 GIT_BRANCH=master
+GIT_DEPT=1
+GIT_COMMIT=
 
 PHP_OPCACHE=1
 PHP_PRELOADING=0
