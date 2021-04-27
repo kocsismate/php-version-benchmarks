@@ -5,29 +5,39 @@ export PROJECT_ROOT=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 if [[ "$1" == "run" ]]; then
 
-    $PROJECT_ROOT/bin/setup.sh "$2"
-    source $PROJECT_ROOT/.env
-    export $(cut -d= -f1 $PROJECT_ROOT/.env)
+    if [[ "$2" == "local-docker" ]]; then
+        source $PROJECT_ROOT/.env
+        export $(cut -d= -f1 $PROJECT_ROOT/.env)
 
-    for config in $PROJECT_ROOT/config/*.ini; do
-        export CONFIG_FILE=$config
-        source "$config"
+        $PROJECT_ROOT/bin/setup.sh "$2"
 
-        export $(cut -d= -f1 $config)
-        export GIT_PATH=$PROJECT_ROOT/tmp/$NAME
+        for config in $PROJECT_ROOT/config/*.ini; do
+            source "$config"
+            if [[ "$ENABLED" == "0" ]]; then
+                continue
+            fi
 
-        echo "---------------------------------------------------------------------------------------"
-        echo "Current benchmark: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
-        echo "---------------------------------------------------------------------------------------"
+            export $(cut -d= -f1 $config)
+            export CONFIG_FILE=$config
+            export GIT_PATH=$PROJECT_ROOT/tmp/$NAME
 
-        $PROJECT_ROOT/bin/provision.sh "$2"
-        $PROJECT_ROOT/bin/benchmark.sh "$2"
-        $PROJECT_ROOT/bin/deprovision.sh "$2"
-    done
+            echo "---------------------------------------------------------------------------------------"
+            echo "Current benchmark: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+            echo "---------------------------------------------------------------------------------------"
 
-elif [[ "$1" == "aws" ]]; then
+            $PROJECT_ROOT/bin/provision.sh "$2"
+            $PROJECT_ROOT/bin/benchmark.sh "$2"
+            $PROJECT_ROOT/bin/deprovision.sh "$2"
+        done
+    elif [[ "$2" == "aws-docker" ]]; then
+        $PROJECT_ROOT/bin/terraform.sh
+    fi
 
+elif [[ "$1" == "help" ]]; then
+
+    echo "Usage: ./benchmark.sh run [runner]"
     echo ""
+    echo "Available runners: local-docker, aws-docker"
 
 else
 

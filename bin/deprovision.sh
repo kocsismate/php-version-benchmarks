@@ -11,13 +11,9 @@ elif [[ "$1" == "aws-docker" ]]; then
 
     echo "aws-docker"
 
-elif [[ "$1" == "aws-host" ]]; then
-
-    echo "aws-host"
-
 else
 
-    echo 'Available options: "local-docker", "aws-docker", "aws-host"!'
+    echo 'Available options: "local-docker", "aws-docker"!'
     exit 1
 
 fi

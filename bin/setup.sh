@@ -40,52 +40,44 @@ if [[ "$1" == "local-docker" ]]; then
             curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/micro_bench.php --output /code/app/zend/micro_bench.php
     fi
 
-    mkdir -p $PROJECT_ROOT/tmp/result
-    rm -f $PROJECT_ROOT/tmp/result/*
+elif [[ "$1" == "aws-docker" ]]; then
 
-elif [[ "$1" == "aws" ]]; then
+    mkdir -p "$PROJECT_ROOT/app/symfony"
+    mkdir -p "$PROJECT_ROOT/app/laravel"
+    mkdir -p "$PROJECT_ROOT/app/wordpress"
+    mkdir -p "$PROJECT_ROOT/app/zend"
 
-    cd $PROJECT_ROOT/build/infrastructure/aws/
+    # Install Laravel demo app
+    sudo docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer create-project laravel/laravel laravel 8.5.16 --no-interaction --working-dir=/code/app
 
-    terraform init -backend=true -get=true
+    sudo chmod -R 777 "$PROJECT_ROOT/app/laravel/storage"
 
-    echo "TERRAFORM PLAN:"
+    # Install Symfony demo app
+    sudo docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer create-project symfony/symfony-demo symfony dev-main --no-interaction --working-dir=/code/app
 
-    terraform plan \
-        -input=false \
-        -out="$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan" \
-        -refresh=true \
-        -var "project_root=$PROJECT_ROOT" \
-        -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars"
+    sudo chmod -R 777 "$PROJECT_ROOT/app/symfony/var"
 
-    echo "TERRAFORM APPLY:"
+    # Download bench.php
+    sudo docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/bench.php --output /code/app/zend/bench.php
 
-    terraform apply \
-        -auto-approve \
-        -input=false \
-        "$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan"
-
-    BENCHMARK_URL=`terraform output dns`
-
-    echo "RUNNING BENCHMARK: $BENCHMARK_URL"
-
-    $PROJECT_ROOT/bin/benchmark "$BENCHMARK_URL"
-
-    echo "TERRAFORM DESTROY"
-
-    terraform destroy \
-        -var "project_root=\"$PROJECT_ROOT\"" \
-        -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars"
-
-    cd $PROJECT_ROOT
-
-elif [[ "$1" == "aws-host" ]]; then
-
-    echo "aws-host"
+    # Download micro_bench.php
+    sudo docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/micro_bench.php --output /code/app/zend/micro_bench.php
 
 else
 
-    echo 'Available options: "docker", "aws-docker", "aws-host"!'
+    echo 'Available options: "local-docker", "aws-docker"!'
     exit 1
 
 fi

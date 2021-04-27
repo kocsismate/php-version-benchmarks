@@ -1,6 +1,7 @@
 NAME=is_literal
+ENABLED=1
 
-GIT_REPO=git@github.com:krakjoe/php-src.git
+GIT_REPO=https://github.com/krakjoe/php-src.git
 GIT_BRANCH=is_literal
 GIT_DEPT=1
 GIT_COMMIT=
@@ -9,5 +10,5 @@ PHP_OPCACHE=1
 PHP_PRELOADING=0
 PHP_JIT=0
 
-AB_REQUESTS=100
+AB_REQUESTS=1000
 AB_CONCURRENCY=10

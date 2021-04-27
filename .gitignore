@@ -9,6 +9,7 @@ tmp/
 .terraform*
 .env
 .phpcs-cache
+/build/infrastructure/aws/main.tf
 *.pem
 *.tfplan
 *.tfstate

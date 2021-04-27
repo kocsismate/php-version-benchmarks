@@ -56,7 +56,7 @@ RUN set -eux; \
 	apt-mark manual $savedAptMark > /dev/null; \
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
-COPY .. /usr/src/php
+COPY . /usr/src/php
 ENV PHP_INI_DIR /usr/local/etc/php
 
 RUN set -eux; \
@@ -109,12 +109,9 @@ RUN set -eux; \
 		--enable-opcache \
 # always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
 		--with-pdo-sqlite=/usr \
-		--with-sqlite3=/usr \
 		\
 		--with-curl \
-		--with-libedit \
 		--with-openssl \
-		--with-zlib \
 		\
 # in PHP 7.4+, the pecl/pear installers are officially deprecated (requiring an explicit "--with-pear") and will be removed in PHP 8+; see also https://github.com/docker-library/php/issues/846#issuecomment-505638494
 		--with-pear \
@@ -131,6 +128,7 @@ RUN set -eux; \
 	; \
 	make -j "$(nproc)"; \
 	find -type f -name '*.a' -delete; \
+	find -type f -name '*.dep' -delete; \
 	make install; \
 	find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; \
 	make clean; \
