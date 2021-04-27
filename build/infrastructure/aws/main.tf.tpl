@@ -23,6 +23,7 @@ resource "aws_instance" "ec2_instance" {
   key_name = var.ssh_key_name
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = false
+  host_id = var.dedicated_host_id
 
   tags = {
     Name = "php-benchmark"

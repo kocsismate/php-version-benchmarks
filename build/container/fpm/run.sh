@@ -20,4 +20,9 @@ else
     sed -i "s/JIT_BUFFER_SIZE/0/g" /usr/local/etc/php/conf.d/zz-custom-php.ini
 fi
 
-php-fpm -d zend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20201009/opcache.so
+if [ "$PHP_OPCACHE" = "1" ]; then
+    OPCACHE_PATH="$(cd /usr/local/lib/php/extensions/ && find . -path "./*/opcache.so")"
+    php-fpm -d "zend_extension=/usr/local/lib/php/extensions/$OPCACHE_PATH"
+else
+    php-fpm
+fi

@@ -10,7 +10,7 @@ variable "ssh_private_key" {}
 
 variable "region" {}
 
-variable "dedicated_host" {}
+variable "dedicated_host_id" {}
 
 variable "ecr_registry_id" {}
 

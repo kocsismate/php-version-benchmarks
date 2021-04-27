@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -e
 
 if [[ "$1" == "local-docker" ]]; then
 
@@ -13,7 +13,7 @@ if [[ "$1" == "local-docker" ]]; then
     docker stop $BENCHMARK_NGINX_ADDR $BENCHMARK_FPM_ADDR || true
     docker rm $BENCHMARK_NGINX_ADDR $BENCHMARK_FPM_ADDR || true
 
-    docker run --rm --detach --network=php-benchmark --log-driver=local --env-file $PROJECT_ROOT/.env --env-file $CONFIG_FILE \
+    docker run --rm --detach --network=php-benchmark --log-driver=none --env-file $PROJECT_ROOT/.env --env-file $CONFIG_FILE \
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
             --name="$BENCHMARK_FPM_ADDR" "php-benchmark-fpm:$NAME-latest" /code/build/container/fpm/run.sh
 
@@ -32,15 +32,13 @@ elif [[ "$1" == "aws-docker" ]]; then
 
     sudo docker network create php-benchmark || true
 
-    sudo docker run --rm --detach --network=php-benchmark --log-driver=local --env-file "$PROJECT_ROOT/.env" --env-file "$CONFIG_FILE" \
+    sudo docker run --rm --detach --network=php-benchmark --log-driver=none --env-file "$PROJECT_ROOT/.env" --env-file "$CONFIG_FILE" \
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
             --name="$BENCHMARK_FPM_ADDR" "$ECR_REGISTRY_ID/$ECR_REPOSITORY_NAME:$NAME-latest" /code/build/container/fpm/run.sh
 
     sudo docker run --rm --detach --network=php-benchmark --log-driver=none --env-file "$PROJECT_ROOT/.env" \
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
             --name="$BENCHMARK_NGINX_ADDR" -p 80:80 -p 8888:80 -p 8889:81 -p 8890:82 nginx:1.20 /code/build/container/nginx/run.sh
-
-    sleep 50
 
 else
 
