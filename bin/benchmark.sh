@@ -29,6 +29,9 @@ run_curl () {
 }
 
 run_benchmark () {
+    echo "Ping ($benchmark_uri):"
+    ping -c 3 "$benchmark_uri"
+
     printf "Benchmark\tMedian\tStdDev\n" >> "$result_file"
 
     echo "---------------------------------------------------------------------------------------"
