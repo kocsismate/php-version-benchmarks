@@ -40,6 +40,14 @@ if [[ "$1" == "local-docker" ]]; then
             curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/micro_bench.php --output /code/app/zend/micro_bench.php
     fi
 
+    # Download concat test
+    if [ ! -f "$PROJECT_ROOT/app/zend/concat.php" ]; then
+        docker run --rm \
+            --volume $PROJECT_ROOT:/code \
+            --user $(id -u):$(id -g) \
+            curlimages/curl https://raw.githubusercontent.com/craigfrancis/php-is-literal-rfc/main/tests/001.phpt --output /code/app/zend/concat.php
+    fi
+
 elif [[ "$1" == "aws-docker" ]]; then
 
     mkdir -p "$PROJECT_ROOT/app/symfony"
@@ -74,6 +82,12 @@ elif [[ "$1" == "aws-docker" ]]; then
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         curlimages/curl https://raw.githubusercontent.com/php/php-src/master/Zend/micro_bench.php --output /code/app/zend/micro_bench.php
+
+    # Download concat.php
+    sudo docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        curlimages/curl https://raw.githubusercontent.com/craigfrancis/php-is-literal-rfc/main/tests/001.phpt --output /code/app/zend/concat.php
 
 else
 

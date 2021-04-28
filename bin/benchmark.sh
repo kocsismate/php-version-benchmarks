@@ -76,6 +76,17 @@ run_benchmark () {
     # Calculate
     results="$(grep "Total" "$result_path/5_micro_bench.log" | cut -c 20- | tr -s '\n' ' ')"
     printf "Micro bench:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
+
+    echo "---------------------------------------------------------------------------------------"
+    echo "Benchmarking concat bench    : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "---------------------------------------------------------------------------------------"
+    # Warmup
+    run_ab 20 4 http://$benchmark_uri:8889/concat.php > /dev/null
+    # Benchmark
+    run_curl 10 http://$benchmark_uri:8890/concat.php | tee -a "$result_path/6_concat.log"
+    # Calculate
+    results="$(grep " " "$result_path/6_concat.log" | tr -s ' ' '')"
+    printf "Concat:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
 }
 
 result_path="$PROJECT_ROOT/tmp/result/$NAME"
