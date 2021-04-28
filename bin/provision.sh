@@ -17,7 +17,7 @@ if [[ "$1" == "local-docker" ]]; then
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
             --name="$BENCHMARK_FPM_ADDR" "php-benchmark-fpm:$NAME-latest" /code/build/container/fpm/run.sh
 
-    sleep 2
+    sleep 3
 
     docker run --rm --detach --network=php-benchmark --log-driver=none --env-file $PROJECT_ROOT/.env \
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
