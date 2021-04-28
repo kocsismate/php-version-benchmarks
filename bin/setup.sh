@@ -16,6 +16,8 @@ if [[ "$1" == "local-docker" ]]; then
             composer create-project laravel/laravel laravel 8.5.16 --no-interaction --working-dir=/code/app
     fi
 
+    sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
+
     # Install Symfony demo app
     if [ -z "$(ls -A $PROJECT_ROOT/app/symfony)" ]; then
         docker run --rm \

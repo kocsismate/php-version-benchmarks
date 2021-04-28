@@ -29,8 +29,11 @@ run_curl () {
 }
 
 run_benchmark () {
-    echo "Ping ($benchmark_uri):"
-    ping -c 3 "$benchmark_uri"
+    if [[ "$mode" == "aws-docker" ]]; then
+        ping -c 3 "$benchmark_uri"
+    fi
+
+    sleep 4
 
     printf "Benchmark\tMedian\tStdDev\n" >> "$result_file"
 
@@ -88,7 +91,7 @@ run_benchmark () {
     # Benchmark
     run_curl 10 http://$benchmark_uri:8890/concat.php | tee -a "$result_path/6_concat.log"
     # Calculate
-    results="$(grep " " "$result_path/6_concat.log" | tr -s ' ' '')"
+    results="$(cat "$result_path/6_concat.log" | cut -c 2- | tr -s '\n' ' ')"
     printf "Concat:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
 }
 

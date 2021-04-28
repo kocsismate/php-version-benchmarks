@@ -4,8 +4,6 @@ set -e
 cp /code/build/container/fpm/php-fpm.conf /usr/local/etc/php-fpm.conf
 cp /code/build/container/fpm/custom-php.ini /usr/local/etc/php/conf.d/zz-custom-php.ini
 
-ls -la /usr/src/php/
-
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" /usr/local/etc/php/conf.d/zz-custom-php.ini
 
 if [ "$PHP_PRELOADING" = "1" ]; then
