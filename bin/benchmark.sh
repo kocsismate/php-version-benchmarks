@@ -19,12 +19,20 @@ std_deviation() {
 }
 
 run_ab () {
-    docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
+    if [[ "$mode" == "local-docker" ]]; then
+        docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
+    elif [[ "$mode" == "aws-docker" ]]; then
+        sudo docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
+    fi
 }
 
 run_curl () {
     for i in $(seq "$1"); do
-        docker run --rm curlimages/curl -s "$2"
+        if [[ "$mode" == "local-docker" ]]; then
+            docker run --rm curlimages/curl -s "$2"
+        elif [[ "$mode" == "aws-docker" ]]; then
+            sudo docker run --rm curlimages/curl -s "$2"
+        fi
     done
 }
 
@@ -41,33 +49,33 @@ run_benchmark () {
     echo "Benchmarking Laravel demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 8 1 http://$host_ip:8888/ > /dev/null
+    run_ab 20 4 http://$benchmark_uri:8888/ > /dev/null
     # Benchmark
-    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$host_ip:8888/ | tee -a "$result_path/1_laravel.log"
+    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8888/ | tee -a "$result_path/1_laravel.log"
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Symfony demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 8 1 http://$host_ip:8889/ > /dev/null
+    run_ab 20 4 http://$benchmark_uri:8889/ > /dev/null
     # Benchmark
-    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$host_ip:8889/ | tee -a "$result_path/2_symfony_main.log"
+    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/2_symfony_main.log"
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Symfony demo blog: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 8 1 http://$host_ip:8889/en/blog/ > /dev/null
+    run_ab 20 4 http://$benchmark_uri:8889/en/blog/ > /dev/null
     # Benchmark
-    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$host_ip:8889/ | tee -a "$result_path/3_symfony_blog.log"
+    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/3_symfony_blog.log"
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Zend bench       : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 8 1 http://$host_ip:8889/bench.php > /dev/null
+    run_ab 20 4 http://$benchmark_uri:8889/bench.php > /dev/null
     # Benchmark
-    run_curl 10 http://$host_ip:8890/bench.php | tee -a "$result_path/4_bench.log"
+    run_curl 10 http://$benchmark_uri:8890/bench.php | tee -a "$result_path/4_bench.log"
     # Calculate
     results="$(grep "Total" "$result_path/4_bench.log" | cut -c 20- | tr -s '\n' ' ')"
     printf "Bench:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
@@ -76,9 +84,9 @@ run_benchmark () {
     echo "Benchmarking Zend micro bench: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 8 1 http://$host_ip:8889/micro_bench.php > /dev/null
+    run_ab 20 4 http://$benchmark_uri:8889/micro_bench.php > /dev/null
     # Benchmark
-    run_curl 10 http://$host_ip:8890/micro_bench.php | tee -a "$result_path/5_micro_bench.log"
+    run_curl 10 http://$benchmark_uri:8890/micro_bench.php | tee -a "$result_path/5_micro_bench.log"
     # Calculate
     results="$(grep "Total" "$result_path/5_micro_bench.log" | cut -c 20- | tr -s '\n' ' ')"
     printf "Micro bench:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
@@ -95,6 +103,7 @@ run_benchmark () {
     printf "Concat:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"
 }
 
+mode="$1"
 result_path="$PROJECT_ROOT/tmp/result/$NAME"
 log_file="$result_path/benchmark.log"
 result_file="$result_path/benchmark.txt"
@@ -107,7 +116,7 @@ touch "$result_file"
 
 if [[ "$1" == "local-docker" ]]; then
 
-    host_ip=`docker network inspect bridge -f '{{range.IPAM.Config}}{{.Gateway}}{{end}}'`
+    benchmark_uri=`docker network inspect bridge -f '{{range.IPAM.Config}}{{.Gateway}}{{end}}'`
 
     run_benchmark | tee -a $log_file
 

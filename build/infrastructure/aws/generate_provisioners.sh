@@ -58,12 +58,16 @@ for config in $PROJECT_ROOT/config/*.ini; do
         command = <<EOP
             set -e
 
-            export CONFIG_FILE="$config"
+            CONFIG_FILE="$config"
             source "$config"
-            export \$(cut -d= -f1 $config)
-            export host_ip="\${aws_instance.ec2_instance.public_dns}"
+            benchmark_uri="\${aws_instance.client.public_dns}"
 
-            $PROJECT_ROOT/bin/benchmark.sh "aws-docker"
+            ssh-keyscan -H "\${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
+            SSH_CMD="export PROJECT_ROOT='/php-benchmark/'; export benchmark_uri='\${aws_instance.client.public_dns}'; export NAME='$NAME'; export PHP_OPCACHE=$PHP_OPCACHE; export PHP_PRELOADING=$PHP_PRELOADING; export PHP_JIT=$PHP_JIT; export AB_REQUESTS=$AB_REQUESTS; export AB_CONCURRENCY=$AB_CONCURRENCY; /php-benchmark/bin/benchmark.sh aws-docker"
+            ssh -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" "\${var.host_ssh_user}@\${aws_instance.host.public_dns}" "\$SSH_CMD"
+
+            mkdir -p "$PROJECT_ROOT/tmp/result/$NAME"
+            scp -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" -r "\${var.host_ssh_user}@\${aws_instance.host.public_dns}:/php-benchmark/tmp/result/$NAME" "$PROJECT_ROOT/tmp/result/"
         EOP
     }
 

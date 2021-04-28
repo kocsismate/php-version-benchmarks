@@ -16,23 +16,96 @@ provider "aws" {
   secret_key = var.secret_key
 }
 
-resource "aws_instance" "ec2_instance" {
-  ami = data.aws_ami.ubuntu.image_id
-  instance_type = var.instance_type
-  associate_public_ip_address = true
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_instance" "host" {
+  ami = data.aws_ami.host.image_id
+  instance_type = var.host_instance_type
+  associate_public_ip_address = false
   key_name = var.ssh_key_name
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_security_group_ids = [aws_security_group.security_group.id]
-  monitoring = false
-  host_id = var.dedicated_host_id
+  monitoring = true
 
   tags = {
-    Name = "php-benchmark"
+    Name = "php-benchmark-host"
   }
 
   connection {
     type = "ssh"
-    host = aws_instance.ec2_instance.public_ip
-    user = "ubuntu"
+    host = aws_instance.host.public_ip
+    user = var.host_ssh_user
+    private_key = file(format("%s/%s", "../config", var.ssh_private_key))
+    timeout = "30m"
+    agent = true
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      set -e
+
+      cd ${var.project_root}
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./bin ./build ./config
+EOF
+  }
+
+  provisioner "file" {
+    source = "${var.project_root}/tmp/archive.tar.gz"
+    destination = "/home/${var.host_ssh_user}/archive.tar.gz"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "set -e",
+
+      "# Update permissions",
+      "sudo mkdir -p /php-benchmark",
+      "sudo chmod -R 775 /php-benchmark",
+      "sudo chown -R root:${var.host_ssh_user} /php-benchmark",
+      "cd /php-benchmark",
+
+      "# Unzip the archive",
+      "tar -xf ~/archive.tar.gz",
+
+      "sudo chmod -R 775 /php-benchmark",
+      "sudo chown -R root:${var.host_ssh_user} /php-benchmark",
+    ]
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "set -e",
+
+      "# Update system packages",
+      "sudo apt-get update",
+      "sudo apt-get -y install curl",
+
+      "# Install Docker",
+      "curl -fsSL https://get.docker.com/ | sh",
+    ]
+  }
+}
+
+resource "aws_instance" "client" {
+  ami = data.aws_ami.client.image_id
+  instance_type = var.client_instance_type
+  associate_public_ip_address = true
+  key_name = var.ssh_key_name
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_security_group_ids = [aws_security_group.security_group.id]
+  monitoring = true
+  host_id = var.dedicated_host_id
+
+  tags = {
+    Name = "php-benchmark-client"
+  }
+
+  connection {
+    type = "ssh"
+    host = aws_instance.client.public_ip
+    user = var.client_ssh_user
     private_key = file(format("%s/%s", "../config", var.ssh_private_key))
     timeout = "30m"
     agent = true
@@ -49,7 +122,7 @@ EOF
 
   provisioner "file" {
     source = "${var.project_root}/tmp/archive.tar.gz"
-    destination = "/home/ubuntu/archive.tar.gz"
+    destination = "/home/${var.client_ssh_user}/archive.tar.gz"
   }
 
   provisioner "remote-exec" {
@@ -59,17 +132,17 @@ EOF
       "# Update permissions",
       "sudo mkdir -p /php-benchmark",
       "sudo chmod -R 775 /php-benchmark",
-      "sudo chown -R root:ubuntu /php-benchmark",
+      "sudo chown -R root:${var.client_ssh_user} /php-benchmark",
       "cd /php-benchmark",
 
       "# Unzip the archive",
-      "tar -xf /home/ubuntu/archive.tar.gz",
+      "tar -xf ~/archive.tar.gz",
 
       "# Create and source the config file",
       "cp .env.dist .env",
 
       "sudo chmod -R 775 /php-benchmark",
-      "sudo chown -R root:ubuntu /php-benchmark",
+      "sudo chown -R root:${var.client_ssh_user} /php-benchmark",
     ]
   }
 
@@ -91,9 +164,9 @@ EOF
   }$PROVISIONERS
 }
 
-data "aws_ami" "ubuntu" {
+data "aws_ami" "host" {
   most_recent = true
-  owners = ["099720109477"]
+  owners = [var.host_image_owner]
 
   filter {
     name = "virtualization-type"
@@ -102,7 +175,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name = "architecture"
-    values = [var.image_architecture]
+    values = [var.host_image_architecture]
   }
 
   filter {
@@ -112,7 +185,32 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name = "name"
-    values = ["ubuntu/images/hvm-ssd/${var.image_name}-*"]
+    values = [var.host_image_name_pattern]
+  }
+}
+
+data "aws_ami" "client" {
+  most_recent = true
+  owners = [var.client_image_owner]
+
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name = "architecture"
+    values = [var.client_image_architecture]
+  }
+
+  filter {
+    name = "image-type"
+    values = ["machine"]
+  }
+
+  filter {
+    name = "name"
+    values = [var.client_image_name_pattern]
   }
 }
 

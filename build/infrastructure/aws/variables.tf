@@ -16,8 +16,22 @@ variable "ecr_registry_id" {}
 
 variable "ecr_repository_name" {}
 
-variable "instance_type" {}
+variable "host_instance_type" {}
 
-variable "image_name" {}
+variable "host_image_owner" {}
 
-variable "image_architecture" {}
+variable "host_image_name_pattern" {}
+
+variable "host_image_architecture" {}
+
+variable "host_ssh_user" {}
+
+variable "client_instance_type" {}
+
+variable "client_image_owner" {}
+
+variable "client_image_name_pattern" {}
+
+variable "client_image_architecture" {}
+
+variable "client_ssh_user" {}
