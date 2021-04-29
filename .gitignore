@@ -2,6 +2,7 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/opcache.php
+!/app/zend/opcache_reset.php
 !/app/zend/phpinfo.php
 /config/*.ini
 tmp/

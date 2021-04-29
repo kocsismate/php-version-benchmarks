@@ -84,6 +84,9 @@ EOF
 
       "# Install Docker",
       "curl -fsSL https://get.docker.com/ | sh",
+
+      "# Install ab",
+      "sudo apt-get -y install apache2-utils",
     ]
   }
 }
@@ -116,7 +119,7 @@ resource "aws_instance" "client" {
       set -e
 
       cd ${var.project_root}
-      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/zend/opcache.php ./app/zend/phpinfo.php ./bin ./build ./config .dockerignore .env.dist Dockerfile
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/zend/opcache.php  ./app/zend/opcache_reset.php ./app/zend/phpinfo.php ./bin ./build ./config .dockerignore .env.dist Dockerfile
 EOF
   }
 
@@ -156,6 +159,9 @@ EOF
 
       "# Install Docker",
       "curl -fsSL https://get.docker.com/ | sh",
+
+      "# Install ab",
+      "sudo apt-get -y install apache2-utils",
 
       "# Setup apps",
       "export PROJECT_ROOT=/php-benchmark",

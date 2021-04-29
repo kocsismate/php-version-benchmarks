@@ -18,10 +18,10 @@ if [[ "$1" == "local-docker" ]]; then
 
 elif [[ "$1" == "aws-docker" ]]; then
 
-    sudo mkdir -p "$GIT_PATH"
+    mkdir -p "$GIT_PATH"
 
     #sudo ssh -o StrictHostKeyChecking=no git@github.com
-    sudo git clone --depth "$GIT_DEPT" --single-branch --branch="$GIT_BRANCH" "$GIT_REPO" "$GIT_PATH"
+    git clone --depth "$GIT_DEPT" --single-branch --branch="$GIT_BRANCH" "$GIT_REPO" "$GIT_PATH"
 
     if [ ! -z "$GIT_COMMIT" ]; then
         (cd $GIT_PATH && sudo git checkout $GIT_COMMIT)

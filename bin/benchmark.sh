@@ -22,7 +22,7 @@ run_ab () {
     if [[ "$mode" == "local-docker" ]]; then
         docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
     elif [[ "$mode" == "aws-docker" ]]; then
-        sudo docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
+        ab -n "$1" -c "$2" -q "$3"
     fi
 }
 
@@ -31,7 +31,7 @@ run_curl () {
         if [[ "$mode" == "local-docker" ]]; then
             docker run --rm curlimages/curl -s "$2"
         elif [[ "$mode" == "aws-docker" ]]; then
-            sudo docker run --rm curlimages/curl -s "$2"
+            curl -s "$2"
         fi
     done
 }
@@ -41,7 +41,7 @@ run_benchmark () {
         ping -c 3 "$benchmark_uri"
     fi
 
-    sleep 8
+    sleep 10
 
     printf "Benchmark\tMedian\tStdDev\n" >> "$result_file"
 
@@ -49,33 +49,39 @@ run_benchmark () {
     echo "Benchmarking Laravel demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 10 2 http://$benchmark_uri:8888/ > /dev/null
+    run_ab 10 2 "http://$benchmark_uri:8888/" > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8888/ | tee -a "$result_path/1_laravel.log"
+    # Reset OPCache
+    run_curl 1 "http://$benchmark_uri:8890/opcache_reset.php" > /dev/null
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Symfony demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 10 2 http://$benchmark_uri:8889/ > /dev/null
+    run_ab 10 2 "http://$benchmark_uri:8889/" > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/2_symfony_main.log"
+    # Reset OPCache
+    run_curl 1 "http://$benchmark_uri:8890/opcache_reset.php" > /dev/null
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Symfony demo blog: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 10 2 http://$benchmark_uri:8889/en/blog/ > /dev/null
+    run_ab 10 2 "http://$benchmark_uri:8889/en/blog/" > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/3_symfony_blog.log"
+    # Reset OPCache
+    run_curl 1 "http://$benchmark_uri:8890/opcache_reset.php" > /dev/null
 
     echo "---------------------------------------------------------------------------------------"
     echo "Benchmarking Zend bench       : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 10 2 http://$benchmark_uri:8889/bench.php > /dev/null
+    run_ab 10 2 "http://$benchmark_uri:8889/bench.php" > /dev/null
     # Benchmark
-    run_curl 10 http://$benchmark_uri:8890/bench.php | tee -a "$result_path/4_bench.log"
+    run_curl 10 "http://$benchmark_uri:8890/bench.php" | tee -a "$result_path/4_bench.log"
     # Calculate
     results="$(grep "Total" "$result_path/4_bench.log" | cut -c 20- | tr -s '\n' ' ')"
     printf "Bench:\t%.4f\t%.4f\n" "$(median $results)" "$(std_deviation "$results")" >> "$result_file"

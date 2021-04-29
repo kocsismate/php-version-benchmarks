@@ -14,6 +14,11 @@ if [[ "$1" == "local-docker" ]]; then
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             composer create-project laravel/laravel laravel 8.5.16 --no-interaction --working-dir=/code/app
+
+        docker run --rm \
+            --volume $PROJECT_ROOT:/code \
+            --user $(id -u):$(id -g) \
+            composer dump-autoload --classmap-authoritative --working-dir=/code/app/laravel
     fi
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
@@ -24,6 +29,11 @@ if [[ "$1" == "local-docker" ]]; then
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             composer create-project symfony/symfony-demo symfony dev-main --no-interaction --working-dir=/code/app
+
+        docker run --rm \
+            --volume $PROJECT_ROOT:/code \
+            --user $(id -u):$(id -g) \
+            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony
     fi
 
     # Download bench.php
