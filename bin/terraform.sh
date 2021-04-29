@@ -21,10 +21,16 @@ echo "TERRAFORM APPLY:"
 terraform apply \
     -auto-approve \
     -input=false \
-    "$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan"
+    "$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan" || true
+
+if [[ "$N" == "1" ]]; then
+    arg=""
+else
+    arg="-auto-approve"
+fi
 
 terraform destroy \
-    -var "project_root=\"$PROJECT_ROOT\"" \
+    $arg -var "project_root=$PROJECT_ROOT" \
     -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars"
 
 cd $PROJECT_ROOT

@@ -1,11 +1,11 @@
 vendor/
 .terraform/
 /app/*/*
-!/app/zend/opcache.php
-!/app/zend/opcache_reset.php
-!/app/zend/phpinfo.php
+!/app/zend/*
 /config/*.ini
-tmp/
+/tmp/
+/result/
+!.gitkeep
 
 .terraform*
 .env

@@ -43,6 +43,8 @@ for config in $PROJECT_ROOT/config/*.ini; do
             "export \$(cut -d= -f1 \$CONFIG_FILE)",
 
             "export PROJECT_ROOT=/php-benchmark",
+            "export RUN=$RUN",
+            "export NOW=$NOW",
             ". \$PROJECT_ROOT/.env",
             "export \$(cut -d= -f1 \$PROJECT_ROOT/.env)",
 
@@ -51,6 +53,9 @@ for config in $PROJECT_ROOT/config/*.ini; do
             "export ECR_REPOSITORY_NAME=$ECR_REPOSITORY_NAME",
 
             "\$PROJECT_ROOT/bin/provision.sh aws-docker",
+
+            "#export benchmark_uri=127.0.0.1",
+            "#\$PROJECT_ROOT/bin/benchmark.sh aws-docker",
         ]
     }
 
@@ -63,11 +68,11 @@ for config in $PROJECT_ROOT/config/*.ini; do
             benchmark_uri="\${aws_instance.client.public_dns}"
 
             ssh-keyscan -H "\${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
-            SSH_CMD="export PROJECT_ROOT='/php-benchmark/'; export benchmark_uri='\${aws_instance.client.public_dns}'; export NAME='$NAME'; export PHP_OPCACHE=$PHP_OPCACHE; export PHP_PRELOADING=$PHP_PRELOADING; export PHP_JIT=$PHP_JIT; export AB_REQUESTS=$AB_REQUESTS; export AB_CONCURRENCY=$AB_CONCURRENCY; /php-benchmark/bin/benchmark.sh aws-docker"
+            SSH_CMD="export PROJECT_ROOT='/php-benchmark/'; export RUN='$RUN'; export NOW='$NOW'; export benchmark_uri='\${aws_instance.client.public_dns}'; export NAME='$NAME'; export PHP_OPCACHE=$PHP_OPCACHE; export PHP_PRELOADING=$PHP_PRELOADING; export PHP_JIT=$PHP_JIT; export AB_REQUESTS=$AB_REQUESTS; export AB_CONCURRENCY=$AB_CONCURRENCY; /php-benchmark/bin/benchmark.sh aws-docker"
             ssh -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" "\${var.host_ssh_user}@\${aws_instance.host.public_dns}" "\$SSH_CMD"
 
-            mkdir -p "$PROJECT_ROOT/tmp/result/$NAME"
-            scp -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" -r "\${var.host_ssh_user}@\${aws_instance.host.public_dns}:/php-benchmark/tmp/result/$NAME" "$PROJECT_ROOT/tmp/result/"
+            mkdir -p "$PROJECT_ROOT/result/$NOW/$RUN/$NAME"
+            scp -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" -r "\${var.host_ssh_user}@\${aws_instance.host.public_dns}:/php-benchmark/result/$NOW/$RUN/$NAME" "$PROJECT_ROOT/result/$NOW/$RUN"
         EOP
     }
 
