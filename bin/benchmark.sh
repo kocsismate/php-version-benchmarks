@@ -41,7 +41,7 @@ run_benchmark () {
         ping -c 3 "$benchmark_uri"
     fi
 
-    sleep 4
+    sleep 8
 
     printf "Benchmark\tMedian\tStdDev\n" >> "$result_file"
 
@@ -49,7 +49,7 @@ run_benchmark () {
     echo "Benchmarking Laravel demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 20 4 http://$benchmark_uri:8888/ > /dev/null
+    run_ab 10 2 http://$benchmark_uri:8888/ > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8888/ | tee -a "$result_path/1_laravel.log"
 
@@ -57,7 +57,7 @@ run_benchmark () {
     echo "Benchmarking Symfony demo app : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 20 4 http://$benchmark_uri:8889/ > /dev/null
+    run_ab 10 2 http://$benchmark_uri:8889/ > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/2_symfony_main.log"
 
@@ -65,7 +65,7 @@ run_benchmark () {
     echo "Benchmarking Symfony demo blog: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 20 4 http://$benchmark_uri:8889/en/blog/ > /dev/null
+    run_ab 10 2 http://$benchmark_uri:8889/en/blog/ > /dev/null
     # Benchmark
     run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" http://$benchmark_uri:8889/ | tee -a "$result_path/3_symfony_blog.log"
 
@@ -73,7 +73,7 @@ run_benchmark () {
     echo "Benchmarking Zend bench       : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
     # Warmup
-    run_ab 20 4 http://$benchmark_uri:8889/bench.php > /dev/null
+    run_ab 10 2 http://$benchmark_uri:8889/bench.php > /dev/null
     # Benchmark
     run_curl 10 http://$benchmark_uri:8890/bench.php | tee -a "$result_path/4_bench.log"
     # Calculate
