@@ -2,7 +2,7 @@
 set -e
 
 print_result_header () {
-    printf "Benchmark\tMetric\tResult\tStdDev\tDescription\n" >> "$result_file_csv"
+    printf "Benchmark\tMetric\tResult\tStdDev\tDescription\n" >> "$result_file_tsv"
 
     now="$(date +'%Y-%m-%d %H-%M')"
 cat << EOF >> "$result_file_md"
@@ -10,17 +10,16 @@ cat << EOF >> "$result_file_md"
 
 |  Benchmark   |    Metric    |   Result    |    StdDev   | Description |
 |--------------|--------------|-------------|-------------|-------------|
-
 EOF
 }
 
 print_result_value () {
-    printf "%s\t%s\t%.4f\t%.4f\t%s\n" "$1" "$2" "$3" "$4" "$5" >> "$result_file_csv"
+    printf "%s\t%s\t%.4f\t%.4f\t%s\n" "$1" "$2" "$3" "$4" "$5" >> "$result_file_tsv"
     printf "|%s|%s|%.4f|%.4f|%s|\n" "$1" "$2" "$3" "$4" "$5" >> "$result_file_md"
 }
 
 print_result_footer () {
-    printf "##### Generated: $now\n" >> "$result_file_md"
+    printf "\n##### Generated: $now\n" >> "$result_file_md"
 }
 
 median () {
@@ -44,7 +43,7 @@ run_ab () {
     if [[ "$mode" == "local-docker" ]]; then
         docker run --rm jordi/ab -n "$1" -c "$2" -q "$3"
     elif [[ "$mode" == "aws-docker" ]]; then
-        ab -n "$1" -c "$2" -q "$3"
+        ab -n "$1" -c "$2" "$3"
     fi
 }
 
@@ -67,13 +66,13 @@ run_ab_benchmark () {
     run_ab 10 2 "$3" > /dev/null
 
     # Benchmark
-    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" "$3" | tee -a "$result_path/$2.log"
+    run_ab "$AB_REQUESTS" "$AB_CONCURRENCY" "$3" | tee -a "$log_path/$2.log"
 
     # Reset OPCache
     run_curl 1 "http://$benchmark_uri:8890/opcache_reset.php" > /dev/null
 
     # Collect results
-    results="$(grep "Requests per second" "$result_path/$2.log" | cut -d " " -f 7)"
+    results="$(grep "Requests per second" "$log_path/$2.log" | cut -d " " -f 7)"
     print_result_value "$1" "request/sec (mean)" "$results" "0.0000" "total: $AB_REQUESTS, concurrency: $AB_CONCURRENCY"
 }
 
@@ -86,16 +85,16 @@ run_micro_benchmark () {
     run_ab 10 2 "$3" > /dev/null
 
     # Benchmark
-    run_curl 10 "$3" | tee -a "$result_path/$2.log"
+    run_curl 10 "$3" | tee -a "$log_path/$2.log"
 
     # Calculate
-    results="$(grep "Total" "$result_path/$2.log" | cut -c 20- | tr -s '\n' ' ')"
+    results="$(grep "Total" "$log_path/$2.log" | cut -c 20- | tr -s '\n' ' ')"
     print_result_value "$1" "sec (median)" "$(median $results)" "$(std_deviation "$results")" "10 consecutive runs"
 }
 
 run_benchmark () {
     if [[ "$mode" == "aws-docker" ]]; then
-        ping -c 3 "$benchmark_uri" | tee -a "$result_path/0_ping.log"
+        ping -c 3 "$benchmark_uri" | tee -a "$log_path/0_ping.log"
     fi
 
     sleep 10
@@ -120,27 +119,27 @@ run_benchmark () {
 }
 
 mode="$1"
-result_path="$PROJECT_ROOT/result/$NOW/$RUN/$NAME"
-log_file="$result_path/benchmark.log"
-result_file_csv="$result_path/benchmark.csv"
-result_file_md="$result_path/benchmark.md"
+result_path="$PROJECT_ROOT/result/$NOW/$RUN"
+result_file_tsv="$result_path/$NAME.tsv"
+result_file_md="$result_path/$NAME.md"
 
-rm -rf "$result_path"
-mkdir -p "$result_path"
+log_path="$result_path/$NAME"
 
-touch "$log_file"
-touch "$result_file_csv"
+rm -rf "$log_path"
+mkdir -p "$log_path"
+
+touch "$result_file_tsv"
 touch "$result_file_md"
 
 if [[ "$1" == "local-docker" ]]; then
 
     benchmark_uri=`docker network inspect bridge -f '{{range.IPAM.Config}}{{.Gateway}}{{end}}'`
 
-    run_benchmark | tee -a $log_file
+    run_benchmark
 
 elif [[ "$1" == "aws-docker" ]]; then
 
-    run_benchmark | tee -a $log_file
+    run_benchmark
 
 else
 

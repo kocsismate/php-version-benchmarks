@@ -13,9 +13,9 @@ start_docker () {
     $run_as docker stop $BENCHMARK_NGINX_ADDR $BENCHMARK_FPM_ADDR || true
     $run_as docker rm $BENCHMARK_NGINX_ADDR $BENCHMARK_FPM_ADDR || true
 
-    $run_as docker run --detach --network=php-benchmark --log-driver=none --env-file $PROJECT_ROOT/.env --env-file $CONFIG_FILE \
+    $run_as docker run --detach --network=php-benchmark --log-driver=local --env-file $PROJECT_ROOT/.env --env-file $CONFIG_FILE \
             --volume "php-benchmark-socket:/var/run/php" --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            --name="$BENCHMARK_FPM_ADDR" "php-benchmark-fpm:$NAME-latest" /code/build/container/fpm/run.sh
+            --name="$BENCHMARK_FPM_ADDR" "$repository:$NAME-latest" /code/build/container/fpm/run.sh
 
     sleep 3
 
@@ -29,6 +29,7 @@ if [[ "$1" == "local-docker" ]]; then
     $PROJECT_ROOT/build/script/php_source.sh "$1"
 
     run_as=""
+    repository="php-benchmark-fpm"
 
     build_docker
     start_docker
@@ -36,8 +37,8 @@ if [[ "$1" == "local-docker" ]]; then
 elif [[ "$1" == "aws-docker" ]]; then
 
     run_as="sudo"
+    repository="$ECR_REGISTRY_ID/$ECR_REPOSITORY_NAME"
 
-    build_docker
     start_docker
 
 fi
