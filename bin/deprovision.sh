@@ -7,6 +7,8 @@ if [[ "$1" == "local-docker" ]]; then
 
     docker network rm php-benchmark || true
 
+    docker volume rm php-benchmark-socket || true
+
 elif [[ "$1" == "aws-docker" ]]; then
 
     echo "aws-docker"
