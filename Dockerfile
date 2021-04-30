@@ -1,4 +1,3 @@
-# This Dockerfile is highly inspired by https://github.com/docker-library/php
 FROM debian:buster
 
 # prevent Debian's PHP packages from being installed
@@ -124,7 +123,7 @@ RUN set -eux; \
 		--enable-fpm \
         --with-fpm-user=www-data \
         --with-fpm-group=www-data \
-        --disable-cgi \
+        --enable-cgi \
 	; \
 	make -j "$(nproc)"; \
 	find -type f -name '*.a' -delete; \

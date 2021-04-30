@@ -17,17 +17,9 @@ for config in $PROJECT_ROOT/config/*.ini; do
         fi
     done < "$PROJECT_ROOT/build/infrastructure/config/aws.tfvars"
 
-    export GIT_PATH="$PROJECT_ROOT/tmp/$GIT_BRANCH"
-    export COMMIT_HASH=`git -C $GIT_PATH rev-parse HEAD`
+    export GIT_PATH="$PROJECT_ROOT/tmp/$NAME"
     export ECR_REGISTRY_ID="$ecr_registry_id"
     export ECR_REPOSITORY_NAME="$ecr_repository_name"
-
-    cp "$PROJECT_ROOT/.dockerignore" "$GIT_PATH/.dockerignore"
-    docker build -f "$PROJECT_ROOT/Dockerfile" -t "$ECR_REPOSITORY_NAME:$NAME-latest" "$GIT_PATH"
-
-    aws ecr-public get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "$ECR_REGISTRY_ID"
-    docker tag "$ECR_REPOSITORY_NAME:$NAME-latest" "$ECR_REGISTRY_ID/$ECR_REPOSITORY_NAME:$NAME-latest"
-    docker push "$ECR_REGISTRY_ID/$ECR_REPOSITORY_NAME:$NAME-latest"
 
     remote_config_name=`basename $config`
 
@@ -52,10 +44,7 @@ for config in $PROJECT_ROOT/config/*.ini; do
             "export ECR_REGISTRY_ID=$ECR_REGISTRY_ID",
             "export ECR_REPOSITORY_NAME=$ECR_REPOSITORY_NAME",
 
-            "\$PROJECT_ROOT/bin/provision.sh aws-docker",
-
-            "#export benchmark_uri=127.0.0.1",
-            "#\$PROJECT_ROOT/bin/benchmark.sh aws-docker",
+            "\$PROJECT_ROOT/bin/benchmark.sh aws-docker",
         ]
     }
 
@@ -63,26 +52,11 @@ for config in $PROJECT_ROOT/config/*.ini; do
         command = <<EOP
             set -e
 
-            CONFIG_FILE="$config"
-            source "$config"
-            benchmark_uri="\${aws_instance.client.public_dns}"
-
-            ssh-keyscan -H "\${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
-            SSH_CMD="export PROJECT_ROOT='/php-benchmark/'; export RUN='$RUN'; export NOW='$NOW'; export benchmark_uri='\${aws_instance.client.public_dns}'; export NAME='$NAME'; export PHP_OPCACHE=$PHP_OPCACHE; export PHP_PRELOADING=$PHP_PRELOADING; export PHP_JIT=$PHP_JIT; export AB_REQUESTS=$AB_REQUESTS; export AB_CONCURRENCY=$AB_CONCURRENCY; /php-benchmark/bin/benchmark.sh aws-docker"
-            ssh -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" "\${var.host_ssh_user}@\${aws_instance.host.public_dns}" "\$SSH_CMD"
+            ssh-keyscan -H "\${aws_instance.client.public_dns}" >> ~/.ssh/known_hosts
 
             mkdir -p "$PROJECT_ROOT/result/$NOW/$RUN/$NAME"
-            scp -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" -r "\${var.host_ssh_user}@\${aws_instance.host.public_dns}:/php-benchmark/result/$NOW/$RUN/$NAME" "$PROJECT_ROOT/result/$NOW/$RUN"
+            scp -i "$PROJECT_ROOT/build/infrastructure/config/\${var.ssh_private_key}" -r "\${var.client_ssh_user}@\${aws_instance.client.public_dns}:/php-benchmark/result/$NOW/$RUN/$NAME" "$PROJECT_ROOT/result/$NOW/$RUN"
         EOP
-    }
-
-    provisioner "remote-exec" {
-        inline = [
-            "set -e",
-
-            "export PROJECT_ROOT=/php-benchmark",
-            "/php-benchmark/bin/deprovision.sh aws-docker",
-        ]
     }
 
 EOF

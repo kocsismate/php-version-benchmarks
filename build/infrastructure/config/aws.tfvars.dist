@@ -7,14 +7,8 @@ dedicated_host_id = ""
 ecr_registry_id = "public.ecr.aws/abcdefgh"
 ecr_repository_name = "php-benchmark-fpm"
 
-host_instance_type = "t3.small"
-host_image_owner = "099720109477"
-host_image_name_pattern = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-host_image_architecture = "x86_64"
-host_ssh_user = "ubuntu"
-
 # X86_64
-client_instance_type = "m5.large"
+client_instance_type = "m5.2xlarge"
 client_image_owner = "099720109477"
 client_image_name_pattern = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
 client_image_architecture = "x86_64"
