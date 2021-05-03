@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-/code/build/container/fpm/config.sh
+/code/build/container/php-cgi/config.sh
 
 if [ "$PHP_OPCACHE" = "1" ]; then
     OPCACHE_PATH="$(cd /usr/local/lib/php/extensions/ && find . -path "./*/opcache.so")"

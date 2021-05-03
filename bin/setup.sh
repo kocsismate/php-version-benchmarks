@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ "$1" == "local-docker" ]]; then
-    run_as=""
-else
+run_as=""
+if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
     run_as="sudo"
 fi
 
@@ -40,7 +39,7 @@ if [ -z "$(ls -A $PROJECT_ROOT/app/symfony)" ]; then
         composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony
 fi
 
-if [[ "$1" == "aws-docker" ]]; then
+if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
 
     sudo chmod -R 777 "$PROJECT_ROOT/app/laravel/storage"
     sudo chmod -R 777 "$PROJECT_ROOT/app/symfony/var"

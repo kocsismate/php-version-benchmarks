@@ -5,62 +5,63 @@ export PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ "$1" == "run" ]]; then
 
-    export N="${3:-1}"
-    export NOW="$(date +'%Y_%m_%d_%H_%M')"
-
-    source $PROJECT_ROOT/.env
-    export $(cut -d= -f1 $PROJECT_ROOT/.env)
-
-    if [[ "$2" == "local-docker" ]]; then
-        $PROJECT_ROOT/bin/setup.sh "$2"
+    if [[ "$2" == "local" ]]; then
+        INFRA_ENVIRONMENT="local"
+    elif [[ "$2" == "aws" ]]; then
+        INFRA_ENVIRONMENT="aws"
+    else
+        echo "Available environments: local, aws"
+        exit 1
     fi
 
-    for config in $PROJECT_ROOT/config/*.ini; do
-        source "$config"
-        if [[ "$ENABLED" == "0" ]]; then
-            continue
-        fi
-        export $(cut -d= -f1 $config)
+    export N="${3:-1}"
+    NOW="$(date +'%Y-%m-%d %H:%M')"
+    export NOW
 
-        $PROJECT_ROOT/bin/build.sh "$2"
+    RESULT_ROOT_DIR="${NOW//-/_}"
+    RESULT_ROOT_DIR="${RESULT_ROOT_DIR// /_}"
+    RESULT_ROOT_DIR="${RESULT_ROOT_DIR//:/_}"
+    export RESULT_ROOT_DIR
+    export INFRA_ENVIRONMENT
+
+    for infra_config in $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini; do
+        source "$infra_config"
+        export $(cut -d= -f1 $infra_config)
+
+        for php_config in $PROJECT_ROOT/config/php/*.ini; do
+            source "$php_config"
+            export $(cut -d= -f1 $php_config)
+            export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+
+            $PROJECT_ROOT/build/script/php_source.sh
+            $PROJECT_ROOT/bin/build.sh
+        done
     done
 
-    for r in $(seq "$N"); do
+    if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
+        $PROJECT_ROOT/bin/setup.sh
+    fi
 
-        export RUN="$r"
+    for RUN in $(seq "$N"); do
+        export RUN
 
-        for config in $PROJECT_ROOT/config/*.ini; do
-            source "$config"
-            if [[ "$ENABLED" == "0" ]]; then
-                continue
-            fi
+        for infra_config in $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini; do
+            source "$infra_config"
+            export $(cut -d= -f1 $infra_config)
 
-            export $(cut -d= -f1 $config)
-            export CONFIG_FILE=$config
-            export GIT_PATH=$PROJECT_ROOT/tmp/$NAME
-
-            echo "---------------------------------------------------------------------------------------"
-            echo "$r/$N - $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
-            echo "---------------------------------------------------------------------------------------"
-
-            if [[ "$2" == "local-docker" ]]; then
-                $PROJECT_ROOT/build/script/php_source.sh "$2"
-                $PROJECT_ROOT/bin/benchmark.sh "$2"
-            elif [[ "$2" == "aws-docker" ]]; then
-                $PROJECT_ROOT/bin/terraform.sh "$3"
-            fi
+            $PROJECT_ROOT/bin/provision.sh
         done
     done
 
 elif [[ "$1" == "help" ]]; then
 
-    echo "Usage: ./benchmark.sh run [runner]"
+    echo "Usage: ./benchmark.sh run [runner] [runs]"
     echo ""
-    echo "Available runners: local-docker, aws-docker"
+    echo "Available runners: local-docker, aws-docker, aws-host"
 
 else
 
-    echo 'Available options: "run"!'
+    echo 'Available options: "run", "help"!'
     exit 1
 
 fi

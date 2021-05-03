@@ -2,7 +2,7 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/*
-/config/*.ini
+/config/**/*.ini
 /tmp/
 /result/
 !.gitkeep
@@ -10,7 +10,6 @@ vendor/
 .terraform*
 .env
 .phpcs-cache
-/build/infrastructure/aws/main.tf
 *.pem
 *.tfplan
 *.tfstate

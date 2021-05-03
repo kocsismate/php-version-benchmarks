@@ -1,27 +1,99 @@
-variable "project_root" {}
+variable "access_key" {
+  type = string
+  sensitive = true
+}
 
-variable "access_key" {}
+variable "secret_key" {
+  type = string
+  sensitive = true
+}
 
-variable "secret_key" {}
+variable "ssh_key_name" {
+  type = string
+}
 
-variable "ssh_key_name" {}
+variable "ssh_private_key" {
+  type = string
+  sensitive = true
+}
 
-variable "ssh_private_key" {}
+variable "region" {
+  type = string
+}
 
-variable "region" {}
 
-variable "dedicated_host_id" {}
+variable "run" {
+  type = number
+}
 
-variable "ecr_registry_id" {}
+variable "runs" {
+  type = number
+}
 
-variable "ecr_repository_name" {}
+variable "now" {
+  type = string
+}
 
-variable "client_instance_type" {}
+variable "result_root_dir" {
+  type = string
+}
 
-variable "client_image_owner" {}
+variable "remote_project_root" {
+  type = string
+}
 
-variable "client_image_name_pattern" {}
+variable "local_project_root" {
+  type = string
+}
 
-variable "client_image_architecture" {}
+variable "instance_type" {
+  type = string
+}
 
-variable "client_ssh_user" {}
+variable "image_owner" {
+  type = string
+}
+
+variable "image_name_pattern" {
+  type = string
+}
+
+variable "image_architecture" {
+  type = string
+}
+
+variable "image_user" {
+  type = string
+}
+
+variable "dedicated_host_id" {
+  type = string
+}
+
+variable "use_dedicated_host" {
+  type = bool
+}
+
+variable "disable_turbo_boost" {
+  type = bool
+}
+
+variable "infra_name" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "provisioner" {
+  type = string
+}
+
+variable "docker_registry" {
+  type = string
+}
+
+variable "docker_repository" {
+  type = string
+}

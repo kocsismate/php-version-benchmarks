@@ -35,7 +35,7 @@ apt-mark auto '.*' > /dev/null
 apt-mark manual $savedAptMark > /dev/null
 apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
-cp . /usr/src/php/$NAME
+cp . /usr/src/php/$PHP_ID
 PHP_INI_DIR=/usr/local/etc/php
 
 mkdir -p "$PHP_INI_DIR/conf.d"

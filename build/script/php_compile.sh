@@ -3,7 +3,7 @@
 gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";
 debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)";
 
-cd "$GIT_PATH"
+cd "$PHP_SOURCE_PATH"
 ./buildconf
 ./configure \
     --build="$gnuArch" \
@@ -21,10 +21,7 @@ cd "$GIT_PATH"
     --with-openssl \
     --with-zlib \
     --with-libdir="lib/$debMultiarch" \
-    --enable-fpm \
-    --with-fpm-user=www-data \
-    --with-fpm-group=www-data \
-    --disable-cgi \
+    --enable-cgi \
     --with-pear
 
 make -j "$(nproc)"

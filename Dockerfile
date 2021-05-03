@@ -120,9 +120,6 @@ RUN set -eux; \
 		$(test "$gnuArch" = 's390x-linux-gnu' && echo '--without-pcre-jit') \
 		--with-libdir="lib/$debMultiarch" \
         \
-		--enable-fpm \
-        --with-fpm-user=www-data \
-        --with-fpm-group=www-data \
         --enable-cgi \
 	; \
 	make -j "$(nproc)"; \
@@ -152,10 +149,9 @@ RUN set -eux; \
 	pecl update-channels; \
 	rm -rf /tmp/pear ~/.pearrc; \
 # smoke test
-	php --version; \
-	php-fpm --version
+	php --version
 
 # temporary "freetype-config" workaround for https://github.com/docker-library/php/issues/865 (https://bugs.php.net/bug.php?id=76324)
 RUN { echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bin/freetype-config && chmod +x /usr/local/bin/freetype-config
 
-CMD ["php-fpm"]
+CMD ["php-cgi"]

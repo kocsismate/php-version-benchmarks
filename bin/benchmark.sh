@@ -6,7 +6,7 @@ print_result_header () {
 
     now="$(date +'%Y-%m-%d %H-%M')"
 cat << EOF >> "$result_file_md"
-### $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)
+### $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)
 
 |  Benchmark   |    Metric    |   Median    |    StdDev   | Description |
 |--------------|--------------|-------------|-------------|-------------|
@@ -19,7 +19,7 @@ print_result_value () {
 }
 
 print_result_footer () {
-    #commit="$(git -C "$GIT_PATH" rev-parse HEAD)"
+    #commit="$(git -C "$php_source_path" rev-parse HEAD)"
     #url="${GIT_REPO//.git/}/commit/$commit"
 
     #printf "\n##### Generated: $now based on commit [$commit]($url)\n" >> "$result_file_md"
@@ -44,45 +44,45 @@ std_deviation () {
 }
 
 run_cgi () {
-    if [[ "$mode" == "local-docker" ]]; then
+    if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
         run_as=""
-        repository="php-benchmark-fpm"
-    elif [[ "$mode" == "aws-docker" ]]; then
+        repository="$INFRA_DOCKER_REPOSITORY"
+    elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
         run_as="sudo"
-        repository="$ECR_REGISTRY_ID/$ECR_REPOSITORY_NAME"
+        repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
     fi
 
-    $run_as docker run --rm --log-driver=none --env-file $PROJECT_ROOT/.env --env-file $CONFIG_FILE \
-            --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            "$repository:$NAME-latest" /code/build/container/fpm/cgi.sh "$1" "$2,$3" "$4" "$5" "$6"
+    $run_as docker run --rm --log-driver=none --env-file "$PHP_CONFIG_FILE" \
+        --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
+        "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
 }
 
 run_real_benchmark () {
     echo "---------------------------------------------------------------------------------------"
-    echo "Benchmarking $1: $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "Benchmarking $TEST_NAME: $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
-    for b in $(seq 10); do
-        run_cgi "quiet" 10 "$AB_REQUESTS" "$3" "$4" "$5" 2>&1 | tee -a "$result_path/$2.log"
+    for b in $(seq $TEST_ITERATIONS); do
+        run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
     done
 
     # Collect results
-    results="$(grep "Elapsed time" "$result_path/$2.log" | cut -c 14- | cut -d ' ' -f 2)"
-    print_result_value "$1" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "$AB_REQUESTS requests, 10 consecutive runs"
+    results="$(grep "Elapsed time" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | cut -c 14- | cut -d ' ' -f 2)"
+    print_result_value "$TEST_NAME" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS requests"
 }
 
 run_micro_benchmark () {
     echo "---------------------------------------------------------------------------------------"
-    echo "Benchmarking $1 : $NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "Benchmarking $TEST_NAME : $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
-    run_cgi "verbose" 5 10 "$3" "" "" 2>&1 | tee -a "$result_path/$2.log"
+    run_cgi "verbose" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
 
     # Calculate
-    results="$(grep "Total" "$result_path/$2.log" | tail -n +6 | cut -c 20- | tr -s '\n' ' ')"
-    print_result_value "$1" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "10 consecutive runs"
+    results="$(grep "Total" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | tail -n +6 | cut -c 20- | tr -s '\n' ' ')"
+    print_result_value "$TEST_NAME" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs"
 }
 
 run_benchmark () {
@@ -91,45 +91,66 @@ run_benchmark () {
 
     print_result_header
 
-    run_real_benchmark "Laravel demo" "1_laravel" "/code/app/laravel/public/index.php" "" "production"
+    TEST_NUMBER=0
+    for test_config in $PROJECT_ROOT/config/test/*.ini; do
+        source $test_config
+        ((TEST_NUMBER=TEST_NUMBER+1))
 
-    run_real_benchmark "Symfony main" "2_symfony_main" "/code/app/symfony/public/index.php" "/" "prod"
+        case "$TEST_ID" in
 
-    #run_real_benchmark "Symfony blog" "3_symfony_blog" "/code/app/symfony/public/index.php" "/en/blog/" "prod"
+            laravel)
+                run_real_benchmark "/code/app/laravel/public/index.php" "" "production"
+                ;;
 
-    run_micro_benchmark "bench.php" "4_bench" "/code/app/zend/bench.php"
+            symfony_main)
+                run_real_benchmark "/code/app/symfony/public/index.php" "/" "prod"
+                ;;
 
-    run_micro_benchmark "micro_bench.php" "5_micro_bench" "/code/app/zend/micro_bench.php"
+            symfony_blog)
+                run_real_benchmark "/code/app/symfony/public/index.php" "/en/blog/" "prod"
+                ;;
 
-    run_micro_benchmark "concat.php" "6_concat" "/code/app/zend/concat.php"
+            bench)
+                run_micro_benchmark "/code/app/zend/bench.php"
+                ;;
+
+            micro_bench)
+                run_micro_benchmark "/code/app/zend/micro_bench.php"
+                ;;
+
+            concat)
+                run_micro_benchmark "/code/app/zend/concat.php"
+                ;;
+
+            *)
+                echo "Invalid test ID!"
+                ;;
+        esac
+    done
 
     print_result_footer
 }
 
-mode="$1"
-result_path="$PROJECT_ROOT/result/$NOW/$RUN/$NAME"
-result_file_tsv="$result_path/benchmark.tsv"
-result_file_md="$result_path/benchmark.md"
+result_path="$PROJECT_ROOT/result/$RESULT_ROOT_DIR/$RUN"
 
-rm -rf "$result_path"
-mkdir -p "$result_path"
+for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+    source $PHP_CONFIG_FILE
+    export PHP_CONFIG_FILE
+    php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-touch "$result_file_tsv"
-touch "$result_file_md"
+    log_path="$result_path/$PHP_ID"
+    result_file_tsv="$result_path/$PHP_ID.tsv"
+    result_file_md="$result_path/$PHP_ID.md"
 
-if [[ "$1" == "local-docker" ]]; then
+    rm -rf "$log_path"
+    mkdir -p "$log_path"
 
-    benchmark_uri=`docker network inspect bridge -f '{{range.IPAM.Config}}{{.Gateway}}{{end}}'`
+    touch "$result_file_tsv"
+    touch "$result_file_md"
+
+    echo "---------------------------------------------------------------------------------------"
+    echo "$RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "---------------------------------------------------------------------------------------"
 
     run_benchmark
-
-elif [[ "$1" == "aws-docker" ]]; then
-
-    run_benchmark
-
-else
-
-    echo 'Available options: "local-docker", "aws-docker"!'
-    exit 1
-
-fi
+done

@@ -4,19 +4,8 @@ ssh_key_name = "ec2"
 ssh_private_key = "ec2.pem"
 region = "eu-central-1"
 dedicated_host_id = ""
-ecr_registry_id = "public.ecr.aws/abcdefgh"
-ecr_repository_name = "php-benchmark-fpm"
 
-# X86_64
-client_instance_type = "m5.2xlarge"
-client_image_owner = "099720109477"
-client_image_name_pattern = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-client_image_architecture = "x86_64"
-client_ssh_user = "ubuntu"
-
-# ARM
-# client_instance_type = "m6g.large"
-# client_image_owner = "099720109477"
-# client_image_name_pattern = "ubuntu-focal-20.04-arm64-server"
-# client_image_architecture = "arm64"
-# client_ssh_user = "ubuntu"
+image_owner = "099720109477"
+image_name_pattern = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
+image_user = "ubuntu"
+remote_project_root = "/php-benchmark"
