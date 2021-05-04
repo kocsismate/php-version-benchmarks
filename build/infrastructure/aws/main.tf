@@ -84,11 +84,12 @@ EOF
       "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
       "# Update system packages",
-      "sudo apt-get update",
-      "sudo apt-get -y install git curl",
+      "sudo yum -y update",
+      "sudo yum -y install git curl docker",
 
-      "# Install Docker",
-      "curl -fsSL https://get.docker.com/ | sh",
+      "# Start Docker service",
+      "sudo usermod -a -G docker ${var.image_user}",
+      "sudo service docker start",
 
       "# Setup environment",
       "export PROJECT_ROOT=\"${var.remote_project_root}\"",
@@ -124,7 +125,12 @@ EOF
 
 data "aws_ami" "host" {
   most_recent = true
-  owners = [var.image_owner]
+  owners = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
+  }
 
   filter {
     name = "virtualization-type"
@@ -139,11 +145,6 @@ data "aws_ami" "host" {
   filter {
     name = "image-type"
     values = ["machine"]
-  }
-
-  filter {
-    name = "name"
-    values = [var.image_name_pattern]
   }
 }
 

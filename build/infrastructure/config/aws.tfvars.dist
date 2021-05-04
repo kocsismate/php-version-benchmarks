@@ -5,7 +5,5 @@ ssh_private_key = "ec2.pem"
 region = "eu-central-1"
 dedicated_host_id = ""
 
-image_owner = "099720109477"
-image_name_pattern = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-image_user = "ubuntu"
+image_user = "ec2-user"
 remote_project_root = "/php-benchmark"

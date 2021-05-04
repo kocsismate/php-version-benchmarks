@@ -54,14 +54,6 @@ variable "instance_type" {
   type = string
 }
 
-variable "image_owner" {
-  type = string
-}
-
-variable "image_name_pattern" {
-  type = string
-}
-
 variable "image_architecture" {
   type = string
 }
