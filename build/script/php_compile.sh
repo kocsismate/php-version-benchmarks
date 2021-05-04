@@ -1,7 +1,18 @@
 #!/bin/sh
+set -eux
 
 gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";
 debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)";
+
+# Apply stack smash protection to functions using local buffers and alloca()
+# Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
+# Enable optimization (-O2)
+# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
+# https://github.com/docker-library/php/issues/272
+# -D_LARGEFILE_SOURCE and -D_FILE_OFFSET_BITS=64 (https://www.php.net/manual/en/intro.filesystem.php)
+export PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+export PHP_CPPFLAGS="$PHP_CFLAGS"
+export PHP_LDFLAGS="-Wl,-O1 -pie"
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
@@ -25,28 +36,3 @@ cd "$PHP_SOURCE_PATH"
     --with-pear
 
 make -j "$(nproc)"
-find -type f -name '*.a' -delete
-make install
-find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true
-make clean
-
-cp -v php.ini-* "$PHP_INI_DIR/"
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-apt-mark auto '.*' > /dev/null
-[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark;
-find /usr/local -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
-		| sort -u \
-		| xargs -r dpkg-query --search \
-		| cut -d: -f1 \
-		| sort -u \
-		| xargs -r apt-mark manual
-
-apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
-pecl update-channels
-rm -rf /tmp/pear ~/.pearrc
-# smoke test
-php --version
-
-# temporary "freetype-config" workaround for https://github.com/docker-library/php/issues/865 (https://bugs.php.net/bug.php?id=76324)
-{ echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bin/freetype-config && chmod +x /usr/local/bin/freetype-config

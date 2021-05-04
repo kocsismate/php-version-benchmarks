@@ -96,6 +96,7 @@ EOF
       "export RUN=\"${var.run}\"",
       "export NOW=\"${var.now}\"",
       "export RESULT_ROOT_DIR=\"${var.result_root_dir}\"",
+      "${var.php_commits}",
       "export INFRA_NAME=\"${var.infra_name}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_PROVISIONER=\"${var.provisioner}\"",
@@ -103,6 +104,7 @@ EOF
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 
       "# Run the benchmark",
+      "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
       "${var.remote_project_root}/bin/benchmark.sh",
     ]

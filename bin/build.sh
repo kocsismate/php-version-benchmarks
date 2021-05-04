@@ -1,17 +1,41 @@
 #!/usr/bin/env bash
-set -e
+set -eux
 
-if [[ "$INFRA_PROVISIONER" == "docker" ]]; then
+if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" && "$INFRA_PROVISIONER" == "host" ]]; then
+    $PROJECT_ROOT/build/script/php_deps.sh
+fi
 
-    tag="$INFRA_DOCKER_REPOSITORY:$PHP_ID-latest"
+for php_config in $PROJECT_ROOT/config/php/*.ini; do
+    source "$php_config"
+    export $(cut -d= -f1 $php_config)
+    export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
 
-    cp "$PROJECT_ROOT/.dockerignore" "$PHP_SOURCE_PATH/.dockerignore"
-    docker build -f "$PROJECT_ROOT/Dockerfile" -t "$tag" "$PHP_SOURCE_PATH"
-
-    if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
-        aws ecr-public get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "$INFRA_DOCKER_REGISTRY"
-        docker tag "$tag" "$INFRA_DOCKER_REGISTRY/$tag"
-        docker push "$INFRA_DOCKER_REGISTRY/$tag"
+    if [[ "$1" == "local" || "$INFRA_PROVISIONER" == "host" ]]; then
+        $PROJECT_ROOT/build/script/php_source.sh "$1"
     fi
 
-fi
+    if [[ "$1" == "local" && "$INFRA_PROVISIONER" == "docker" ]]; then
+        tag="$INFRA_DOCKER_REPOSITORY:$PHP_ID-latest"
+
+        cp "$PROJECT_ROOT/.dockerignore" "$PHP_SOURCE_PATH/.dockerignore"
+        docker build -f "$PROJECT_ROOT/Dockerfile" -t "$tag" "$PHP_SOURCE_PATH"
+
+        if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
+            aws ecr-public get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "$INFRA_DOCKER_REGISTRY"
+            docker tag "$tag" "$INFRA_DOCKER_REGISTRY/$tag"
+            docker push "$INFRA_DOCKER_REGISTRY/$tag"
+        fi
+    fi
+
+    if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_PROVISIONER" == "host" ]]; then
+        if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
+            $PROJECT_ROOT/build/script/php_deps.sh
+        fi
+
+        $PROJECT_ROOT/build/script/php_compile.sh
+
+        if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
+            $PROJECT_ROOT/build/script/php_clean.sh
+        fi
+    fi
+done

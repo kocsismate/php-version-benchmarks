@@ -29,13 +29,15 @@ if [[ "$1" == "run" ]]; then
         export $(cut -d= -f1 $infra_config)
 
         for php_config in $PROJECT_ROOT/config/php/*.ini; do
-            source "$php_config"
-            export $(cut -d= -f1 $php_config)
-            export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
-
-            $PROJECT_ROOT/build/script/php_source.sh
-            $PROJECT_ROOT/bin/build.sh
+            $PROJECT_ROOT/bin/build.sh "local"
         done
+    done
+
+    for php_config in $PROJECT_ROOT/config/php/*.ini; do
+        source "$php_config"
+        export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+
+        export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
     done
 
     if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
@@ -55,9 +57,9 @@ if [[ "$1" == "run" ]]; then
 
 elif [[ "$1" == "help" ]]; then
 
-    echo "Usage: ./benchmark.sh run [runner] [runs]"
+    echo "Usage: ./benchmark.sh run [environment] [runs]"
     echo ""
-    echo "Available runners: local-docker, aws-docker, aws-host"
+    echo "Available runners: local, aws"
 
 else
 

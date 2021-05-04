@@ -19,11 +19,11 @@ print_result_value () {
 }
 
 print_result_footer () {
-    #commit="$(git -C "$php_source_path" rev-parse HEAD)"
-    #url="${GIT_REPO//.git/}/commit/$commit"
+    var="PHP_COMMITS_$PHP_ID"
+    commit_hash="${!var}"
+    url="${PHP_REPO//.git/}/commit/$commit_hash"
 
-    #printf "\n##### Generated: $now based on commit [$commit]($url)\n" >> "$result_file_md"
-    printf "\n##### Generated: $now\n" >> "$result_file_md"
+    printf "\n##### Generated: $now based on commit [$commit_hash]($url)\n" >> "$result_file_md"
 }
 
 median () {
@@ -44,17 +44,37 @@ std_deviation () {
 }
 
 run_cgi () {
-    if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
-        run_as=""
-        repository="$INFRA_DOCKER_REPOSITORY"
-    elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
-        run_as="sudo"
-        repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
-    fi
+    if [[ "$INFRA_PROVISIONER" == "host" ]]; then
+        if [ "$PHP_OPCACHE" = "1" ]; then
+            opcache="-d zend_extension=$php_source_path/modules/opcache.so"
+        else
+            opcache=""
+        fi
 
-    $run_as docker run --rm --log-driver=none --env-file "$PHP_CONFIG_FILE" \
-        --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-        "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
+        export REQUEST_URI="$4"
+        export APP_ENV="$5"
+        export APP_DEBUG=false
+        export SESSION_DRIVER=cookie
+        export LOG_LEVEL=warning
+
+        if [ "$1" = "quiet" ]; then
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$4" > /dev/null
+        else
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$4"
+        fi
+    elif [[ "$INFRA_PROVISIONER" == "docker" ]]; then
+        if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
+            run_as=""
+            repository="$INFRA_DOCKER_REPOSITORY"
+        elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
+            run_as="sudo"
+            repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
+        fi
+
+        $run_as docker run --rm --log-driver=none --env-file "$PHP_CONFIG_FILE" \
+            --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
+            "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
+    fi
 }
 
 run_real_benchmark () {

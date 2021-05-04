@@ -46,6 +46,10 @@ variable "local_project_root" {
   type = string
 }
 
+variable "php_commits" {
+  type = string
+}
+
 variable "instance_type" {
   type = string
 }
