@@ -79,7 +79,7 @@ run_cgi () {
 
 run_real_benchmark () {
     echo "---------------------------------------------------------------------------------------"
-    echo "Benchmarking $TEST_NAME: $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "Benchmarking $TEST_NAME: $PHP_NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
@@ -94,7 +94,7 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     echo "---------------------------------------------------------------------------------------"
-    echo "Benchmarking $TEST_NAME : $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+    echo "Benchmarking $TEST_NAME : $PHP_NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
