@@ -83,6 +83,7 @@ run_real_benchmark () {
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
+    run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" > /dev/null 2>&1
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
     done
@@ -98,6 +99,7 @@ run_micro_benchmark () {
     echo "---------------------------------------------------------------------------------------"
 
     # Benchmark
+    run_cgi "quiet" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" > /dev/null 2>&1
     run_cgi "verbose" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
 
     # Calculate
