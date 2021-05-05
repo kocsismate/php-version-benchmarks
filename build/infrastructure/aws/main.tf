@@ -20,10 +20,6 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "template_file" "user_data" {
-  template = file("./cloud_data.yaml")
-}
-
 resource "aws_instance" "host" {
   ami = data.aws_ami.host.image_id
   instance_type = var.instance_type
@@ -32,7 +28,6 @@ resource "aws_instance" "host" {
   availability_zone = data.aws_availability_zones.available.names[0]
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = true
-  user_data = data.template_file.user_data.rendered
   tenancy = var.use_dedicated_instance ? "dedicated" : "default"
   instance_initiated_shutdown_behavior = "terminate"
 
@@ -110,7 +105,12 @@ EOF
       "# Run the benchmark",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
+
+      "# Prepare for tests: stop docker daemon, disable turbo boost",
       "sudo service docker stop",
+      "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done",
+      var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped'",
+
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
   }

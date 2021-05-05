@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-# persistent / runtime deps
 sudo yum update -y
 sudo yum groupinstall -y "Development Tools"
 sudo yum install -y \

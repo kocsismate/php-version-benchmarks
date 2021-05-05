@@ -7,7 +7,7 @@ if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
 fi
 
 disable_turbo_boost="false"
-if [[ "$INFRA_DISABLED_TURBO_BOOST" == "1" ]]; then
+if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
     disable_turbo_boost="true"
 fi
 
