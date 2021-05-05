@@ -6,4 +6,5 @@ region = "eu-central-1"
 dedicated_host_id = ""
 
 image_user = "ec2-user"
+termination_timeout_in_min = 90
 remote_project_root = "/php-benchmark"

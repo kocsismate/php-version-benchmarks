@@ -34,6 +34,7 @@ resource "aws_instance" "host" {
   monitoring = true
   host_id = var.use_dedicated_host ? var.dedicated_host_id : ""
   user_data = data.template_file.user_data.rendered
+  instance_initiated_shutdown_behavior = "terminate"
 
   root_block_device {
     volume_type = "gp2"
@@ -49,7 +50,7 @@ resource "aws_instance" "host" {
     host = aws_instance.host.public_ip
     user = var.image_user
     private_key = file(format("%s/%s", "../config", var.ssh_private_key))
-    timeout = "30m"
+    timeout = "${var.termination_timeout_in_min}m"
     agent = true
   }
 
@@ -70,6 +71,9 @@ EOF
   provisioner "remote-exec" {
     inline = [
       "set -e",
+
+      "# Automatic termination",
+      "echo 'sudo halt' | at now + ${var.termination_timeout_in_min} min",
 
       "# Update permissions",
       "sudo mkdir -p ${var.remote_project_root}",

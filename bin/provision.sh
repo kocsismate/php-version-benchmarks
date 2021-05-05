@@ -23,7 +23,7 @@ elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
         "$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan" || true
 
     if [[ "$N" == "1" ]]; then
-        arg=""
+        arg="-auto-approve"
     else
         arg="-auto-approve"
     fi

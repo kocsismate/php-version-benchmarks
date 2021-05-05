@@ -38,6 +38,10 @@ variable "result_root_dir" {
   type = string
 }
 
+variable "termination_timeout_in_min" {
+  type = number
+}
+
 variable "remote_project_root" {
   type = string
 }
