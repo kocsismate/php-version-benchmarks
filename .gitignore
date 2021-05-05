@@ -2,7 +2,8 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/*
-/config/**/*.ini
+/config/**/*
+!/config/**/*.dist
 /tmp/
 /result/
 !.gitkeep

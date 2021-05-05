@@ -97,6 +97,7 @@ EOF
       "export RESULT_ROOT_DIR=\"${var.result_root_dir}\"",
       "${var.php_commits}",
       "export INFRA_NAME=\"${var.infra_name}\"",
+      "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_PROVISIONER=\"${var.provisioner}\"",
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",

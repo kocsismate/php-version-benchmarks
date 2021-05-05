@@ -160,9 +160,9 @@ for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
     export PHP_CONFIG_FILE
     php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-    log_path="$result_path/$PHP_ID"
-    result_file_tsv="$result_path/$PHP_ID.tsv"
-    result_file_md="$result_path/$PHP_ID.md"
+    log_path="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}"
+    result_file_tsv="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.tsv"
+    result_file_md="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.md"
 
     rm -rf "$log_path"
     mkdir -p "$log_path"
