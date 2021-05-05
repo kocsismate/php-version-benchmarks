@@ -5,6 +5,7 @@ set -e
 sudo yum update -y
 sudo yum groupinstall -y "Development Tools"
 sudo yum install -y \
+    util-linux \
     autoconf \
     file \
     gcc \
