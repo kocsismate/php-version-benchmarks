@@ -60,7 +60,7 @@ run_cgi () {
         if [ "$1" = "quiet" ]; then
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
         else
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
         fi
     elif [[ "$INFRA_PROVISIONER" == "docker" ]]; then
         if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
