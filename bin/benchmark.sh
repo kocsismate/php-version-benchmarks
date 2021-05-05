@@ -4,7 +4,7 @@ set -e
 print_result_header () {
     printf "Benchmark\tMetric\tResult\tStdDev\tDescription\n" >> "$result_file_tsv"
 
-    now="$(date +'%Y-%m-%d %H-%M')"
+    now="$(date +'%Y-%m-%d %H:%M')"
 cat << EOF >> "$result_file_md"
 ### $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)
 
