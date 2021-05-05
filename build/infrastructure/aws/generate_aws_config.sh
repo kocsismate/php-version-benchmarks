@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-use_dedicated_host="false"
-if [[ "$INFRA_DEDICATED_HOST" == "1" ]]; then
-    use_dedicated_host="true"
+use_dedicated_instance="false"
+if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
+    use_dedicated_instance="true"
 fi
 
 disable_turbo_boost="false"
@@ -28,7 +28,7 @@ php_commits = "$php_commits"
 
 instance_type = "$INFRA_INSTANCE_TYPE"
 image_architecture = "$INFRA_ARCHITECTURE"
-use_dedicated_host = $use_dedicated_host
+use_dedicated_instance = $use_dedicated_instance
 disable_turbo_boost = $disable_turbo_boost
 
 infra_name = "$INFRA_NAME"

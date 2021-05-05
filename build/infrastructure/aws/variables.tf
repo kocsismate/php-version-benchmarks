@@ -70,7 +70,7 @@ variable "dedicated_host_id" {
   type = string
 }
 
-variable "use_dedicated_host" {
+variable "use_dedicated_instance" {
   type = bool
 }
 

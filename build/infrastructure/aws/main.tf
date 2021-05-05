@@ -32,8 +32,8 @@ resource "aws_instance" "host" {
   availability_zone = data.aws_availability_zones.available.names[0]
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = true
-  host_id = var.use_dedicated_host ? var.dedicated_host_id : ""
   user_data = data.template_file.user_data.rendered
+  tenancy = var.use_dedicated_instance ? "dedicated" : "default"
   instance_initiated_shutdown_behavior = "terminate"
 
   root_block_device {
