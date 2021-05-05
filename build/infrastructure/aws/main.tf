@@ -91,8 +91,7 @@ EOF
       "sudo yum -y update",
       "sudo yum -y install git curl docker",
 
-      "# Start Docker service",
-      "sudo usermod -a -G docker ${var.image_user}",
+      "sudo usermod -a -G docker ${var.image_user}" ,
       "sudo service docker start",
 
       "# Setup environment",
@@ -111,6 +110,7 @@ EOF
       "# Run the benchmark",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
+      "sudo service docker stop",
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
   }

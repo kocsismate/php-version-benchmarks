@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -e
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" && "$INFRA_PROVISIONER" == "host" ]]; then
     $PROJECT_ROOT/build/script/php_deps.sh
@@ -28,14 +28,6 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
     fi
 
     if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_PROVISIONER" == "host" ]]; then
-        if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
-            $PROJECT_ROOT/build/script/php_deps.sh
-        fi
-
         $PROJECT_ROOT/build/script/php_compile.sh
-
-        if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
-            $PROJECT_ROOT/build/script/php_clean.sh
-        fi
     fi
 done

@@ -51,16 +51,16 @@ run_cgi () {
             opcache=""
         fi
 
-        export REQUEST_URI="$4"
-        export APP_ENV="$5"
+        export REQUEST_URI="$5"
+        export APP_ENV="$6"
         export APP_DEBUG=false
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
 
         if [ "$1" = "quiet" ]; then
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$4" > /dev/null
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
         else
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$4"
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
         fi
     elif [[ "$INFRA_PROVISIONER" == "docker" ]]; then
         if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
@@ -119,27 +119,27 @@ run_benchmark () {
         case "$TEST_ID" in
 
             laravel)
-                run_real_benchmark "/code/app/laravel/public/index.php" "" "production"
+                run_real_benchmark "app/laravel/public/index.php" "" "production"
                 ;;
 
             symfony_main)
-                run_real_benchmark "/code/app/symfony/public/index.php" "/" "prod"
+                run_real_benchmark "app/symfony/public/index.php" "/" "prod"
                 ;;
 
             symfony_blog)
-                run_real_benchmark "/code/app/symfony/public/index.php" "/en/blog/" "prod"
+                run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
                 ;;
 
             bench)
-                run_micro_benchmark "/code/app/zend/bench.php"
+                run_micro_benchmark "app/zend/bench.php"
                 ;;
 
             micro_bench)
-                run_micro_benchmark "/code/app/zend/micro_bench.php"
+                run_micro_benchmark "app/zend/micro_bench.php"
                 ;;
 
             concat)
-                run_micro_benchmark "/code/app/zend/concat.php"
+                run_micro_benchmark "app/zend/concat.php"
                 ;;
 
             *)

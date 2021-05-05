@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+
 cp /code/build/container/php-cgi/custom-php.ini /usr/local/etc/php/conf.d/zz-custom-php.ini
 
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" /usr/local/etc/php/conf.d/zz-custom-php.ini

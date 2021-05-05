@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+laravel_version="8.5.16"
+symfony_version="dev-main"
+
 run_as=""
 if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
     run_as="sudo"
@@ -15,7 +18,7 @@ if [ -z "$(ls -A $PROJECT_ROOT/app/laravel)" ]; then
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
-        composer create-project laravel/laravel laravel 8.5.16 --no-interaction --working-dir=/code/app \
+        composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
 
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \
@@ -31,7 +34,7 @@ if [ -z "$(ls -A $PROJECT_ROOT/app/symfony)" ]; then
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
-        composer create-project symfony/symfony-demo symfony dev-main --no-interaction --working-dir=/code/app
+        composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app
 
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \

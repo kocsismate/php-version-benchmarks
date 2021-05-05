@@ -17,7 +17,7 @@ export SESSION_DRIVER=cookie
 export LOG_LEVEL=warning
 
 if [ "$1" = "quiet" ]; then
-    php-cgi $opcache "-T$2" "$3" > /dev/null
+    php-cgi $opcache "-T$2" "/code/$3" > /dev/null
 else
-    php-cgi $opcache -q "-T$2" "$3"
+    php-cgi $opcache -q "-T$2" "/code/$3"
 fi
