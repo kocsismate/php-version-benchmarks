@@ -6,8 +6,9 @@ mkdir -p "$PHP_SOURCE_PATH"
 if [ "$1" == "local" ]; then
     if [ -z "$(ls -A $PHP_SOURCE_PATH)" ]; then
         git clone "$PHP_REPO" "$PHP_SOURCE_PATH"
+        (cd $PHP_SOURCE_PATH && git checkout "$PHP_BRANCH")
     else
-        echo "Up-to-date"
+        (cd $PHP_SOURCE_PATH && git checkout "$PHP_BRANCH")
         #(cd "$PHP_SOURCE_PATH" && git pull origin "$PHP_BRANCH" --rebase)
     fi
 
