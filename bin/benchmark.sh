@@ -2,28 +2,32 @@
 set -e
 
 print_result_header () {
-    printf "Benchmark\tMetric\tResult\tStdDev\tDescription\n" >> "$result_file_tsv"
+    printf "Benchmark\tMetric\tAverage\tMedian\tStdDev\tDescription\n" >> "$result_file_tsv"
 
-    now="$(date +'%Y-%m-%d %H:%M')"
 cat << EOF >> "$result_file_md"
 ### $PHP_ID (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)
 
-|  Benchmark   |    Metric    |   Median    |    StdDev   | Description |
-|--------------|--------------|-------------|-------------|-------------|
+|  Benchmark   |    Metric    |   Average   |   Median    |    StdDev   | Description |
+|--------------|--------------|-------------|-------------|-------------|-------------|
 EOF
 }
 
 print_result_value () {
-    printf "%s\t%s\t%.4f\t%.4f\t%s\n" "$1" "$2" "$3" "$4" "$5" >> "$result_file_tsv"
-    printf "|%s|%s|%.4f|%.4f|%s|\n" "$1" "$2" "$3" "$4" "$5" >> "$result_file_md"
+    printf "%s\t%s\t%.4f\t%.4f\t%.4f\t%s\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_tsv"
+    printf "|%s|%s|%.4f|%.4f|%.4f|%s|\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_md"
 }
 
 print_result_footer () {
     var="PHP_COMMITS_$PHP_ID"
     commit_hash="${!var}"
     url="${PHP_REPO//.git/}/commit/$commit_hash"
+    now="$(date +'%Y-%m-%d %H:%M')"
 
     printf "\n##### Generated: $now based on commit [$commit_hash]($url)\n" >> "$result_file_md"
+}
+
+average () {
+  echo "$1" | tr -s ' ' '\n' | awk '{sum+=$1}END{print sum/NR}'
 }
 
 median () {
@@ -90,7 +94,7 @@ run_real_benchmark () {
 
     # Collect results
     results="$(grep "Elapsed time" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | cut -c 14- | cut -d ' ' -f 2)"
-    print_result_value "$TEST_NAME" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS requests"
+    print_result_value "$TEST_NAME" "time (sec)" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS requests"
 }
 
 run_micro_benchmark () {
@@ -104,7 +108,7 @@ run_micro_benchmark () {
 
     # Calculate
     results="$(grep "Total" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | tail -n +6 | cut -c 20- | tr -s '\n' ' ')"
-    print_result_value "$TEST_NAME" "time (sec)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs"
+    print_result_value "$TEST_NAME" "time (sec)" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs"
 }
 
 run_benchmark () {
