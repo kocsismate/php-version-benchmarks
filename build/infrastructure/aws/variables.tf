@@ -74,6 +74,10 @@ variable "use_dedicated_instance" {
   type = bool
 }
 
+variable "disable_hyper_threading" {
+  type = bool
+}
+
 variable "disable_turbo_boost" {
   type = bool
 }

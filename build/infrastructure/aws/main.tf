@@ -109,7 +109,7 @@ EOF
 
       "# Prepare for tests: stop docker daemon, disable turbo boost",
       var.provisioner == "host" ? "sudo service docker stop" : "echo 'skipped'",
-      "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done",
+      var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped'",
       var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped'",
 
       "${var.remote_project_root}/bin/benchmark.sh",

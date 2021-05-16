@@ -7,6 +7,11 @@ if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
 fi
 
 disable_turbo_boost="false"
+if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
+    disable_hyper_threading="true"
+fi
+
+disable_turbo_boost="false"
 if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
     disable_turbo_boost="true"
 fi
@@ -29,6 +34,7 @@ php_commits = "$php_commits"
 instance_type = "$INFRA_INSTANCE_TYPE"
 image_architecture = "$INFRA_ARCHITECTURE"
 use_dedicated_instance = $use_dedicated_instance
+disable_hyper_threading = $disable_hyper_threading
 disable_turbo_boost = $disable_turbo_boost
 
 infra_name = "$INFRA_NAME"
