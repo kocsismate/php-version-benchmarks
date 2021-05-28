@@ -6,7 +6,7 @@ if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
     use_dedicated_instance="true"
 fi
 
-disable_turbo_boost="false"
+disable_hyper_threading="false"
 if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
     disable_hyper_threading="true"
 fi
