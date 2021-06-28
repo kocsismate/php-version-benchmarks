@@ -13,8 +13,8 @@ EOF
 }
 
 print_result_value () {
-    printf "%s\t%s\t%.4f\t%.4f\t%.4f\t%s\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_tsv"
-    printf "|%s|%s|%.4f|%.4f|%.4f|%s|\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_md"
+    printf "%s\t%s\t%.5f\t%.5f\t%.5f\t%s\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_tsv"
+    printf "|%s|%s|%.5f|%.5f|%.5f|%s|\n" "$1" "$2" "$3" "$4" "$5" "$6" >> "$result_file_md"
 }
 
 print_result_footer () {
@@ -38,7 +38,7 @@ median () {
   else
     (( j=nel/2 ))
     (( k=j-1 ))
-    val=$(echo "scale=4;(${arr[j]}" + "${arr[k]})"/2|bc -l)
+    val=$(echo "scale=6;(${arr[j]}" + "${arr[k]})/2"|bc -l)
   fi
   echo $val
 }
