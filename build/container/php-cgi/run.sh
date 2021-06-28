@@ -10,6 +10,8 @@ else
     opcache=""
 fi
 
+export CONTENT_TYPE="text/html; charset=utf-8"
+export SCRIPT_FILENAME="/code/$3"
 export REQUEST_URI="$4"
 export APP_ENV="$5"
 export APP_DEBUG=false
