@@ -2,7 +2,7 @@
 set -e
 
 laravel_version="8.5.16"
-symfony_version="dev-main"
+symfony_version="1.7.1"
 
 run_as=""
 if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
