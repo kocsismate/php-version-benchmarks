@@ -92,8 +92,14 @@ run_real_benchmark () {
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
     done
 
+    # Format log
+    sed -i".original" "/^[[:space:]]*$/d" "$log_path/${TEST_NUMBER}_$TEST_ID.log"
+    sed -i".original" "s/Elapsed time\: //g" "$log_path/${TEST_NUMBER}_$TEST_ID.log"
+    sed -i".original" "s/ sec//g" "$log_path/${TEST_NUMBER}_$TEST_ID.log"
+    rm "$log_path/${TEST_NUMBER}_$TEST_ID.log.original"
+
     # Collect results
-    results="$(grep "Elapsed time" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | cut -c 14- | cut -d ' ' -f 2)"
+    results="$(cat "$log_path/${TEST_NUMBER}_$TEST_ID.log")"
     print_result_value "$TEST_NAME" "time (sec)" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS requests"
 }
 
@@ -106,8 +112,14 @@ run_micro_benchmark () {
     run_cgi "quiet" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" > /dev/null 2>&1
     run_cgi "verbose" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_path/${TEST_NUMBER}_$TEST_ID.log"
 
+    # Format log
+    results="$(grep "Total" "$log_path/${TEST_NUMBER}_$TEST_ID.log")"
+    echo "$results" > "$log_path/${TEST_NUMBER}_$TEST_ID.log"
+    sed -i".original" "s/Total              //g" "$log_path/${TEST_NUMBER}_$TEST_ID.log"
+    rm "$log_path/${TEST_NUMBER}_$TEST_ID.log.original"
+
     # Calculate
-    results="$(grep "Total" "$log_path/${TEST_NUMBER}_$TEST_ID.log" | tail -n +6 | cut -c 20- | tr -s '\n' ' ')"
+    results="$(cat "$log_path/${TEST_NUMBER}_$TEST_ID.log")"
     print_result_value "$TEST_NAME" "time (sec)" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs"
 }
 
