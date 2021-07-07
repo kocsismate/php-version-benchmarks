@@ -48,6 +48,8 @@ std_deviation () {
 }
 
 run_cgi () {
+    sleep 0.25
+
     if [[ "$INFRA_PROVISIONER" == "host" ]]; then
         if [ "$PHP_OPCACHE" = "1" ]; then
             opcache="-d zend_extension=$php_source_path/modules/opcache.so"
