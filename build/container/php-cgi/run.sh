@@ -17,6 +17,9 @@ export APP_ENV="$5"
 export APP_DEBUG=false
 export SESSION_DRIVER=cookie
 export LOG_LEVEL=warning
+export DB_CONNECTION=sqlite
+export LOG_CHANNEL=stderr
+export BROADCAST_DRIVER=null
 
 if [ "$1" = "quiet" ]; then
     php-cgi $opcache "-T$2" "/code/$3" > /dev/null
