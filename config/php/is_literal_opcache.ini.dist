@@ -2,7 +2,7 @@ PHP_NAME="is_literal"
 PHP_ID=is_literal
 
 PHP_REPO=https://github.com/krakjoe/php-src.git
-PHP_BRANCH=is_literal
+PHP_BRANCH=literals
 PHP_COMMIT=
 
 PHP_OPCACHE=1
