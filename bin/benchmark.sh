@@ -188,7 +188,7 @@ run_benchmark () {
 
         run_test
 
-        if [ "$TEST_NUMBER" = "$ALL_TESTS" ]; then
+        if [ "$TEST_NUMBER" = "$TEST_COUNT" ]; then
             print_result_footer
         fi
     done
@@ -198,7 +198,7 @@ run_benchmark () {
 result_path="$PROJECT_ROOT/result/$RESULT_ROOT_DIR/$RUN"
 
 TEST_NUMBER=0
-ALL_TESTS=$(ls ./config/test/*.ini | wc -l)
+TEST_COUNT=$(ls 2>/dev/null -Ubad1 -- ./config/test/*.ini | wc -l)
 
 for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
