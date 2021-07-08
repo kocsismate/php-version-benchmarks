@@ -127,72 +127,84 @@ run_micro_benchmark () {
     print_result_value "$TEST_NAME" "time (sec)" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$TEST_ITERATIONS consecutive runs"
 }
 
+run_test () {
+
+    case "$TEST_ID" in
+
+        laravel)
+            run_real_benchmark "app/laravel/public/index.php" "" "production"
+            ;;
+
+        symfony_main)
+            run_real_benchmark "app/symfony/public/index.php" "/" "prod"
+            ;;
+
+        symfony_blog)
+            run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
+            ;;
+
+        bench)
+            run_micro_benchmark "app/zend/bench.php"
+            ;;
+
+        micro_bench)
+            run_micro_benchmark "app/zend/micro_bench.php"
+            ;;
+
+        concat)
+            run_micro_benchmark "app/zend/concat.php"
+            ;;
+
+        *)
+            echo "Invalid test ID!"
+            ;;
+    esac
+
+}
+
 run_benchmark () {
 
-    sleep 4
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        source $PHP_CONFIG_FILE
+        export PHP_CONFIG_FILE
+        php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-    print_result_header
+        log_path="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}"
+        result_file_tsv="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.tsv"
+        result_file_md="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.md"
 
-    TEST_NUMBER=0
-    for test_config in $PROJECT_ROOT/config/test/*.ini; do
-        source $test_config
-        ((TEST_NUMBER=TEST_NUMBER+1))
+        mkdir -p "$log_path"
 
-        case "$TEST_ID" in
+        touch "$result_file_tsv"
+        touch "$result_file_md"
 
-            laravel)
-                run_real_benchmark "app/laravel/public/index.php" "" "production"
-                ;;
+        echo "---------------------------------------------------------------------------------------"
+        echo "$RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
+        echo "---------------------------------------------------------------------------------------"
 
-            symfony_main)
-                run_real_benchmark "app/symfony/public/index.php" "/" "prod"
-                ;;
+        if [ "$TEST_NUMBER" = "1" ]; then
+            print_result_header
+        fi
 
-            symfony_blog)
-                run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
-                ;;
+        run_test
 
-            bench)
-                run_micro_benchmark "app/zend/bench.php"
-                ;;
-
-            micro_bench)
-                run_micro_benchmark "app/zend/micro_bench.php"
-                ;;
-
-            concat)
-                run_micro_benchmark "app/zend/concat.php"
-                ;;
-
-            *)
-                echo "Invalid test ID!"
-                ;;
-        esac
+        if [ "$TEST_NUMBER" = "$ALL_TESTS" ]; then
+            print_result_footer
+        fi
     done
 
-    print_result_footer
 }
 
 result_path="$PROJECT_ROOT/result/$RESULT_ROOT_DIR/$RUN"
 
-for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-    source $PHP_CONFIG_FILE
-    export PHP_CONFIG_FILE
-    php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
+TEST_NUMBER=0
+ALL_TESTS=$(ls ./config/test/*.ini | wc -l)
 
-    log_path="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}"
-    result_file_tsv="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.tsv"
-    result_file_md="$result_path/${PHP_ID}_${INFRA_ARCHITECTURE}.md"
+for test_config in $PROJECT_ROOT/config/test/*.ini; do
+    source $test_config
+    ((TEST_NUMBER=TEST_NUMBER+1))
 
-    rm -rf "$log_path"
-    mkdir -p "$log_path"
-
-    touch "$result_file_tsv"
-    touch "$result_file_md"
-
-    echo "---------------------------------------------------------------------------------------"
-    echo "$RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, preloading: $PHP_PRELOADING, JIT: $PHP_JIT)"
-    echo "---------------------------------------------------------------------------------------"
-
+    sleep 3
     run_benchmark
+
 done
