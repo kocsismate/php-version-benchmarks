@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
+min () {
+  echo "$1" | awk 'BEGIN{a=999999}{if ($1<0+a) a=$1}END{print a}'
+}
+
+max () {
+  echo "$1" | awk 'BEGIN{a=0}{if ($1>0+a) a=$1}END{print a}'
+}
+
 average () {
-  echo "$1" | tr -s ' ' '\n' | awk '{sum+=$1}END{print sum/NR}'
+  echo "$1" | awk '{sum+=$1}END{print sum/NR}'
 }
 
 median () {
@@ -19,11 +27,11 @@ median () {
 }
 
 std_deviation () {
-    echo "$1" | tr -s ' ' '\n' | awk '{sum+=$1; sumsq+=$1*$1}END{print sqrt(sumsq/NR - (sum/NR)**2)}'
+    echo "$1" | awk '{sum+=$1; sumsq+=$1*$1}END{print sqrt(sumsq/NR - (sum/NR)**2)}'
 }
 
 print_result_header () {
-    printf "Benchmark\tAverage\tMedian\tStdDev\tCommit\n" >> "$1.tsv"
+    printf "Benchmark\tMin\tMax\tAverage\tMedian\tStdDev\tCommit\n" >> "$1.tsv"
 
     description="$TEST_ITERATIONS consecutive runs"
     if [ ! -z "$TEST_REQUESTS" ]; then
@@ -33,8 +41,8 @@ print_result_header () {
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $INFRA_NAME - $description (sec)
 
-|  PHP         |   Average   |   Median    |    StdDev   | Commit      |
-|--------------|-------------|-------------|-------------|-------------|
+|  PHP         |   Min       |   Max       |   Average   |   Median    |    StdDev   | Commit      |
+|--------------|-------------|-------------|-------------|-------------|-------------|-------------|
 EOF
 }
 
@@ -45,8 +53,8 @@ print_result_value () {
 
     results="$(cat "$1")"
 
-    printf "%s\t%.5f\t%.5f\t%.5f\t%s\n" "$PHP_NAME" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "$url" >> "$2.tsv"
-    printf "|%s|%.5f|%.5f|%.5f|%s|\n" "$PHP_NAME" "$(average $results)" "$(median $results)" "$(std_deviation "$results")" "[$commit_hash]($url)" >> "$2.md"
+    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%s\n" "$PHP_NAME" "$(min "$results")" "$(max "$results")" "$(average "$results")" "$(median $results)" "$(std_deviation "$results")" "$url" >> "$2.tsv"
+    printf "|%s|%.5f|%.5f|%.5f|%.5f|%.5f|%s|\n"     "$PHP_NAME" "$(min "$results")" "$(max "$results")" "$(average "$results")" "$(median $results)" "$(std_deviation "$results")" "[$commit_hash]($url)" >> "$2.md"
 }
 
 print_result_footer () {
