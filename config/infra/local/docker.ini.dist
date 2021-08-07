@@ -1,3 +1,4 @@
+INFRA_ID=local_x86_64
 INFRA_NAME=local
 
 INFRA_PROVISIONER=docker

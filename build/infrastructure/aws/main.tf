@@ -54,7 +54,9 @@ resource "aws_instance" "host" {
       set -e
 
       cd ${var.local_project_root}
-      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/zend/ ./bin ./build ./config .dockerignore Dockerfile
+      mkdir -p "./result/${var.result_root_dir}"
+
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/zend/ ./bin ./build ./config ./result/${var.result_root_dir} .dockerignore Dockerfile
 EOF
   }
 
@@ -96,6 +98,7 @@ EOF
       "export NOW=\"${var.now}\"",
       "export RESULT_ROOT_DIR=\"${var.result_root_dir}\"",
       "${var.php_commits}",
+      "export INFRA_ID=\"${var.infra_id}\"",
       "export INFRA_NAME=\"${var.infra_name}\"",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
@@ -122,8 +125,7 @@ EOF
 
       ssh-keyscan -H "${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
 
-      mkdir -p "${var.local_project_root}/result/${var.result_root_dir}/${var.run}"
-      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/result/${var.result_root_dir}/${var.run}" "${var.local_project_root}/result/${var.result_root_dir}"
+      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/result/${var.result_root_dir}/" "${var.local_project_root}/result/${var.result_root_dir}"
     EOP
   }
 }

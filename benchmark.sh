@@ -21,6 +21,10 @@ if [[ "$1" == "run" ]]; then
     RESULT_ROOT_DIR="${NOW//-/_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR// /_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR//:/_}"
+    RESULT_ROOT_DIR="${RESULT_ROOT_DIR}_${INFRA_ENVIRONMENT}"
+    if [ ! -z "$INFRA_ARCHITECTURE" ]; then
+        RESULT_ROOT_DIR="${RESULT_ROOT_DIR}_${INFRA_ARCHITECTURE}"
+    fi
     export RESULT_ROOT_DIR
     export INFRA_ENVIRONMENT
 

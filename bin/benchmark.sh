@@ -183,14 +183,14 @@ run_test () {
 run_benchmark () {
 
     final_result_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}"
-    final_result_file="$final_result_dir/result_${INFRA_ARCHITECTURE}"
+    final_result_file="$final_result_dir/result"
 
     mkdir -p "$final_result_dir"
     touch "$final_result_file.tsv"
     touch "$final_result_file.md"
 
-    result_dir="$final_result_dir/${RUN}"
-    result_file="$result_dir/result_${INFRA_ARCHITECTURE}"
+    result_dir="$final_result_dir/${RUN}_${INFRA_ID}"
+    result_file="$result_dir/result"
 
     mkdir -p "$result_dir"
     touch "$result_file.tsv"
@@ -210,11 +210,11 @@ run_benchmark () {
         php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
         final_log_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}"
-        final_log_file="$final_log_dir/${PHP_ID}_${INFRA_ARCHITECTURE}.log"
+        final_log_file="$final_log_dir/${PHP_ID}.log"
         mkdir -p "$final_log_dir"
 
-        log_dir="$final_log_dir/${RUN}"
-        log_file="$log_dir/${PHP_ID}_${INFRA_ARCHITECTURE}.log"
+        log_dir="$final_log_dir/${RUN}_${INFRA_ID}"
+        log_file="$log_dir/${PHP_ID}.log"
         mkdir -p "$log_dir"
 
         echo "---------------------------------------------------------------------------------------"

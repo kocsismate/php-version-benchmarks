@@ -37,6 +37,7 @@ use_dedicated_instance = $use_dedicated_instance
 disable_hyper_threading = $disable_hyper_threading
 disable_turbo_boost = $disable_turbo_boost
 
+infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
 provisioner = "$INFRA_PROVISIONER"

@@ -82,6 +82,10 @@ variable "disable_turbo_boost" {
   type = bool
 }
 
+variable "infra_id" {
+  type = string
+}
+
 variable "infra_name" {
   type = string
 }

@@ -1,3 +1,4 @@
+INFRA_ID="aws_arm64_c6g_8xlarge"
 INFRA_NAME="AWS ARM64 (c6g.8xlarge)"
 INFRA_INSTANCE_TYPE=c6g.8xlarge
 INFRA_ARCHITECTURE=arm64
