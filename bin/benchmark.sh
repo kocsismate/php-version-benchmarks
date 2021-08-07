@@ -30,8 +30,12 @@ std_deviation () {
     echo "$1" | awk '{sum+=$1; sumsq+=$1*$1}END{print sqrt(sumsq/NR - (sum/NR)**2)}'
 }
 
+diff () {
+  awk -v t1="$1" -v t2="$2" 'BEGIN{print (1-t1/t2) * 100}'
+}
+
 print_result_header () {
-    printf "Benchmark\tMin\tMax\tAverage\tMedian\tStdDev\tCommit\n" >> "$1.tsv"
+    printf "Benchmark\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStdDev\tCommit\n" >> "$1.tsv"
 
     description="$TEST_ITERATIONS consecutive runs"
     if [ ! -z "$TEST_REQUESTS" ]; then
@@ -41,8 +45,8 @@ print_result_header () {
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $INFRA_NAME - $description (sec)
 
-|  PHP         |   Min       |   Max       |   Average   |   Median    |    StdDev   | Commit      |
-|--------------|-------------|-------------|-------------|-------------|-------------|-------------|
+|  PHP         |   Min       |   Max       |    StdDev   |   Average   | Average diff %  |   Median    | Median diff %  | Commit      |
+|--------------|-------------|-------------|-------------|-------------|-----------------|-------------|----------------|-------------|
 EOF
 }
 
@@ -53,8 +57,22 @@ print_result_value () {
 
     results="$(cat "$1")"
 
-    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%s\n" "$PHP_NAME" "$(min "$results")" "$(max "$results")" "$(average "$results")" "$(median $results)" "$(std_deviation "$results")" "$url" >> "$2.tsv"
-    printf "|%s|%.5f|%.5f|%.5f|%.5f|%.5f|%s|\n"     "$PHP_NAME" "$(min "$results")" "$(max "$results")" "$(average "$results")" "$(median $results)" "$(std_deviation "$results")" "[$commit_hash]($url)" >> "$2.md"
+    min="$(min "$results")"
+    max="$(max "$results")"
+    average="$(average "$results")"
+    if [ -z "$first_average" ]; then
+        first_average="$average"
+    fi
+    average_diff="$(diff "$first_average" "$average")"
+    median="$(median $results)"
+    if [ -z "$first_median" ]; then
+        first_median="$median"
+    fi
+    median_diff="$(diff "$first_median" "$median")"
+    std_dev="$(std_deviation "$results")"
+
+    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%s\n" "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$url" >> "$2.tsv"
+    printf "|%s|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%s|\n"   "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "[$commit_hash]($url)" >> "$2.md"
 }
 
 print_result_footer () {
@@ -182,6 +200,9 @@ run_benchmark () {
     if [ "$RUN" -eq "1" ]; then
         print_result_header "$final_result_file"
     fi
+
+    first_average="";
+    first_median="";
 
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         source $PHP_CONFIG_FILE
