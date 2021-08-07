@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-laravel_version="8.5.16"
+laravel_version="8.5.23"
 symfony_version="1.7.1"
 
 run_as=""
