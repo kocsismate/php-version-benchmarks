@@ -120,7 +120,7 @@ run_cgi () {
 
         $run_as docker run --rm --log-driver=none --env-file "$PHP_CONFIG_FILE" \
             --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
+            --cpuset-cpus=0 "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
     fi
 }
 
