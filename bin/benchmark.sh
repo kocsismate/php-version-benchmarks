@@ -144,7 +144,7 @@ run_real_benchmark () {
 run_micro_benchmark () {
     # Benchmark
     run_cgi "quiet" "$TEST_WARMUP" "1" "$1" "" "" > /dev/null 2>&1
-    run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
+    run_cgi "normal" "0" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
 
     # Format log
     results="$(grep "Total" "$log_file")"
