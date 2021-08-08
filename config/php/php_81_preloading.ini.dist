@@ -1,5 +1,6 @@
 PHP_NAME="PHP 8.1 (preloading)"
 PHP_ID=php_81_preloading
+PHP_BASE_ID=php_81
 
 PHP_REPO=https://github.com/php/php-src.git
 PHP_BRANCH=master

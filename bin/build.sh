@@ -9,6 +9,11 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
     source "$php_config"
     export $(cut -d= -f1 $php_config)
     export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+    if [ -z "$PHP_BASE_ID" ]; then
+        export PHP_BASE_SOURCE_PATH=""
+    else
+        export PHP_BASE_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
+    fi
 
     if [[ "$1" == "local" || "$INFRA_PROVISIONER" == "host" ]]; then
         $PROJECT_ROOT/build/script/php_source.sh "$1"

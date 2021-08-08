@@ -1,5 +1,6 @@
 PHP_NAME="PHP 8.1 (JIT)"
 PHP_ID=php_81_jit
+PHP_BASE_ID=php_81
 
 PHP_REPO=https://github.com/php/php-src.git
 PHP_BRANCH=master
