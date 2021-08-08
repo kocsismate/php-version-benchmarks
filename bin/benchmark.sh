@@ -129,7 +129,7 @@ run_cgi () {
 
 run_real_benchmark () {
     # Benchmark
-    run_cgi "verbose" "$TEST_WARMUP" "1" "$1" "$2" "$3" 2>&1
+    run_cgi "verbose" "1" "1" "$1" "$2" "$3"
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
@@ -143,13 +143,13 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     # Benchmark
-    run_cgi "quiet" "$TEST_WARMUP" "1" "$1" "" "" > /dev/null 2>&1
-    run_cgi "normal" "0" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
+    run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
 
     # Format log
     results="$(grep "Total" "$log_file")"
     echo "$results" > "$log_file"
     sed -i".original" "s/Total              //g" "$log_file"
+    sed -i".original" -e "1,${TEST_WARMUP}d" "$log_file"
     rm "$log_file.original"
 }
 
