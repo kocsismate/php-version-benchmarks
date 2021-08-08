@@ -35,7 +35,7 @@ diff () {
 }
 
 print_result_header () {
-    printf "Benchmark\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStdDev\tCommit hash\nCommit URL\n" >> "$1.tsv"
+    printf "Benchmark\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\nCommit URL\n" >> "$1.tsv"
 
     description="$TEST_ITERATIONS consecutive runs"
     if [ ! -z "$TEST_REQUESTS" ]; then
@@ -45,8 +45,8 @@ print_result_header () {
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $INFRA_NAME - $description (sec)
 
-|  PHP         |   Min       |   Max       |    StdDev   |   Average   | Average diff %  |   Median    | Median diff %  | Commit      |
-|--------------|-------------|-------------|-------------|-------------|-----------------|-------------|----------------|-------------|
+|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |   Commit    |
+|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|-------------|
 EOF
 }
 
@@ -98,6 +98,9 @@ run_cgi () {
         export APP_DEBUG=false
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
+        export DB_CONNECTION=sqlite
+        export LOG_CHANNEL=stderr
+        export BROADCAST_DRIVER=null
 
         cpu_count="$(nproc)"
         last_cpu="$((cpu_count-1))"
@@ -140,8 +143,8 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     # Benchmark
-    run_cgi "quiet" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" > /dev/null 2>&1
-    run_cgi "verbose" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
+    run_cgi "quiet" "$TEST_WARMUP" "1" "$1" "" "" > /dev/null 2>&1
+    run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
 
     # Format log
     results="$(grep "Total" "$log_file")"

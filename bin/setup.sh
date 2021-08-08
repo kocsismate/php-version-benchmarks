@@ -11,7 +11,6 @@ fi
 
 mkdir -p "$PROJECT_ROOT/app/symfony"
 mkdir -p "$PROJECT_ROOT/app/laravel"
-mkdir -p "$PROJECT_ROOT/app/wordpress"
 
 # Install Laravel demo app
 if [ -z "$(ls -A $PROJECT_ROOT/app/laravel)" ]; then
