@@ -95,7 +95,7 @@ run_cgi () {
         export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
         export REQUEST_URI="$5"
         export APP_ENV="$6"
-        export APP_DEBUG=false
+        export APP_DEBUG=true
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
         export DB_CONNECTION=sqlite
@@ -129,7 +129,7 @@ run_cgi () {
 
 run_real_benchmark () {
     # Benchmark
-    run_cgi "verbose" "1" "1" "$1" "$2" "$3"
+    run_cgi "verbose" "0" "1" "$1" "$2" "$3"
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
