@@ -11,6 +11,11 @@ if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
     disable_hyper_threading="true"
 fi
 
+disable_deeper_c_states="false"
+if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
+    disable_deeper_c_states="true"
+fi
+
 disable_turbo_boost="false"
 if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
     disable_turbo_boost="true"
@@ -34,6 +39,7 @@ php_commits = "$php_commits"
 instance_type = "$INFRA_INSTANCE_TYPE"
 image_architecture = "$INFRA_ARCHITECTURE"
 use_dedicated_instance = $use_dedicated_instance
+disable_deeper_c_states = $disable_deeper_c_states
 disable_hyper_threading = $disable_hyper_threading
 disable_turbo_boost = $disable_turbo_boost
 

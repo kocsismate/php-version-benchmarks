@@ -78,6 +78,10 @@ variable "disable_hyper_threading" {
   type = bool
 }
 
+variable "disable_deeper_c_states" {
+  type = bool
+}
+
 variable "disable_turbo_boost" {
   type = bool
 }

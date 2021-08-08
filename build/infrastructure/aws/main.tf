@@ -29,7 +29,7 @@ resource "aws_instance" "host" {
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = true
   tenancy = var.use_dedicated_instance ? "dedicated" : "default"
-  instance_initiated_shutdown_behavior = "terminate"
+  instance_initiated_shutdown_behavior = "stop"
 
   root_block_device {
     volume_type = "gp2"
@@ -110,7 +110,38 @@ EOF
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
 
-      "# Prepare for tests: stop docker daemon, disable turbo boost",
+      var.disable_deeper_c_states ? "sudo sed -i 's/rd\\.shell=0\"/rd.shell=0 intel_idle.max_cstate=1\"/' /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg" : "echo 'skipped disabling deeper C states'",
+    ]
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "set -e",
+
+      var.disable_deeper_c_states ? "sudo reboot&" : "echo ''"
+    ]
+    on_failure = continue
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "set -e",
+
+      "# Setup environment",
+      "export PROJECT_ROOT=\"${var.remote_project_root}\"",
+      "export N=\"${var.runs}\"",
+      "export RUN=\"${var.run}\"",
+      "export NOW=\"${var.now}\"",
+      "export RESULT_ROOT_DIR=\"${var.result_root_dir}\"",
+      "${var.php_commits}",
+      "export INFRA_ID=\"${var.infra_id}\"",
+      "export INFRA_NAME=\"${var.infra_name}\"",
+      "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
+      "export INFRA_ENVIRONMENT=\"${var.environment}\"",
+      "export INFRA_PROVISIONER=\"${var.provisioner}\"",
+      "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
+      "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
+
       var.provisioner == "host" ? "sudo service docker stop" : "echo 'skipped stopping docker service'",
       var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped disabling hyper threading'",
       var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped disabling turbo boost'",
