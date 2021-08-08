@@ -41,7 +41,7 @@ cp "$PROJECT_ROOT/build/container/php-cgi/custom-php.ini" "$PHP_SOURCE_PATH/conf
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 if [ "$PHP_PRELOADING" = "1" ]; then
-    sed -i "s/PRELOAD_SCRIPT/\/code\/app\/preload\.php/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+    sed -i "s#PRELOAD_SCRIPT#$PROJECT_ROOT/app/preload.php#g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 else
     sed -i "s/PRELOAD_SCRIPT/\"\"/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 fi
