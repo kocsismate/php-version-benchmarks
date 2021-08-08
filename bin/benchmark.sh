@@ -99,10 +99,15 @@ run_cgi () {
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
 
+        cpu_count="$(nproc)"
+        last_cpu="$((cpu_count-1))"
+
         if [ "$1" = "quiet" ]; then
-            taskset 4 $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+            taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+        elif [ "$1" = "verbose" ]; then
+            taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
         else
-            taskset 4 $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
+            taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
         fi
     elif [[ "$INFRA_PROVISIONER" == "docker" ]]; then
         if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
@@ -121,7 +126,7 @@ run_cgi () {
 
 run_real_benchmark () {
     # Benchmark
-    run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" > /dev/null 2>&1
+    run_cgi "verbose" "$TEST_WARMUP" "1" "$1" "$2" "$3" 2>&1
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done

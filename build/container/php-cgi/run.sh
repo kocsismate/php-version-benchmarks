@@ -23,6 +23,8 @@ export BROADCAST_DRIVER=null
 
 if [ "$1" = "quiet" ]; then
     php-cgi $opcache "-T$2" "/code/$3" > /dev/null
+elif [ "$1" = "verbose" ]; then
+    php-cgi $opcache "-T$2" "/code/$3"
 else
     php-cgi $opcache -q "-T$2" "/code/$3"
 fi
