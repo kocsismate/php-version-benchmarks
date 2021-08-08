@@ -177,10 +177,6 @@ run_test () {
             run_micro_benchmark "app/zend/micro_bench.php"
             ;;
 
-        concat)
-            run_micro_benchmark "app/zend/concat.php"
-            ;;
-
         *)
             echo "Invalid test ID!"
             ;;
