@@ -1,0 +1,10 @@
+PHP_NAME="PHP 8.1 (preloading)"
+PHP_ID=php_81_preloading
+
+PHP_REPO=https://github.com/php/php-src.git
+PHP_BRANCH=master
+PHP_COMMIT=
+
+PHP_OPCACHE=1
+PHP_PRELOADING=1
+PHP_JIT=0

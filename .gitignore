@@ -2,7 +2,7 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/*
-/config/**/*
+/config/**/*.*
 !/config/**/*.dist
 /tmp/
 /result/

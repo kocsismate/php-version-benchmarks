@@ -1,0 +1,10 @@
+PHP_NAME="PHP 8.1 (JIT)"
+PHP_ID=php_81_jit
+
+PHP_REPO=https://github.com/php/php-src.git
+PHP_BRANCH=master
+PHP_COMMIT=
+
+PHP_OPCACHE=1
+PHP_PRELOADING=0
+PHP_JIT=1
