@@ -125,7 +125,7 @@ EOF
 
       ssh-keyscan -H "${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
 
-      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/result/${var.result_root_dir}/" "${var.local_project_root}/result/${var.result_root_dir}"
+      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/result/${var.result_root_dir}/*" "${var.local_project_root}/result/${var.result_root_dir}/"
     EOP
   }
 }
