@@ -30,8 +30,7 @@ cd "$PHP_SOURCE_PATH"
     --with-libedit \
     --with-openssl \
     --with-zlib \
-    --enable-cgi \
-    --with-pear
+    --enable-cgi
 
 make -j "$(nproc)"
 
