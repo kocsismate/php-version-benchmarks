@@ -130,6 +130,7 @@ run_cgi () {
 run_real_benchmark () {
     # Benchmark
     run_cgi "verbose" "0" "1" "$1" "$2" "$3"
+    run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" > /dev/null 2>&1
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
