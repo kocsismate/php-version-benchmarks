@@ -5,5 +5,5 @@ ssh_private_key = "ec2.pem"
 region = "eu-central-1"
 
 image_user = "ec2-user"
-termination_timeout_in_min = 90
+termination_timeout_in_min = 60
 remote_project_root = "/php-benchmark"
