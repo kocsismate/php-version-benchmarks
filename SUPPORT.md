@@ -1,3 +1,3 @@
 # Support
 
-If you need support, please ask your questions on [Gitter](https://gitter.im/kocsismate/php-version-benchmarks).
+If you need support, please create an issue.
