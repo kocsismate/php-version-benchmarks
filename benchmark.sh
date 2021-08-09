@@ -39,7 +39,11 @@ if [[ "$1" == "run" ]]; then
 
     for php_config in $PROJECT_ROOT/config/php/*.ini; do
         source "$php_config"
-        export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+        if [ -z "$PHP_BASE_ID" ]; then
+            export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+        else
+            export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
+        fi
 
         export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
     done
