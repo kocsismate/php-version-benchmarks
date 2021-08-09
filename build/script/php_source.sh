@@ -10,7 +10,7 @@ if [ "$1" == "local" ]; then
             (cd $PHP_SOURCE_PATH && git checkout "$PHP_BRANCH")
         else
             echo "Creating source ($PHP_SOURCE_PATH) from base source ($PHP_BASE_SOURCE_PATH)"
-            cp -r "$PHP_BASE_SOURCE_PATH/*" "$PHP_SOURCE_PATH"
+            cp -r "$PHP_BASE_SOURCE_PATH/" "$PHP_SOURCE_PATH"
         fi
     else
         (cd $PHP_SOURCE_PATH && git checkout "$PHP_BRANCH")
