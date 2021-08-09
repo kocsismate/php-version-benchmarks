@@ -43,11 +43,33 @@ print_result_header () {
     fi
 
 cat << EOF >> "$1.md"
-### $TEST_NAME - $INFRA_NAME - $description (sec)
+### $TEST_NAME - $description (sec)
 
 |     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
 |-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|
 EOF
+}
+
+print_environment () {
+    printf "ID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\n" > "$1.tsv"
+
+cat << EOF > "$1.md"
+### $INFRA_NAME
+
+|  Attribute  |     Value   |
+|-------------|-------------|
+EOF
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n" \
+        "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$INFRA_ARCHITECTURE" \
+        "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" >> "$1.tsv"
+    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s|\n|Dedicated instance|%d|\n|Disabled deeper C-states|%d|\n|Disabled turbo boost|%d|\n|Disabled hyper-threading|%d|\n" \
+        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$INFRA_ARCHITECTURE" \
+        "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" >> "$1.md"
+
+    now="$(date +'%Y-%m-%d %H:%M')"
+
+    printf "\n##### Generated: $now\n" >> "$1.md"
 }
 
 print_result_value () {
@@ -200,6 +222,8 @@ run_benchmark () {
     mkdir -p "$result_dir"
     touch "$result_file.tsv"
     touch "$result_file.md"
+
+    print_environment "$result_dir/environment"
 
     print_result_header "$result_file"
     if [ "$RUN" -eq "1" ]; then
