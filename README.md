@@ -41,7 +41,8 @@ are bundled with the benchmark (having `.ini.dist` extension in their names). Fe
 
 ### Usage with Docker
 
-*As a prerequisite, you need the following:
+As a prerequisite, you need the following:
+
 - a UNIX system (Linux, Mac)
 - git
 - a recent version of Docker
@@ -54,12 +55,13 @@ Run the following command to execute the benchmark suite locally:
 
 ### Usage on AWS EC2
 
-*As a prerequisite, you need the following:
+As a prerequisite, you need the following:
+
 - a UNIX system (Linux, Mac)
 - git
 - [Terraform](https://www.terraform.io)
 
-Then you have to create the necessary config file by copying the `aws.tfvars.dist` to `aws.tfvars` in the
+Then you have to create the necessary AWS-related config file by copying the `aws.tfvars.dist` to `aws.tfvars` in the
 `build/infrastructure/config/aws.tfvars.dist` directory:
 
 ```bash
