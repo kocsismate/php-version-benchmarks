@@ -45,8 +45,8 @@ print_result_header () {
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $INFRA_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |   Commit    |
-|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|-------------|
+|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
+|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|
 EOF
 }
 
@@ -72,7 +72,7 @@ print_result_value () {
     std_dev="$(std_deviation "$results")"
 
     printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%s\t%s\n" "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$commit_hash" "$url" >> "$2.tsv"
-    printf "|%s|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%s|\n"   "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "[$commit_hash]($url)" >> "$2.md"
+    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n"  "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
 }
 
 print_result_footer () {
