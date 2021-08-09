@@ -3,7 +3,6 @@ secret_key = ""
 ssh_key_name = "ec2"
 ssh_private_key = "ec2.pem"
 region = "eu-central-1"
-dedicated_host_id = ""
 
 image_user = "ec2-user"
 termination_timeout_in_min = 90

@@ -66,10 +66,6 @@ variable "image_user" {
   type = string
 }
 
-variable "dedicated_host_id" {
-  type = string
-}
-
 variable "use_dedicated_instance" {
   type = bool
 }
