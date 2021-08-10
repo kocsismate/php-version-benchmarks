@@ -35,7 +35,7 @@ diff () {
 }
 
 print_result_header () {
-    printf "Benchmark\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\nCommit URL\n" >> "$1.tsv"
+    printf "PHP\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\tCommit URL\tWarmup\tIterations\tRequests\n" >> "$1.tsv"
 
     description="$TEST_ITERATIONS consecutive runs"
     if [ ! -z "$TEST_REQUESTS" ]; then
@@ -125,8 +125,11 @@ print_result_value () {
     median_diff="$(diff "$first_median" "$median")"
     std_dev="$(std_deviation "$results")"
 
-    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%s\t%s\n" "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$commit_hash" "$url" >> "$2.tsv"
-    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n"  "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
+    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%s\t%s\t%d\t%d\t%d\n" \
+        "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" \
+        "$commit_hash" "$url" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" >> "$2.tsv"
+    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n" \
+        "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
 }
 
 print_result_footer () {
