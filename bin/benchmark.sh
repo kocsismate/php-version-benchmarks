@@ -34,22 +34,6 @@ diff () {
   awk -v t1="$1" -v t2="$2" 'BEGIN{print (1-t1/t2) * 100}'
 }
 
-print_result_header () {
-    printf "PHP\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\tCommit URL\tWarmup\tIterations\tRequests\n" >> "$1.tsv"
-
-    description="$TEST_ITERATIONS consecutive runs"
-    if [ ! -z "$TEST_REQUESTS" ]; then
-        description="$description, $TEST_REQUESTS requests"
-    fi
-
-cat << EOF >> "$1.md"
-### $TEST_NAME - $description (sec)
-
-|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
-|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|
-EOF
-}
-
 print_environment () {
     printf "ID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tCPU\tCPU Cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
 
@@ -102,6 +86,22 @@ EOF
         "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
         "$NOW" >> "$1.md"
+}
+
+print_result_header () {
+    printf "PHP\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\tCommit URL\tWarmup\tIterations\tRequests\n" >> "$1.tsv"
+
+    description="$TEST_ITERATIONS consecutive runs"
+    if [ ! -z "$TEST_REQUESTS" ]; then
+        description="$description, $TEST_REQUESTS requests"
+    fi
+
+cat << EOF >> "$1.md"
+### $TEST_NAME - $description (sec)
+
+|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
+|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|
+EOF
 }
 
 print_result_value () {
