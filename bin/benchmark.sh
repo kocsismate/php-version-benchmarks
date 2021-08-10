@@ -241,14 +241,7 @@ run_test () {
 
 run_benchmark () {
 
-    final_result_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}"
-    final_result_file="$final_result_dir/result"
-
-    mkdir -p "$final_result_dir"
-    touch "$final_result_file.tsv"
-    touch "$final_result_file.md"
-
-    result_dir="$final_result_dir/${RUN}_${INFRA_ID}"
+    result_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}/${RUN}_${INFRA_ID}"
     result_file="$result_dir/result"
 
     mkdir -p "$result_dir"
@@ -258,9 +251,6 @@ run_benchmark () {
     print_environment "$result_dir/environment"
 
     print_result_header "$result_file"
-    if [ "$RUN" -eq "1" ]; then
-        print_result_header "$final_result_file"
-    fi
 
     first_average="";
     first_median="";
@@ -270,11 +260,7 @@ run_benchmark () {
         export PHP_CONFIG_FILE
         php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-        final_log_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}"
-        final_log_file="$final_log_dir/${PHP_ID}.log"
-        mkdir -p "$final_log_dir"
-
-        log_dir="$final_log_dir/${RUN}_${INFRA_ID}"
+        log_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}/${RUN}_${INFRA_ID}"
         log_file="$log_dir/${PHP_ID}.log"
         mkdir -p "$log_dir"
 
@@ -284,18 +270,10 @@ run_benchmark () {
 
         run_test
 
-        cat "$log_file" >> "$final_log_file"
-
         print_result_value "$log_file" "$result_file"
-        if [ "$RUN" -eq "$N" ]; then
-            print_result_value "$final_log_file" "$final_result_file"
-        fi
     done
 
     print_result_footer "$result_file"
-    if [ "$RUN" -eq "$N" ]; then
-        print_result_footer "$final_result_file"
-    fi
 
 }
 
