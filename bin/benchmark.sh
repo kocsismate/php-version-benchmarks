@@ -145,7 +145,7 @@ print_result_footer () {
 }
 
 run_cgi () {
-    sleep 0.25
+    sleep 0.1
 
     if [[ "$INFRA_PROVISIONER" == "host" ]]; then
         if [ "$PHP_OPCACHE" = "1" ]; then
@@ -308,7 +308,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
     ((TEST_NUMBER=TEST_NUMBER+1))
 
-    sleep 3
+    sleep 5
     run_benchmark
 
 done
