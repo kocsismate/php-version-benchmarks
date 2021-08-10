@@ -51,7 +51,7 @@ EOF
 }
 
 print_environment () {
-    printf "ID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\n" > "$1.tsv"
+    printf "ID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tCPU\tCPU Cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -60,16 +60,48 @@ cat << EOF > "$1.md"
 |-------------|-------------|
 EOF
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n" \
-        "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$INFRA_ARCHITECTURE" \
-        "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" >> "$1.tsv"
-    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s|\n|Dedicated instance|%d|\n|Disabled deeper C-states|%d|\n|Disabled turbo boost|%d|\n|Disabled hyper-threading|%d|\n" \
-        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$INFRA_ARCHITECTURE" \
-        "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" >> "$1.md"
+    architecture="$(uname -m)"
+    kernel="$(uname -r)"
 
-    now="$(date +'%Y-%m-%d %H:%M')"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        cpu="$(sysctl -n machdep.cpu.brand_string)"
+        cpu_count="$(sysctl -n hw.ncpu)"
 
-    printf "\n##### Generated: $now\n" >> "$1.md"
+        os_name="$(sw_vers | grep '^ProductName:')"
+        os_name="${os_name/ProductName:/}"
+        os_name="$(echo "$os_name" | awk '{$1=$1;print}')"
+        os_version="$(sw_vers | grep '^ProductVersion:')"
+        os_version="${os_version/ProductVersion:/}"
+        os_version="$(echo "$os_version" | awk '{$1=$1;print}')"
+        os="$os_name $os_version"
+
+        ram_b="$(sysctl -n hw.memsize)"
+        ram_gb=$(expr $ram_b / 1024 / 1024 / 1024)
+    else
+        cpu=""
+        #cpu_info="$(lscpu)"
+        #cpu="$(echo "$cpu_info" | grep '^Model name:')"
+        #cpu="${cpu/Model name:/}"
+        #cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
+        cpu_count="$(nproc)"
+
+        ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
+        ram_gb=$(expr $ram_kb / 1024 / 1024)
+
+        os="$(grep '^PRETTY_NAME=' /etc/os-release)"
+        os="${os/PRETTY_NAME=/}"
+        os="${os//\"/}"
+        os="$(echo "$os" | awk '{$1=$1;print}')"
+    fi
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
+        "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
+        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
+        "NOW" >> "$1.tsv"
+    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|RAM|%d GB|\n|\n|Kernel|%s|\n|OS|%s|\n|Dedicated instance|%d|\n|Disabled deeper C-states|%d|\n|Disabled turbo boost|%d|\n|Disabled hyper-threading|%d|\n|Time|%s|\n" \
+        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
+        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
+        "$NOW" >> "$1.md"
 }
 
 print_result_value () {
