@@ -88,9 +88,11 @@ EOF
         "$NOW" >> "$1.md"
 }
 
-print_result_header () {
-    printf "PHP\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\tCommit hash\tCommit URL\tWarmup\tIterations\tRequests\n" >> "$1.tsv"
+print_result_tsv_header () {
+    printf "PHP\tPHP Commit hash\tPHP Commit URL\tTest name\tTest warmup\tTest iterations\tTest requests\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\n" >> "$1.tsv"
+}
 
+print_result_md_header () {
     description="$TEST_ITERATIONS consecutive runs"
     if [ ! -z "$TEST_REQUESTS" ]; then
         description="$description, $TEST_REQUESTS requests"
@@ -125,11 +127,15 @@ print_result_value () {
     median_diff="$(diff "$first_median" "$median")"
     std_dev="$(std_deviation "$results")"
 
-    printf "%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%s\t%s\t%d\t%d\t%d\n" \
-        "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" \
-        "$commit_hash" "$url" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" >> "$2.tsv"
-    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n" \
-        "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\n" \
+        "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
+        "$PHP_NAME" "$commit_hash" "$url" \
+        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.tsv"
+
+    if [ ! -z "$3" ]; then
+        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n" \
+            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
+    fi
 }
 
 print_result_footer () {
@@ -244,16 +250,15 @@ run_test () {
 
 run_benchmark () {
 
-    result_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}/${RUN}_${INFRA_ID}"
+    result_dir="$infra_dir/${TEST_NUMBER}_${TEST_ID}"
     result_file="$result_dir/result"
 
     mkdir -p "$result_dir"
     touch "$result_file.tsv"
     touch "$result_file.md"
 
-    print_environment "$result_dir/environment"
-
-    print_result_header "$result_file"
+    print_result_tsv_header "$result_file"
+    print_result_md_header "$result_file"
 
     first_average="";
     first_median="";
@@ -263,7 +268,7 @@ run_benchmark () {
         export PHP_CONFIG_FILE
         php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-        log_dir="$result_base_dir/${TEST_NUMBER}_${TEST_ID}/${RUN}_${INFRA_ID}"
+        log_dir="$result_dir"
         log_file="$log_dir/${PHP_ID}.log"
         mkdir -p "$log_dir"
 
@@ -273,14 +278,28 @@ run_benchmark () {
 
         run_test
 
-        print_result_value "$log_file" "$result_file"
+        print_result_value "$log_file" "$result_file" "1"
+        print_result_value "$log_file" "$final_result_file" "0"
     done
 
-    print_result_footer "$result_file"
+    cat "$result_file.md" >> "$final_result_file.md"
 
 }
 
 result_base_dir="$PROJECT_ROOT/result/$RESULT_ROOT_DIR"
+
+infra_dir="$result_base_dir/${RUN}_${INFRA_ID}"
+final_result_file="$infra_dir/result"
+mkdir -p "$infra_dir"
+touch "$final_result_file.tsv"
+touch "$final_result_file.md"
+
+print_result_tsv_header "$final_result_file"
+
+environment_file="$infra_dir/environment"
+
+print_environment "$environment_file"
+cat "$environment_file.md" >> "$final_result_file.md"
 
 TEST_NUMBER=0
 TEST_COUNT=$(ls 2>/dev/null -Ubad1 -- ./config/test/*.ini | wc -l)
