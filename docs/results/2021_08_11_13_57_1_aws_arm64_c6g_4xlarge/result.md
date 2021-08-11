@@ -3,16 +3,15 @@
 |  Attribute  |     Value   |
 |-------------|-------------|
 |Environment|aws|
-|Provisioner|host|
+|Runner|host|
 |Instance type|c6g.4xlarge|
 |Architecture|aarch64
-|CPU||
-CPU cores|16|
-|CPU attributes||
+|CPU|16 cores|
 |RAM|30 GB|
 |Kernel|4.14.238-182.422.amzn2.aarch64|
 |OS|Amazon Linux 2|
-|Time|2021-08-11 13:57|
+|Time|2021-08-11 13:57:00|
+
 ### Laravel demo app - 25 consecutive runs, 250 requests (sec)
 
 |     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
@@ -31,6 +30,7 @@ CPU cores|16|
 |[PHP 8.1](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|1.28511|1.30353|0.00472|1.29120|-31.76%|1.28974|-31.52%|
 |[PHP 8.1 (JIT)](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|1.26520|1.32804|0.01620|1.27984|-32.93%|1.27348|-33.20%|
 |[PHP 8.1 (preloading)](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|1.28098|1.30886|0.00691|1.28951|-31.93%|1.28583|-31.92%|
+
 ### bench.php - 15 consecutive runs (sec)
 
 |     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
@@ -40,6 +40,7 @@ CPU cores|16|
 |[PHP 8.1](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|0.34267|0.34663|0.00100|0.34475|-1.24%|0.34463|-1.39%|
 |[PHP 8.1 (JIT)](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|0.11173|0.11388|0.00051|0.11225|-210.91%|0.11208|-211.76%|
 |[PHP 8.1 (preloading)](https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744)|0.34573|0.34833|0.00071|0.34737|-0.47%|0.34754|-0.54%|
+
 ### micro_bench.php - 15 consecutive runs (sec)
 
 |     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |

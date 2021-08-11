@@ -107,7 +107,7 @@ EOF
       "export INFRA_INSTANCE_TYPE=\"${var.instance_type}\"",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
-      "export INFRA_PROVISIONER=\"${var.provisioner}\"",
+      "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 
@@ -144,11 +144,11 @@ EOF
       "export INFRA_INSTANCE_TYPE=\"${var.instance_type}\"",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
-      "export INFRA_PROVISIONER=\"${var.provisioner}\"",
+      "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 
-      var.provisioner == "host" ? "sudo service docker stop" : "echo 'skipped stopping docker service'",
+      var.runner == "host" ? "sudo service docker stop" : "echo 'skipped stopping docker service'",
       var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped disabling hyper threading'",
       var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped disabling turbo boost'",
 

@@ -35,7 +35,7 @@ diff () {
 }
 
 print_environment () {
-    printf "URI\tID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tCPU\tCPU Cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -44,9 +44,13 @@ cat << EOF > "$1.md"
 |-------------|-------------|
 EOF
 
-    instance_type="$INFRA_INSTANCE_TYPE"
-    if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
-        instance_type="${instance_type} (dedicated)"
+    instance_type=""
+    if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
+        instance_type="$INFRA_INSTANCE_TYPE"
+        if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
+            instance_type="${instance_type} (dedicated)"
+        fi
+        instance_type="|Instance type|$instance_type|\n"
     fi
 
     architecture="$(uname -m)"
@@ -83,28 +87,39 @@ EOF
         os="$(echo "$os" | awk '{$1=$1;print}')"
     fi
 
-    cpu_attributes=""
+    cpu_settings=""
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
-        cpu_attributes="${cpu_attributes}, disabled deeper C-states"
+        cpu_settings="${cpu_settings}, disabled deeper C-states"
     fi
 
     if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
-        cpu_attributes="${cpu_attributes}, disabled turbo boost"
+        cpu_settings="${cpu_settings}, disabled turbo boost"
     fi
 
     if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
-        cpu_attributes="${cpu_attributes}, disabled hyper-threading"
+        cpu_settings="${cpu_settings}, disabled hyper-threading"
     fi
 
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
-        "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
+        "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
-        "$NOW" >> "$1.tsv"
+        "$NOW:00" >> "$1.tsv"
 
-    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|CPU attributes|%s|\n|RAM|%d GB|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
-        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$instance_type" "$architecture" \
-        "$cpu" "$cpu_count" "$cpu_attributes" "$ram_gb" "$kernel" "$os" \
-        "$NOW" >> "$1.md"
+    if [[ ! -z "$cpu" ]]; then
+        cpu=", "
+    fi
+    cpu="${cpu_count} core"
+    if [ "$cpu_count" -gt "1" ]; then
+        cpu="${cpu}s"
+    fi
+
+    if [[ ! -z "$cpu_settings" ]]; then
+        cpu_settings="|CPU settings|$cpu_settings|\n"
+    fi
+
+    printf "|Environment|%s|\n|Runner|%s|\n$instance_type|Architecture|%s\n|CPU|%s|\n$cpu_settings|RAM|%d GB|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
+        "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$architecture" \
+        "$cpu" "$ram_gb" "$kernel" "$os" "$NOW:00" >> "$1.md"
 }
 
 print_result_tsv_header () {
@@ -166,7 +181,7 @@ print_result_footer () {
 run_cgi () {
     sleep 0.1
 
-    if [[ "$INFRA_PROVISIONER" == "host" ]]; then
+    if [[ "$INFRA_RUNNER" == "host" ]]; then
         if [ "$PHP_OPCACHE" = "1" ]; then
             opcache="-d zend_extension=$php_source_path/modules/opcache.so"
         else
@@ -194,7 +209,7 @@ run_cgi () {
         else
             taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
         fi
-    elif [[ "$INFRA_PROVISIONER" == "docker" ]]; then
+    elif [[ "$INFRA_RUNNER" == "docker" ]]; then
         if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
             run_as=""
             repository="$INFRA_DOCKER_REPOSITORY"
@@ -301,6 +316,7 @@ run_benchmark () {
         print_result_value "$log_file" "$final_result_file" "0"
     done
 
+    echo "" >> "$final_result_file.md"
     cat "$result_file.md" >> "$final_result_file.md"
 
 }

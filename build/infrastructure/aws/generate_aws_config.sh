@@ -52,7 +52,7 @@ disable_turbo_boost = $disable_turbo_boost
 infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
-provisioner = "$INFRA_PROVISIONER"
+runner = "$INFRA_RUNNER"
 docker_registry = "$INFRA_DOCKER_REGISTRY"
 docker_repository = "$INFRA_DOCKER_REPOSITORY"
 EOF

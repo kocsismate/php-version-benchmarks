@@ -88,7 +88,7 @@ variable "environment" {
   type = string
 }
 
-variable "provisioner" {
+variable "runner" {
   type = string
 }
 

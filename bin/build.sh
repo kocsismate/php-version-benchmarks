@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" && "$INFRA_PROVISIONER" == "host" ]]; then
+if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" && "$INFRA_RUNNER" == "host" ]]; then
     $PROJECT_ROOT/build/script/php_deps.sh
 fi
 
@@ -15,11 +15,11 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
         export PHP_BASE_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
     fi
 
-    if [[ "$1" == "local" || "$INFRA_PROVISIONER" == "host" ]]; then
+    if [[ "$1" == "local" || "$INFRA_RUNNER" == "host" ]]; then
         $PROJECT_ROOT/build/script/php_source.sh "$1"
     fi
 
-    if [[ "$1" == "local" && "$INFRA_PROVISIONER" == "docker" ]]; then
+    if [[ "$1" == "local" && "$INFRA_RUNNER" == "docker" ]]; then
         tag="$INFRA_DOCKER_REPOSITORY:$PHP_ID-latest"
 
         cp "$PROJECT_ROOT/.dockerignore" "$PHP_SOURCE_PATH/.dockerignore"
@@ -32,7 +32,7 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
         fi
     fi
 
-    if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_PROVISIONER" == "host" ]]; then
+    if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_RUNNER" == "host" ]]; then
         $PROJECT_ROOT/build/script/php_compile.sh
     fi
 done
