@@ -20,15 +20,20 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_key_pair" "ssh_key" {
-  public_key = file("../config/ssh-key.pub")
+resource "tls_private_key" "ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "key_pair" {
+  public_key = tls_private_key.ssh_key.public_key_openssh
 }
 
 resource "aws_instance" "host" {
   ami = data.aws_ami.host.image_id
   instance_type = var.instance_type
   associate_public_ip_address = true
-  key_name = aws_key_pair.ssh_key.key_name
+  key_name = aws_key_pair.key_pair.key_name
   availability_zone = data.aws_availability_zones.available.names[0]
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = true
@@ -48,7 +53,7 @@ resource "aws_instance" "host" {
     type = "ssh"
     host = aws_instance.host.public_ip
     user = var.image_user
-    private_key = file("../config/ssh-key")
+    private_key = tls_private_key.ssh_key.private_key_pem
     timeout = "${var.termination_timeout_in_min}m"
     agent = true
   }
@@ -160,9 +165,16 @@ EOF
     command = <<EOP
       set -e
 
+      rm -f "${var.local_project_root}/tmp/archive.tar.gz"
+
+      echo "${tls_private_key.ssh_key.private_key_pem}" > ${var.local_project_root}/tmp/ssh-key.pem
+      chmod 600 "${var.local_project_root}/tmp/ssh-key.pem"
+
       mkdir -p "${var.local_project_root}/tmp/results/${var.result_root_dir}"
 
-      scp -o ControlPath=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.local_project_root}/build/infrastructure/config/ssh-key" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
+      scp -o ControlPath=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.local_project_root}/tmp/ssh-key.pem" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
+
+      rm -f "${var.local_project_root}/tmp/ssh-key.pem"
 
       if [[ "${var.dry_run}" == "false" ]]; then
         ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}"
