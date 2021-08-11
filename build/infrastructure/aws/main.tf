@@ -156,11 +156,9 @@ EOF
     command = <<EOP
       set -e
 
-      ssh-keyscan -H "${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
-
       mkdir -p "${var.local_project_root}/tmp/results/${var.result_root_dir}"
 
-      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
+      scp -o ControlPath=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
 
       if [[ "${var.dry_run}" == "false" ]]; then
         ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}"
