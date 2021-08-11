@@ -1,4 +1,4 @@
-Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Average	Average diff %	Median	Median diff %	Std dev
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %
 Laravel demo app	50	25	250	PHP 7.4	6724d5d4c2c502b098e708bd85b43f2a52848093	https://github.com/php/php-src/commit/6724d5d4c2c502b098e708bd85b43f2a52848093	1.38915	1.43153	0.01176	1.40654	0.00	1.40437	0.00
 Laravel demo app	50	25	250	PHP 8.0	ee11a6065c4a9280e1d6188fbb2a3d5aa532d84d	https://github.com/php/php-src/commit/ee11a6065c4a9280e1d6188fbb2a3d5aa532d84d	1.30990	1.35202	0.01017	1.32320	-6.30	1.32102	-6.31
 Laravel demo app	50	25	250	PHP 8.1	c90c9c7545427d9d35cbac45c4ec896f54619744	https://github.com/php/php-src/commit/c90c9c7545427d9d35cbac45c4ec896f54619744	1.07688	1.08877	0.00337	1.08144	-30.06	1.08131	-29.88
