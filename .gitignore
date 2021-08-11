@@ -2,6 +2,7 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/*
+/build/infrastructure/config/ssh-key*
 /config/**/*.*
 !/config/**/*.dist
 /tmp/
