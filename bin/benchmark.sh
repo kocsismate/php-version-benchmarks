@@ -108,7 +108,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "PHP\tPHP Commit hash\tPHP Commit URL\tTest name\tTest warmup\tTest iterations\tTest requests\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tStd dev\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
