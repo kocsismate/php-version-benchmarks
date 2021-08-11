@@ -18,13 +18,15 @@ if [[ "$1" == "run" ]]; then
     NOW="$(date +'%Y-%m-%d %H:%M')"
     export NOW
 
+    DRY_RUN="0";
+    if [[ "$4" == "dry-run" ]]; then
+        DRY_RUN="1"
+    fi
+    export DRY_RUN
+
     RESULT_ROOT_DIR="${NOW//-/_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR// /_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR//:/_}"
-    RESULT_ROOT_DIR="${RESULT_ROOT_DIR}_${INFRA_ENVIRONMENT}"
-    if [ ! -z "$INFRA_ARCHITECTURE" ]; then
-        RESULT_ROOT_DIR="${RESULT_ROOT_DIR}_${INFRA_ARCHITECTURE}"
-    fi
     export RESULT_ROOT_DIR
     export INFRA_ENVIRONMENT
 
@@ -63,9 +65,13 @@ if [[ "$1" == "run" ]]; then
         done
     done
 
+    if [[ "$DRY_RUN" -eq "0" ]]; then
+        $PROJECT_ROOT/bin/generate_results.sh "$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR" "$PROJECT_ROOT/docs/results/$RESULT_ROOT_DIR"
+    fi
+
 elif [[ "$1" == "help" ]]; then
 
-    echo "Usage: ./benchmark.sh run [environment] [runs]"
+    echo "Usage: ./benchmark.sh run [environment] [runs] [dry-run]"
     echo ""
     echo "Available runners: local, aws"
 

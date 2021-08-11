@@ -54,9 +54,9 @@ resource "aws_instance" "host" {
       set -e
 
       cd ${var.local_project_root}
-      mkdir -p "./result/${var.result_root_dir}"
+      mkdir -p "./tmp/results/${var.result_root_dir}"
 
-      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/preload.php ./app/zend/ ./bin ./build ./config ./result/${var.result_root_dir} .dockerignore Dockerfile
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/preload.php ./app/zend/ ./bin ./build ./config ./tmp/results/${var.result_root_dir} .dockerignore Dockerfile
 EOF
   }
 
@@ -158,7 +158,13 @@ EOF
 
       ssh-keyscan -H "${aws_instance.host.public_dns}" >> ~/.ssh/known_hosts
 
-      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/result/${var.result_root_dir}/*" "${var.local_project_root}/result/${var.result_root_dir}/"
+      mkdir -p "${var.local_project_root}/tmp/results/${var.result_root_dir}"
+
+      scp -i "${var.local_project_root}/build/infrastructure/config/${var.ssh_private_key}" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
+
+      if [[ "${var.dry_run}" == "false" ]]; then
+        ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}"
+      fi
     EOP
   }
 }

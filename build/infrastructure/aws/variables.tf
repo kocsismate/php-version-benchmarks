@@ -21,13 +21,16 @@ variable "region" {
   type = string
 }
 
-
 variable "run" {
   type = number
 }
 
 variable "runs" {
   type = number
+}
+
+variable "dry_run" {
+  type = bool
 }
 
 variable "now" {

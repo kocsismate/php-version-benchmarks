@@ -5,7 +5,6 @@ vendor/
 /config/**/*.*
 !/config/**/*.dist
 /tmp/
-/result/
 !.gitkeep
 
 .terraform*

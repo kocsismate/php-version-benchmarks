@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+dry_run="false"
+if [[ "$DRY_RUN" == "1" ]]; then
+    dry_run="true"
+fi
+
 use_dedicated_instance="false"
 if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
     use_dedicated_instance="true"
@@ -32,6 +37,7 @@ cat << EOF > "$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
 runs = $N
 run = $RUN
 now = "$NOW"
+dry_run = $dry_run
 result_root_dir = "$RESULT_ROOT_DIR"
 local_project_root = "$PROJECT_ROOT"
 php_commits = "$php_commits"
