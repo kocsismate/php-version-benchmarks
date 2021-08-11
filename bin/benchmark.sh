@@ -179,7 +179,7 @@ print_result_footer () {
 }
 
 run_cgi () {
-    sleep 0.1
+    sleep 0.25
 
     if [[ "$INFRA_RUNNER" == "host" ]]; then
         if [ "$PHP_OPCACHE" = "1" ]; then
