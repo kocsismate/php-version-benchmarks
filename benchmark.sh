@@ -14,6 +14,27 @@ if [[ "$1" == "run" ]]; then
         exit 1
     fi
 
+    infra_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini | wc -l)"
+    infra_count="$(echo "$infra_count" | awk '{$1=$1;print}')"
+    if [ "$infra_count" -eq "0" ]; then
+        echo "The ./config/infra/$INFRA_ENVIRONMENT directory should contain at least one .ini file in order to be able to run the benchmark"
+        exit 1
+    fi
+
+    php_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/php/*.ini | wc -l)"
+    php_count="$(echo "$php_count" | awk '{$1=$1;print}')"
+    if [ "$php_count" -eq "0" ]; then
+        echo "The ./config/php directory should contain at least one .ini file in order to be able to run the benchmark"
+        exit 1
+    fi
+
+    test_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/test/*.ini | wc -l)"
+    test_count="$(echo "$test_count" | awk '{$1=$1;print}')"
+    if [ "$test_count" -eq "0" ]; then
+        echo "The ./config/test directory should contain at least one .ini file in order to be able to run the benchmark"
+        exit 1
+    fi
+
     export N="${3:-1}"
     NOW="$(date +'%Y-%m-%d %H:%M')"
     export NOW
@@ -56,8 +77,6 @@ if [[ "$1" == "run" ]]; then
 
         export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
     done
-
-    ls ./config/test/*.ini > /dev/null # Exit early if no tests are available, ref `set -e`
 
     if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
         $PROJECT_ROOT/bin/setup.sh

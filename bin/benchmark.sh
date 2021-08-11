@@ -337,7 +337,6 @@ print_environment "$environment_file"
 cat "$environment_file.md" >> "$final_result_file.md"
 
 TEST_NUMBER=0
-TEST_COUNT=$(ls 2>/dev/null -Ubad1 -- ./config/test/*.ini | wc -l)
 
 for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
