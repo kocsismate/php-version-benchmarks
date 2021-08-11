@@ -363,8 +363,8 @@ function end_test($start, $name)
   $end = gethrtime();
   ob_end_clean();
   $total += $end-$start;
-  $num = number_format($end-$start,3);
-  $pad = str_repeat(" ", 24-strlen($name)-strlen($num));
+  $num = number_format($end-$start,6);
+  $pad = str_repeat(" ", 27-strlen($name)-strlen($num));
 
   echo $name.$pad.$num."\n";
     ob_start();
@@ -374,10 +374,10 @@ function end_test($start, $name)
 function total()
 {
   global $total;
-  $pad = str_repeat("-", 24);
+  $pad = str_repeat("-", 27);
   echo $pad."\n";
-  $num = number_format($total,3);
-  $pad = str_repeat(" ", 24-strlen("Total")-strlen($num));
+  $num = number_format($total,6);
+  $pad = str_repeat(" ", 27-strlen("Total")-strlen($num));
   echo "Total".$pad.$num."\n";
 }
 
