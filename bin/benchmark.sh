@@ -35,7 +35,7 @@ diff () {
 }
 
 print_environment () {
-    printf "ID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tCPU\tCPU Cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tProvisioner\tInstance type\tArchitecture\tCPU\tCPU Cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -43,6 +43,11 @@ cat << EOF > "$1.md"
 |  Attribute  |     Value   |
 |-------------|-------------|
 EOF
+
+    instance_type="$INFRA_INSTANCE_TYPE"
+    if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
+        instance_type="${instance_type} (dedicated)"
+    fi
 
     architecture="$(uname -m)"
     kernel="$(uname -r)"
@@ -78,13 +83,27 @@ EOF
         os="$(echo "$os" | awk '{$1=$1;print}')"
     fi
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
-        "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
+    cpu_attributes=""
+    if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
+        cpu_attributes="${cpu_attributes}, disabled deeper C-states"
+    fi
+
+    if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
+        cpu_attributes="${cpu_attributes}, disabled turbo boost"
+    fi
+
+    if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
+        cpu_attributes="${cpu_attributes}, disabled hyper-threading"
+    fi
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
+        "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
         "$NOW" >> "$1.tsv"
-    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|RAM|%d GB|\n|\n|Kernel|%s|\n|OS|%s|\n|Dedicated instance|%d|\n|Disabled deeper C-states|%d|\n|Disabled turbo boost|%d|\n|Disabled hyper-threading|%d|\n|Time|%s|\n" \
-        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
+
+    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|CPU attributes|%s|\n|RAM|%d GB|\n|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
+        "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$instance_type" "$architecture" \
+        "$cpu" "$cpu_count" "$cpu_attributes" "$ram_gb" "$kernel" "$os" \
         "$NOW" >> "$1.md"
 }
 
@@ -132,7 +151,7 @@ print_result_value () {
         "$PHP_NAME" "$commit_hash" "$url" \
         "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.tsv"
 
-    if [ ! -z "$3" ]; then
+    if [ "$3" -eq "1" ]; then
         printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n" \
             "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
     fi
@@ -286,7 +305,7 @@ run_benchmark () {
 
 }
 
-result_base_dir="$PROJECT_ROOT/result/$RESULT_ROOT_DIR"
+result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
 
 infra_dir="$result_base_dir/${RUN}_${INFRA_ID}"
 final_result_file="$infra_dir/result"
