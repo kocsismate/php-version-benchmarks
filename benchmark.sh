@@ -57,6 +57,8 @@ if [[ "$1" == "run" ]]; then
         export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
     done
 
+    ls ./config/test/*.ini > /dev/null # Exit early if no tests are available, ref `set -e`
+
     if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
         $PROJECT_ROOT/bin/setup.sh
     fi
