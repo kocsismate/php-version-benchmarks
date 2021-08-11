@@ -10,7 +10,6 @@
 CPU cores|16|
 |CPU attributes||
 |RAM|30 GB|
-|
 |Kernel|4.14.238-182.422.amzn2.aarch64|
 |OS|Amazon Linux 2|
 |Time|2021-08-11 13:57|

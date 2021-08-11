@@ -101,7 +101,7 @@ EOF
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
         "$NOW" >> "$1.tsv"
 
-    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|CPU attributes|%s|\n|RAM|%d GB|\n|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
+    printf "|Environment|%s|\n|Provisioner|%s|\n|Instance type|%s|\n|Architecture|%s\n|CPU|%s|\nCPU cores|%d|\n|CPU attributes|%s|\n|RAM|%d GB|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
         "$INFRA_ENVIRONMENT" "$INFRA_PROVISIONER" "$instance_type" "$architecture" \
         "$cpu" "$cpu_count" "$cpu_attributes" "$ram_gb" "$kernel" "$os" \
         "$NOW" >> "$1.md"
