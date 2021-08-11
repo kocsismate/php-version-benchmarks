@@ -30,6 +30,13 @@ if [[ "$1" == "run" ]]; then
     export RESULT_ROOT_DIR
     export INFRA_ENVIRONMENT
 
+    if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
+        ssh_key_path="build/infrastructure/config/ssh-key";
+        if [[ ! -f "${ssh_key_path}" ]]; then
+          ssh-keygen -f "${ssh_key_path}" -q -N "";
+        fi
+    fi
+
     for infra_config in $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini; do
         source "$infra_config"
         export $(cut -d= -f1 $infra_config)

@@ -72,12 +72,7 @@ Then, you need to override some values in it:
 
 - `access_key`: the access key of your AWS account
 - `secret_key`: the secret access key of your AWS account
-- `ssh_key_name`: the name of your key pair added to EC2
-- `ssh_private_key`: the file name of your private key
 - `region`: it is "eu-central-1" by default, but you should choose the closest one to your area
-
-Finally, you have to copy your private key in the "build/infrastructure/config" directory with a file name that matches
-the one defined in the `ssh_private_key` setting.
 
 Now, you are ready to go:
 
