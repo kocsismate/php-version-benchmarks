@@ -123,7 +123,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -135,8 +135,8 @@ print_result_md_header () {
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |
-|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |     Memory    |
+|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|---------------|
 EOF
 }
 
@@ -146,6 +146,7 @@ print_result_value () {
     url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     results="$(cat "$1")"
+    memory_result="$(cat "$2")"
 
     min="$(min "$results")"
     max="$(max "$results")"
@@ -160,15 +161,16 @@ print_result_value () {
     fi
     median_diff="$(diff "$first_median" "$median")"
     std_dev="$(std_deviation "$results")"
+    memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.tsv"
+        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$memory_usage" >> "$3.tsv"
 
-    if [ "$3" -eq "1" ]; then
-        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|\n" \
-            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" >> "$2.md"
+    if [ "$4" -eq "1" ]; then
+        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.2f MB|\n" \
+            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$memory_usage" >> "$3.md"
     fi
 }
 
@@ -206,6 +208,8 @@ run_cgi () {
             taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
         elif [ "$1" = "verbose" ]; then
             taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
+        elif [ "$1" = "memory" ]; then
+            /usr/bin/time -v taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
         else
             taskset -c "$last_cpu" $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
         fi
@@ -227,10 +231,16 @@ run_cgi () {
 run_real_benchmark () {
     # Benchmark
     run_cgi "verbose" "0" "1" "$1" "$2" "$3"
-    run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" > /dev/null 2>&1
+    run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
+
+    # Format memory log
+    result="$(grep "Maximum resident set size" "$memory_log_file")"
+    echo "$result" > "$memory_log_file"
+    sed -i".original" "s/	Maximum resident set size (kbytes): //g" "$memory_log_file"
+    rm "$memory_log_file.original"
 
     # Format log
     sed -i".original" "/^[[:space:]]*$/d" "$log_file"
@@ -241,7 +251,14 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     # Benchmark
+    run_cgi "memory" "0" "$TEST_WARMUP" "$1" "" "" 2>&1 | tee -a "$memory_log_file"
     run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
+
+    # Format memory log
+    result="$(grep "Maximum resident set size" "$memory_log_file")"
+    echo "$result" > "$memory_log_file"
+    sed -i".original" "s/	Maximum resident set size (kbytes): //g" "$memory_log_file"
+    rm "$memory_log_file.original"
 
     # Format log
     results="$(grep "Total" "$log_file")"
@@ -304,6 +321,7 @@ run_benchmark () {
 
         log_dir="$result_dir"
         log_file="$log_dir/${PHP_ID}.log"
+        memory_log_file="$log_dir/${PHP_ID}.memory.log"
         mkdir -p "$log_dir"
 
         echo "---------------------------------------------------------------------------------------"
@@ -312,8 +330,8 @@ run_benchmark () {
 
         run_test
 
-        print_result_value "$log_file" "$result_file" "1"
-        print_result_value "$log_file" "$final_result_file" "0"
+        print_result_value "$log_file" "$memory_log_file" "$result_file" "1"
+        print_result_value "$log_file" "$memory_log_file" "$final_result_file" "0"
     done
 
     echo "" >> "$final_result_file.md"

@@ -31,6 +31,7 @@ RUN set -eux; \
 		ca-certificates \
 		curl \
 		xz-utils \
+		time \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
