@@ -3,7 +3,7 @@ PHP_ID=php_81_preloading
 PHP_BASE_ID=php_81
 
 PHP_REPO=https://github.com/php/php-src.git
-PHP_BRANCH=master
+PHP_BRANCH=PHP-8.1
 PHP_COMMIT=
 
 PHP_OPCACHE=1
