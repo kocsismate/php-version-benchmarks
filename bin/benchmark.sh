@@ -31,7 +31,7 @@ std_deviation () {
 }
 
 diff () {
-  awk -v t1="$1" -v t2="$2" 'BEGIN{print (1-t1/t2) * 100}'
+  awk -v t1="$1" -v t2="$2" 'BEGIN{print (t1/t2-1) * 100}'
 }
 
 print_environment () {
@@ -154,12 +154,12 @@ print_result_value () {
     if [ -z "$first_average" ]; then
         first_average="$average"
     fi
-    average_diff="$(diff "$first_average" "$average")"
+    average_diff="$(diff "$average" "$first_average")"
     median="$(median $results)"
     if [ -z "$first_median" ]; then
         first_median="$median"
     fi
-    median_diff="$(diff "$first_median" "$median")"
+    median_diff="$(diff "$median" "$first_median")"
     std_dev="$(std_deviation "$results")"
     memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
