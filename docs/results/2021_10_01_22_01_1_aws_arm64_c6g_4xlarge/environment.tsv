@@ -1,2 +1,0 @@
-URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
-2021_10_01_22_01_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.243-185.433.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-10-01 22:01:00
