@@ -46,3 +46,79 @@ micro_bench.php	5	15	0	PHP 8.1	b0dd55b11c73e5f089c78221b1605884ed29c338	https://
 micro_bench.php	5	15	0	PHP 8.1 (JIT)	b0dd55b11c73e5f089c78221b1605884ed29c338	https://github.com/php/php-src/commit/b0dd55b11c73e5f089c78221b1605884ed29c338	1.21532	1.22219	0.00160	1.21938	-82.84	1.21971	-82.82	18.39
 micro_bench.php	5	15	0	PHP 8.1 (preloading)	b0dd55b11c73e5f089c78221b1605884ed29c338	https://github.com/php/php-src/commit/b0dd55b11c73e5f089c78221b1605884ed29c338	2.04623	2.06020	0.00430	2.05483	-8.50	2.05495	-8.51	16.96
 
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
+2021_10_01_22_01_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.243-185.433.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-10-01 22:01:00
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 7.4	4d442714155a305205cdd3785ab024f3eba7516f	https://github.com/php/php-src/commit/4d442714155a305205cdd3785ab024f3eba7516f	1.42321	1.46909	0.01047	1.44002	0.00	1.43880	0.00	33.23
+Laravel demo app	50	25	250	PHP 8.0	5db6e358436f9e8cda82b3154558e22d53eba963	https://github.com/php/php-src/commit/5db6e358436f9e8cda82b3154558e22d53eba963	1.33763	1.38337	0.01167	1.35488	-6.28	1.35153	-6.46	32.88
+Laravel demo app	50	25	250	PHP 8.1	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.09937	1.11531	0.00426	1.10633	-30.16	1.10474	-30.24	35.69
+Laravel demo app	50	25	250	PHP 8.1 (JIT)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.08847	1.10770	0.00528	1.09726	-31.24	1.09472	-31.43	44.26
+Laravel demo app	50	25	250	PHP 8.1 (preloading)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.09952	1.14373	0.01074	1.11166	-29.54	1.10794	-29.86	35.55
+Symfony demo app	50	25	250	PHP 7.4	4d442714155a305205cdd3785ab024f3eba7516f	https://github.com/php/php-src/commit/4d442714155a305205cdd3785ab024f3eba7516f	1.69716	1.78182	0.02411	1.73042	0.00	1.72586	0.00	32.97
+Symfony demo app	50	25	250	PHP 8.0	5db6e358436f9e8cda82b3154558e22d53eba963	https://github.com/php/php-src/commit/5db6e358436f9e8cda82b3154558e22d53eba963	1.64042	1.71455	0.01864	1.67314	-3.42	1.67055	-3.31	32.60
+Symfony demo app	50	25	250	PHP 8.1	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.27810	1.30092	0.00615	1.28944	-34.20	1.28833	-33.96	33.17
+Symfony demo app	50	25	250	PHP 8.1 (JIT)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.25499	1.30118	0.01221	1.26983	-36.27	1.26876	-36.03	42.26
+Symfony demo app	50	25	250	PHP 8.1 (preloading)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.27979	1.32661	0.01014	1.29287	-33.84	1.29119	-33.66	33.44
+bench.php	5	15	0	PHP 7.4	4d442714155a305205cdd3785ab024f3eba7516f	https://github.com/php/php-src/commit/4d442714155a305205cdd3785ab024f3eba7516f	0.34446	0.34869	0.00174	0.34673	0.00	0.34738	0.00	22.94
+bench.php	5	15	0	PHP 8.0	5db6e358436f9e8cda82b3154558e22d53eba963	https://github.com/php/php-src/commit/5db6e358436f9e8cda82b3154558e22d53eba963	0.33641	0.34044	0.00129	0.33828	-2.50	0.33786	-2.82	22.75
+bench.php	5	15	0	PHP 8.1	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	0.34798	0.35785	0.00269	0.35029	1.02	0.34974	0.67	23.19
+bench.php	5	15	0	PHP 8.1 (JIT)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	0.10972	0.11179	0.00056	0.11015	-214.79	0.10989	-216.12	24.78
+bench.php	5	15	0	PHP 8.1 (preloading)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	0.34653	0.35469	0.00240	0.34950	0.79	0.34824	0.25	23.14
+micro_bench.php	5	15	0	PHP 7.4	4d442714155a305205cdd3785ab024f3eba7516f	https://github.com/php/php-src/commit/4d442714155a305205cdd3785ab024f3eba7516f	2.23846	2.24565	0.00166	2.24170	0.00	2.24179	0.00	16.86
+micro_bench.php	5	15	0	PHP 8.0	5db6e358436f9e8cda82b3154558e22d53eba963	https://github.com/php/php-src/commit/5db6e358436f9e8cda82b3154558e22d53eba963	2.10135	2.11038	0.00219	2.10511	-6.49	2.10475	-6.51	16.85
+micro_bench.php	5	15	0	PHP 8.1	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	2.06715	2.07220	0.00125	2.06913	-8.34	2.06879	-8.36	17.20
+micro_bench.php	5	15	0	PHP 8.1 (JIT)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	1.20088	1.20699	0.00194	1.20278	-86.38	1.20229	-86.46	18.45
+micro_bench.php	5	15	0	PHP 8.1 (preloading)	52e7e0f521f6002bb84a20e4be5269617afa071d	https://github.com/php/php-src/commit/52e7e0f521f6002bb84a20e4be5269617afa071d	2.04956	2.05577	0.00182	2.05308	-9.19	2.05336	-9.18	17.18
+
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
+2021_11_11_09_20_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.252-195.483.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-11-11 09:20:00
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 7.4	1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	https://github.com/php/php-src/commit/1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	1.33639	1.46424	0.03508	1.36586	0.00	1.35102	0.00	33.00
+Laravel demo app	50	25	250	PHP 8.0	a551b083073ea08f8fc53b0e1a6380b6de26cc6b	https://github.com/php/php-src/commit/a551b083073ea08f8fc53b0e1a6380b6de26cc6b	1.25693	1.39606	0.03539	1.28991	-5.89	1.27588	-5.89	32.39
+Laravel demo app	50	25	250	PHP 8.1	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.05594	1.06841	0.00409	1.06094	-28.74	1.05898	-27.58	35.48
+Laravel demo app	50	25	250	PHP 8.1 (JIT)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.04156	1.08010	0.00697	1.04972	-30.12	1.04883	-28.81	43.29
+Laravel demo app	50	25	250	PHP 8.1 (preloading)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.05253	1.14954	0.02023	1.06853	-27.83	1.06247	-27.16	35.37
+Symfony demo app	50	25	250	PHP 7.4	1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	https://github.com/php/php-src/commit/1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	1.65015	1.83175	0.04406	1.68866	0.00	1.66990	0.00	33.76
+Symfony demo app	50	25	250	PHP 8.0	a551b083073ea08f8fc53b0e1a6380b6de26cc6b	https://github.com/php/php-src/commit/a551b083073ea08f8fc53b0e1a6380b6de26cc6b	1.59925	1.84683	0.05459	1.66024	-1.71	1.65860	-0.68	33.34
+Symfony demo app	50	25	250	PHP 8.1	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.26713	1.38992	0.02972	1.29129	-30.77	1.27731	-30.74	33.84
+Symfony demo app	50	25	250	PHP 8.1 (JIT)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.23740	1.44721	0.05420	1.27641	-32.30	1.25853	-32.69	42.94
+Symfony demo app	50	25	250	PHP 8.1 (preloading)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.26346	1.31422	0.01618	1.27825	-32.11	1.27007	-31.48	33.92
+bench.php	5	15	0	PHP 7.4	1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	https://github.com/php/php-src/commit/1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	0.34132	0.34402	0.00067	0.34197	0.00	0.34182	0.00	23.52
+bench.php	5	15	0	PHP 8.0	a551b083073ea08f8fc53b0e1a6380b6de26cc6b	https://github.com/php/php-src/commit/a551b083073ea08f8fc53b0e1a6380b6de26cc6b	0.33340	0.34220	0.00245	0.33838	-1.06	0.33817	-1.08	23.43
+bench.php	5	15	0	PHP 8.1	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	0.34259	0.35276	0.00247	0.34749	1.59	0.34850	1.92	23.52
+bench.php	5	15	0	PHP 8.1 (JIT)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	0.10965	0.11136	0.00044	0.10993	-211.09	0.10978	-211.37	25.23
+bench.php	5	15	0	PHP 8.1 (preloading)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	0.34613	0.35117	0.00180	0.34757	1.61	0.34623	1.27	23.53
+micro_bench.php	5	15	0	PHP 7.4	1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	https://github.com/php/php-src/commit/1919c4b44ddd9f056bd53c79c4b99c9e4ce97884	2.22235	2.23131	0.00219	2.22585	0.00	2.22555	0.00	17.77
+micro_bench.php	5	15	0	PHP 8.0	a551b083073ea08f8fc53b0e1a6380b6de26cc6b	https://github.com/php/php-src/commit/a551b083073ea08f8fc53b0e1a6380b6de26cc6b	2.10429	2.11293	0.00220	2.10857	-5.56	2.10894	-5.53	17.54
+micro_bench.php	5	15	0	PHP 8.1	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	2.05999	2.06404	0.00108	2.06174	-7.96	2.06170	-7.95	17.65
+micro_bench.php	5	15	0	PHP 8.1 (JIT)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	1.19769	1.20290	0.00139	1.20044	-85.42	1.20008	-85.45	19.14
+micro_bench.php	5	15	0	PHP 8.1 (preloading)	89f28fafcacee5a65022b0ce36c98c14d04238dc	https://github.com/php/php-src/commit/89f28fafcacee5a65022b0ce36c98c14d04238dc	2.05282	2.06184	0.00240	2.05715	-8.20	2.05761	-8.16	17.79
+
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
+2021_11_25_10_08_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.252-195.483.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-11-25 10:08:00
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 7.4	60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	https://github.com/php/php-src/commit/60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	1.33131	1.42081	0.01762	1.34195	0.00	1.33758	0.00	32.89
+Laravel demo app	50	25	250	PHP 8.0	e713890d369499ab896e926b099fca244980cf0e	https://github.com/php/php-src/commit/e713890d369499ab896e926b099fca244980cf0e	1.26665	1.27868	0.00330	1.27094	-5.29	1.26997	-5.05	32.45
+Laravel demo app	50	25	250	PHP 8.1	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.04292	1.04941	0.00173	1.04546	-22.09	1.04512	-21.87	35.32
+Laravel demo app	50	25	250	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.03823	1.07050	0.00604	1.04179	-22.37	1.04102	-22.17	43.14
+Laravel demo app	50	25	250	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.04316	1.05606	0.00256	1.04756	-21.94	1.04752	-21.69	35.37
+Laravel demo app	50	25	250	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	1.04228	1.05082	0.00209	1.04551	-22.09	1.04561	-21.83	35.14
+Symfony demo app	50	25	250	PHP 7.4	60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	https://github.com/php/php-src/commit/60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	1.63921	1.66050	0.00490	1.64521	0.00	1.64431	0.00	33.23
+Symfony demo app	50	25	250	PHP 8.0	e713890d369499ab896e926b099fca244980cf0e	https://github.com/php/php-src/commit/e713890d369499ab896e926b099fca244980cf0e	1.60439	1.67136	0.01610	1.61613	-1.77	1.60960	-2.11	33.50
+Symfony demo app	50	25	250	PHP 8.1	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.25670	1.26578	0.00235	1.26077	-23.37	1.26076	-23.33	33.59
+Symfony demo app	50	25	250	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.23050	1.24088	0.00279	1.23576	-24.89	1.23568	-24.85	42.70
+Symfony demo app	50	25	250	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.25514	1.26973	0.00303	1.26082	-23.36	1.26065	-23.33	34.09
+Symfony demo app	50	25	250	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	1.24347	1.25410	0.00269	1.24699	-24.20	1.24660	-24.19	33.81
+bench.php	5	15	0	PHP 7.4	60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	https://github.com/php/php-src/commit/60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	0.34303	0.34526	0.00059	0.34365	0.00	0.34339	0.00	23.54
+bench.php	5	15	0	PHP 8.0	e713890d369499ab896e926b099fca244980cf0e	https://github.com/php/php-src/commit/e713890d369499ab896e926b099fca244980cf0e	0.33407	0.33982	0.00172	0.33652	-2.08	0.33607	-2.13	23.26
+bench.php	5	15	0	PHP 8.1	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	0.34348	0.34512	0.00048	0.34410	0.13	0.34395	0.16	23.78
+bench.php	5	15	0	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	0.10815	0.10984	0.00046	0.10873	-68.36	0.10869	-68.35	25.54
+bench.php	5	15	0	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	0.34355	0.34933	0.00152	0.34634	0.78	0.34632	0.85	23.55
+bench.php	5	15	0	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	0.33185	0.33493	0.00104	0.33381	-2.86	0.33435	-2.63	23.30
+micro_bench.php	5	15	0	PHP 7.4	60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	https://github.com/php/php-src/commit/60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	2.21906	2.22713	0.00204	2.22504	0.00	2.22562	0.00	17.61
+micro_bench.php	5	15	0	PHP 8.0	e713890d369499ab896e926b099fca244980cf0e	https://github.com/php/php-src/commit/e713890d369499ab896e926b099fca244980cf0e	2.09911	2.11112	0.00333	2.10565	-5.37	2.10499	-5.42	17.37
+micro_bench.php	5	15	0	PHP 8.1	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	2.04848	2.05488	0.00189	2.05128	-7.81	2.05103	-7.84	17.95
+micro_bench.php	5	15	0	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	1.19378	1.20010	0.00167	1.19601	-46.25	1.19549	-46.29	19.22
+micro_bench.php	5	15	0	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	2.03869	2.05123	0.00327	2.04478	-8.10	2.04487	-8.12	17.88
+micro_bench.php	5	15	0	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	2.05081	2.05579	0.00178	2.05376	-7.70	2.05462	-7.68	17.51
+
