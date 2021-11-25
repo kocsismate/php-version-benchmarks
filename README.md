@@ -20,7 +20,7 @@ The framework is heavily inspired by Intel's work from quite a few years ago: [h
 
 ## Results
 
-You can find the [benchmark results here](https://kocsismate.github.io/php-version-benchmarks/docs/results).
+You can find the [benchmark results here](https://github.com/kocsismate/php-version-benchmarks/tree/main/docs/results).
 
 ## Install
 
