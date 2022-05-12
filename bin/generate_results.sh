@@ -27,7 +27,13 @@ for dir in $database_dir/*/
 do
     dir=${dir%*/}
 
-    cat "$dir/environment.tsv" >> "$database_file"
-    cat "$dir/result.tsv" >> "$database_file"
+    if test -f "$dir/environment.tsv"; then
+        cat "$dir/environment.tsv" >> "$database_file"
+    fi
+
+    if test -f "$dir/result.tsv"; then
+        cat "$dir/result.tsv" >> "$database_file"
+    fi
+
     printf "\n" >> "$database_file"
 done
