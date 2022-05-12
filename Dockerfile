@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bullseye
 
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
