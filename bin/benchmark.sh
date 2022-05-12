@@ -35,13 +35,13 @@ diff () {
 }
 
 print_environment () {
-    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
 
-|  Attribute  |     Value   |
-|-------------|-------------|
+|  Attribute    |     Value      |
+|---------------|----------------|
 EOF
 
     instance_type=""
@@ -50,7 +50,7 @@ EOF
         if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
             instance_type="${instance_type} (dedicated)"
         fi
-        instance_type="|Instance type|$instance_type|\n"
+        instance_type="| Instance type |$instance_type|\n"
     fi
 
     architecture="$(uname -m)"
@@ -70,6 +70,7 @@ EOF
 
         ram_b="$(sysctl -n hw.memsize)"
         ram_gb=$(expr $ram_b / 1024 / 1024 / 1024)
+        gcc_version="$(gcc -v 2>&1 | grep "Apple clang version")"
     else
         cpu=""
         #cpu_info="$(lscpu)"
@@ -85,6 +86,7 @@ EOF
         os="${os/PRETTY_NAME=/}"
         os="${os//\"/}"
         os="$(echo "$os" | awk '{$1=$1;print}')"
+        gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
     fi
 
     cpu_settings=""
@@ -100,9 +102,9 @@ EOF
         cpu_settings="${cpu_settings}, disabled hyper-threading"
     fi
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
+        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
         "$NOW:00" >> "$1.tsv"
 
     if [[ ! -z "$cpu" ]]; then
@@ -114,12 +116,12 @@ EOF
     fi
 
     if [[ ! -z "$cpu_settings" ]]; then
-        cpu_settings="|CPU settings|$cpu_settings|\n"
+        cpu_settings="| CPU settings  |$cpu_settings|\n"
     fi
 
-    printf "|Environment|%s|\n|Runner|%s|\n$instance_type|Architecture|%s\n|CPU|%s|\n$cpu_settings|RAM|%d GB|\n|Kernel|%s|\n|OS|%s|\n|Time|%s|\n" \
+    printf "| Environment   |%s|\n| Runner        |%s|\n$instance_type| Architecture  |%s\n| CPU           |%s|\n$cpu_settings| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n" \
         "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$architecture" \
-        "$cpu" "$ram_gb" "$kernel" "$os" "$NOW:00" >> "$1.md"
+        "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW:00" >> "$1.md"
 }
 
 print_result_tsv_header () {
