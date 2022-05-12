@@ -8,7 +8,7 @@ elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
 
     cd $PROJECT_ROOT/build/infrastructure/aws/
 
-    terraform init -backend=true -get=true
+    terraform init -backend=true -get=true -upgrade
 
     terraform plan \
         -input=false \
