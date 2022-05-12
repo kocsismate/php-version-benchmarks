@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~>1.0"
+  required_version = "~>1.2"
   backend "local" {
     path = "./terraform.tfstate"
   }
@@ -71,7 +71,7 @@ EOF
 
   provisioner "file" {
     source = "${var.local_project_root}/tmp/archive.tar.gz"
-    destination = "~/archive.tar.gz"
+    destination = "/tmp/archive.tar.gz"
   }
 
   provisioner "remote-exec" {
@@ -79,7 +79,7 @@ EOF
       "set -e",
 
       "# Automatic termination",
-      "echo 'sudo halt' | at now + ${var.termination_timeout_in_min} min",
+      "#echo 'sudo halt' | at now + ${var.termination_timeout_in_min} min",
 
       "# Update permissions",
       "sudo mkdir -p ${var.remote_project_root}",
@@ -88,7 +88,7 @@ EOF
       "cd ${var.remote_project_root}",
 
       "# Unzip the archive",
-      "tar -xf ~/archive.tar.gz",
+      "tar -xf /tmp/archive.tar.gz",
 
       "sudo chmod -R 775 ${var.remote_project_root}",
       "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
@@ -189,7 +189,7 @@ data "aws_ami" "host" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*"]
+    values = ["al2022-ami-minimal-2022*"]
   }
 
   filter {

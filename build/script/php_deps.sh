@@ -9,13 +9,13 @@ sudo yum install -y \
     file \
     gcc \
     gcc-c++ \
-    libc-dev \
+    glibc-devel \
     make \
     pkg-config \
     re2c \
     bison \
     ca-certificates \
-    xz-utils \
+    xz \
     dirmngr \
     libargon2-devel \
     libcurl-devel \
@@ -26,4 +26,6 @@ sudo yum install -y \
     sqlite-devel \
     libxml2-devel \
     openssl-devel \
-    zlib-devel
+    zlib-devel \
+    time \
+    bc
