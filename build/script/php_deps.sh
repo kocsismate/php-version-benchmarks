@@ -25,7 +25,8 @@ sudo yum install -y \
     libsodium-devel \
     sqlite-devel \
     libxml2-devel \
-    openssl-devel \
+    openssl1.1-devel \
+    rsync \
     zlib-devel \
     time \
     bc
