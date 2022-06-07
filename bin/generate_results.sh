@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+if [ ! -d "$1" ]; then
+    exit
+fi
+
 if [ -z "$(ls -A $1)" ]; then
     exit
 fi
