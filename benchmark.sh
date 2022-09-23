@@ -55,9 +55,7 @@ if [[ "$1" == "run" ]]; then
         source "$infra_config"
         export $(cut -d= -f1 $infra_config)
 
-        for php_config in $PROJECT_ROOT/config/php/*.ini; do
-            $PROJECT_ROOT/bin/build.sh "local"
-        done
+        $PROJECT_ROOT/bin/build.sh "local"
     done
 
     for php_config in $PROJECT_ROOT/config/php/*.ini; do
