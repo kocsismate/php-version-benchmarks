@@ -1,9 +1,9 @@
-PHP_NAME="PHP 8.2"
-PHP_ID=php_82
+PHP_NAME="PHP 8.3"
+PHP_ID=php_83
 PHP_BASE_ID=
 
 PHP_REPO=https://github.com/php/php-src.git
-PHP_BRANCH=PHP-8.2
+PHP_BRANCH=master
 PHP_COMMIT=
 
 PHP_OPCACHE=1

@@ -3,7 +3,7 @@ PHP_ID=php_82_jit
 PHP_BASE_ID=php_82
 
 PHP_REPO=https://github.com/php/php-src.git
-PHP_BRANCH=master
+PHP_BRANCH=PHP-8.2
 PHP_COMMIT=
 
 PHP_OPCACHE=1
