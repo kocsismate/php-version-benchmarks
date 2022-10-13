@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-sudo yum update -y
-sudo yum groupinstall -y "Development Tools"
-sudo yum install -y \
+sudo dnf update -y
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install --allowerasing -y \
     util-linux \
     autoconf \
     file \

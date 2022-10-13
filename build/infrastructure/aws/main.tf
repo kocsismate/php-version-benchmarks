@@ -94,8 +94,8 @@ EOF
       "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
       "# Update system packages",
-      "sudo yum -y update",
-      "sudo yum -y install git curl docker",
+      "sudo dnf -y update",
+      "sudo dnf -y install git docker",
 
       "sudo usermod -a -G docker ${var.image_user}" ,
       "sudo service docker start",
