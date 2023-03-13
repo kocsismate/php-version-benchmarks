@@ -196,7 +196,7 @@ run_cgi () {
         export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
         export REQUEST_URI="$5"
         export APP_ENV="$6"
-        export APP_DEBUG=true
+        export APP_DEBUG=false
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
         export DB_CONNECTION=sqlite
