@@ -1,11 +1,11 @@
-PHP_NAME="PHP 8.3 (JIT)"
-PHP_ID=php_83_jit
-PHP_BASE_ID=php_83
+PHP_NAME="PHP 8.4"
+PHP_ID=php_84
+PHP_BASE_ID=
 
 PHP_REPO=https://github.com/php/php-src.git
 PHP_BRANCH=master
 PHP_COMMIT=
 
 PHP_OPCACHE=1
-PHP_PRELOADING=0
-PHP_JIT=1
+PHP_JIT_IR=0
+PHP_JIT=0
