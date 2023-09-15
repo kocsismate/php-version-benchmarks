@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-laravel_version="10.0.4" # https://github.com/laravel/laravel/releases
-symfony_version="2.2.3" # https://github.com/symfony/demo/releases
+laravel_version="10.2.6" # https://github.com/laravel/laravel/releases
+symfony_version="2.3.0" # https://github.com/symfony/demo/releases
 
 run_as=""
 if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
