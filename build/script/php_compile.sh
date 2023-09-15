@@ -51,3 +51,50 @@ if [[ "$PHP_JIT" = "1" || "$PHP_JIT_IR" = "1" ]]; then
 else
     sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 fi
+
+# Ensure about correct config
+
+if [ "$PHP_OPCACHE" = "1" ]; then
+    opcache="-d zend_extension=$PHP_SOURCE_PATH/modules/opcache.so"
+else
+    opcache=""
+fi
+
+php_cli_executable="$PHP_SOURCE_PATH/sapi/cli/php $opcache"
+
+$php_cli_executable -m
+$php_cli_executable -i
+
+if $php_cli_executable -i | grep -q "opcache.enable => On"; then
+    opcache_enabled=1
+else
+    opcache_enabled=0
+fi
+
+if $php_cli_executable -i | grep -q "opcache.jit_buffer_size => 0"; then
+    jit_enabled=0
+else
+    jit_enabled=1
+fi
+
+if [[ "$PHP_OPCACHE" = "1" && "$opcache_enabled" = "0" ]]; then
+    echo "OPCache should be enabled"
+    exit 1
+elif [[ "$PHP_OPCACHE" = "0" && "$opcache_enabled" = "1" ]]; then
+    echo "OPCache should not be enabled"
+    exit 1
+fi
+
+if [[ "$PHP_JIT" = "1" || "$PHP_JIT_IR" = "1" ]]; then
+    if [[ "$jit_enabled" = "0" ]]; then
+        echo "JIT should be enabled"
+        exit 1
+    fi
+fi
+
+if [[ "$PHP_JIT" = "0" && "$PHP_JIT_IR" = "0" ]]; then
+    if [[ "$jit_enabled" = "1" ]]; then
+        echo "JIT should not be enabled"
+        exit 1
+    fi
+fi
