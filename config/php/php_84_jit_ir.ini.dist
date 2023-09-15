@@ -1,0 +1,11 @@
+PHP_NAME="PHP 8.4 (JIT-IR)"
+PHP_ID=php_84_jit_ir
+PHP_BASE_ID=
+
+PHP_REPO=https://github.com/dstogov/php-src.git
+PHP_BRANCH=php-ir
+PHP_COMMIT=
+
+PHP_OPCACHE=1
+PHP_JIT_IR=1
+PHP_JIT=0
