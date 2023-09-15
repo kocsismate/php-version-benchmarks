@@ -1,11 +1,11 @@
 terraform {
-  required_version = "~>1.2"
+  required_version = "~>1.5"
   backend "local" {
     path = "./terraform.tfstate"
   }
   required_providers {
     aws = {
-      version = "4.13.0"
+      version = "5.0.0"
     }
   }
 }
