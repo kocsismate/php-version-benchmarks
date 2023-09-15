@@ -29,7 +29,6 @@ micro_bench.php	5	15	0	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	ht
 micro_bench.php	5	15	0	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	2.03869	2.05123	0.00327	2.04478	-8.10	2.04487	-8.12	17.88
 micro_bench.php	5	15	0	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	2.05081	2.05579	0.00178	2.05376	-7.70	2.05462	-7.68	17.51
 
-
 URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
 2022_05_16_13_38_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	5.15.29-16.111.amzn2022.aarch64	Amazon Linux 2022	11.2.1	0	0	0	0	2022-05-16 13:38:00
 Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
@@ -53,4 +52,32 @@ micro_bench.php	5	15	0	PHP 8.1	84c1e99ecfc8c5e025f07573f033cc60ccae8db3	https://
 micro_bench.php	5	15	0	PHP 8.2	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	2.05952	2.07195	0.00440	2.06429	-2.33	2.06193	-2.43	21.07
 micro_bench.php	5	15	0	PHP 8.2 (JIT)	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	1.20828	1.21603	0.00172	1.21292	-42.61	1.21315	-42.59	22.79
 micro_bench.php	5	15	0	PHP 8.2 (preloading)	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	2.05204	2.06632	0.00340	2.05519	-2.76	2.05463	-2.78	21.23
+
+
+
+
+
+
+
+
+
+
+
+
+
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
+2023_09_15_23_18_1_aws_x86_64_c5_4xlarge	aws_x86_64_c5_4xlarge	AWS x86_64 (c5.4xlarge)	aws	host	c6i.4xlarge	x86_64		8	30 GB	6.1.49-70.116.amzn2023.x86_64	Amazon Linux 2023	11.4.1	0	0	0	0	2023-09-15 23:18:00
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 8.4 (JIT)	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.77682	0.78074	0.00109	0.77855	0.00	0.77843	0.00	47.12
+Laravel demo app	50	25	250	PHP 8.4 (JIT-IR)	9a736d54a5e6c0f8becffa77adde9015fc84fcc3	https://github.com/dstogov/php-src/commit/9a736d54a5e6c0f8becffa77adde9015fc84fcc3	0.77143	0.77671	0.00149	0.77440	-0.53	0.77479	-0.47	47.29
+Laravel demo app	50	25	250	PHP 8.4	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.78554	0.78927	0.00091	0.78750	1.15	0.78750	1.17	39.22
+Symfony demo app	50	25	250	PHP 8.4 (JIT)	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.36970	0.37298	0.00070	0.37122	0.00	0.37122	0.00	38.03
+Symfony demo app	50	25	250	PHP 8.4 (JIT-IR)	9a736d54a5e6c0f8becffa77adde9015fc84fcc3	https://github.com/dstogov/php-src/commit/9a736d54a5e6c0f8becffa77adde9015fc84fcc3	0.36941	0.37112	0.00051	0.37021	-0.27	0.37022	-0.27	39.02
+Symfony demo app	50	25	250	PHP 8.4	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.35561	0.35769	0.00052	0.35679	-3.89	0.35682	-3.88	33.10
+bench.php	5	15	0	PHP 8.4 (JIT)	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.06728	0.06989	0.00065	0.06774	0.00	0.06751	0.00	25.82
+bench.php	5	15	0	PHP 8.4 (JIT-IR)	9a736d54a5e6c0f8becffa77adde9015fc84fcc3	https://github.com/dstogov/php-src/commit/9a736d54a5e6c0f8becffa77adde9015fc84fcc3	0.06355	0.06528	0.00044	0.06381	-5.79	0.06368	-5.66	25.86
+bench.php	5	15	0	PHP 8.4	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.18493	0.18542	0.00013	0.18520	173.41	0.18518	174.32	25.01
+micro_bench.php	5	15	0	PHP 8.4 (JIT)	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	0.62933	0.63412	0.00119	0.63104	0.00	0.63123	0.00	20.11
+micro_bench.php	5	15	0	PHP 8.4 (JIT-IR)	9a736d54a5e6c0f8becffa77adde9015fc84fcc3	https://github.com/dstogov/php-src/commit/9a736d54a5e6c0f8becffa77adde9015fc84fcc3	0.56741	0.57395	0.00214	0.57076	-9.55	0.57113	-9.52	20.07
+micro_bench.php	5	15	0	PHP 8.4	7c4db150cb490b476c0b6a6bf9319306856b96ec	https://github.com/php/php-src/commit/7c4db150cb490b476c0b6a6bf9319306856b96ec	1.17913	1.18263	0.00114	1.18086	87.13	1.18086	87.07	19.23
 
