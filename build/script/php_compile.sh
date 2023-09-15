@@ -18,6 +18,12 @@ export PHP_LDFLAGS="-Wl,-O1 -no-pie"
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
+
+opcache_option="--enable-opcache"
+if [ "$PHP_JIT_IR" = "1" ]; then
+    opcache_option="$opcache_option --enable-opcache-jit-ir"
+fi
+
 ./configure \
     --with-config-file-path="$PHP_SOURCE_PATH" \
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
@@ -28,6 +34,7 @@ cd "$PHP_SOURCE_PATH"
     --with-sqlite3=/usr \
     --with-curl \
     --with-libedit \
+    $opcache_option \
     --with-openssl \
     --with-zlib \
     --enable-cgi
@@ -39,13 +46,7 @@ cp "$PROJECT_ROOT/build/container/php-cgi/custom-php.ini" "$PHP_SOURCE_PATH/conf
 
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
-if [ "$PHP_PRELOADING" = "1" ]; then
-    sed -i "s#PRELOAD_SCRIPT#$PROJECT_ROOT/app/preload.php#g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
-else
-    sed -i "s/PRELOAD_SCRIPT/\"\"/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
-fi
-
-if [ "$PHP_JIT" = "1" ]; then
+if [[ "$PHP_JIT" = "1" || "$PHP_JIT_IR" = "1" ]]; then
     sed -i "s/JIT_BUFFER_SIZE/32M/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 else
     sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
