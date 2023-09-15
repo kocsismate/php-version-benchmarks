@@ -34,7 +34,7 @@ resource "aws_instance" "host" {
   instance_type = var.instance_type
   associate_public_ip_address = true
   key_name = aws_key_pair.key_pair.key_name
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[var.availability_zone_index]
   vpc_security_group_ids = [aws_security_group.security_group.id]
   monitoring = true
   tenancy = var.use_dedicated_instance ? "dedicated" : "default"

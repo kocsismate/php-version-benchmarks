@@ -12,6 +12,10 @@ variable "region" {
   type = string
 }
 
+variable "availability_zone_index" {
+  type = number
+}
+
 variable "run" {
   type = number
 }
