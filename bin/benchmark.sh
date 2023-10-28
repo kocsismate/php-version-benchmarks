@@ -327,7 +327,7 @@ run_benchmark () {
         mkdir -p "$log_dir"
 
         echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT-IR: $PHP_JIT_IR, JIT: $PHP_JIT)"
+        echo "$TEST_NAME - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
 
         run_test

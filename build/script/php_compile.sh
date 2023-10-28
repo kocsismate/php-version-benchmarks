@@ -20,9 +20,6 @@ cd "$PHP_SOURCE_PATH"
 ./buildconf
 
 opcache_option="--enable-opcache"
-if [ "$PHP_JIT_IR" = "1" ]; then
-    opcache_option="$opcache_option --enable-opcache-jit-ir"
-fi
 
 ./configure \
     --with-config-file-path="$PHP_SOURCE_PATH" \
@@ -46,7 +43,7 @@ cp "$PROJECT_ROOT/build/container/php-cgi/custom-php.ini" "$PHP_SOURCE_PATH/conf
 
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
-if [[ "$PHP_JIT" = "1" || "$PHP_JIT_IR" = "1" ]]; then
+if [[ "$PHP_JIT" = "1" ]]; then
     sed -i "s/JIT_BUFFER_SIZE/32M/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 else
     sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
@@ -85,14 +82,14 @@ elif [[ "$PHP_OPCACHE" = "0" && "$opcache_enabled" = "1" ]]; then
     exit 1
 fi
 
-if [[ "$PHP_JIT" = "1" || "$PHP_JIT_IR" = "1" ]]; then
+if [[ "$PHP_JIT" = "1" ]]; then
     if [[ "$jit_enabled" = "0" ]]; then
         echo "JIT should be enabled"
         exit 1
     fi
 fi
 
-if [[ "$PHP_JIT" = "0" && "$PHP_JIT_IR" = "0" ]]; then
+if [[ "$PHP_JIT" = "0" ]]; then
     if [[ "$jit_enabled" = "1" ]]; then
         echo "JIT should not be enabled"
         exit 1
