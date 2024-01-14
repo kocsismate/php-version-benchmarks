@@ -29,7 +29,6 @@ micro_bench.php	5	15	0	PHP 8.1 (JIT)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	ht
 micro_bench.php	5	15	0	PHP 8.1 (preloading)	80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	https://github.com/php/php-src/commit/80d63e9d17fd244624b2b6ecb29b6462a92bc0f0	2.03869	2.05123	0.00327	2.04478	-8.10	2.04487	-8.12	17.88
 micro_bench.php	5	15	0	PHP 8.2	d0a3cc146db9bf7c18d8860dcd5442da8354406c	https://github.com/php/php-src/commit/d0a3cc146db9bf7c18d8860dcd5442da8354406c	2.05081	2.05579	0.00178	2.05376	-7.70	2.05462	-7.68	17.51
 
-
 URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
 2022_05_16_13_38_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	5.15.29-16.111.amzn2022.aarch64	Amazon Linux 2022	11.2.1	0	0	0	0	2022-05-16 13:38:00
 Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
@@ -53,4 +52,28 @@ micro_bench.php	5	15	0	PHP 8.1	84c1e99ecfc8c5e025f07573f033cc60ccae8db3	https://
 micro_bench.php	5	15	0	PHP 8.2	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	2.05952	2.07195	0.00440	2.06429	-2.33	2.06193	-2.43	21.07
 micro_bench.php	5	15	0	PHP 8.2 (JIT)	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	1.20828	1.21603	0.00172	1.21292	-42.61	1.21315	-42.59	22.79
 micro_bench.php	5	15	0	PHP 8.2 (preloading)	c732549200138f0649eedff9829eab3c2d37aade	https://github.com/php/php-src/commit/c732549200138f0649eedff9829eab3c2d37aade	2.05204	2.06632	0.00340	2.05519	-2.76	2.05463	-2.78	21.23
+
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
+2024_01_14_21_50_1_aws_x86_64_c5_4xlarge	aws_x86_64_c5_4xlarge	AWS x86_64 (c5.4xlarge)	aws	host	c6i.4xlarge	x86_64		8	30 GB	6.1.66-93.164.amzn2023.x86_64	Amazon Linux 2023	11.4.1	0	0	0	0	2024-01-14 21:50:00
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	0.76862	0.77396	0.00123	0.77080	0.00	0.77077	0.00	38.82
+Laravel demo app	50	25	250	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	0.76390	0.76819	0.00109	0.76626	-0.59	0.76607	-0.61	39.55
+Laravel demo app	50	25	250	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	0.78817	0.79669	0.00162	0.79136	2.67	0.79134	2.67	38.80
+Laravel demo app	50	25	250	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.81345	0.82190	0.00213	0.81701	5.99	0.81687	5.98	39.80
+Laravel demo app	50	25	250	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.79329	0.80888	0.00312	0.79709	3.41	0.79637	3.32	47.89
+Symfony demo app	50	25	250	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	0.34625	0.35229	0.00115	0.34752	0.00	0.34744	0.00	32.73
+Symfony demo app	50	25	250	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	0.34155	0.44763	0.02063	0.34656	-0.28	0.34238	-1.46	32.98
+Symfony demo app	50	25	250	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	0.34498	0.34669	0.00045	0.34575	-0.51	0.34560	-0.53	33.12
+Symfony demo app	50	25	250	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.35105	0.35426	0.00080	0.35259	1.46	0.35251	1.46	33.17
+Symfony demo app	50	25	250	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.36500	0.36816	0.00076	0.36625	5.39	0.36613	5.38	39.39
+bench.php	5	15	0	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	0.18679	0.18779	0.00028	0.18724	0.00	0.18728	0.00	25.18
+bench.php	5	15	0	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	0.18342	0.18398	0.00018	0.18369	-1.90	0.18373	-1.90	25.01
+bench.php	5	15	0	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	0.18795	0.18874	0.00020	0.18839	0.61	0.18844	0.62	24.96
+bench.php	5	15	0	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.18557	0.18624	0.00019	0.18594	-0.69	0.18592	-0.73	25.32
+bench.php	5	15	0	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.06413	0.06653	0.00060	0.06469	-65.45	0.06448	-65.57	26.24
+micro_bench.php	5	15	0	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	1.14874	1.15244	0.00097	1.15083	0.00	1.15077	0.00	19.19
+micro_bench.php	5	15	0	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	1.15436	1.15947	0.00116	1.15639	0.48	1.15633	0.48	19.18
+micro_bench.php	5	15	0	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	1.18950	1.19473	0.00143	1.19241	3.61	1.19252	3.63	19.23
+micro_bench.php	5	15	0	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	1.14662	1.14964	0.00069	1.14812	-0.24	1.14822	-0.22	19.71
+micro_bench.php	5	15	0	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.57973	0.58867	0.00308	0.58458	-49.20	0.58436	-49.22	20.65
 
