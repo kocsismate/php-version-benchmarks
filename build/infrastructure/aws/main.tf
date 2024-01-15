@@ -41,8 +41,9 @@ resource "aws_instance" "host" {
   instance_initiated_shutdown_behavior = "stop"
 
   root_block_device {
-    volume_type = "gp2"
+    volume_type = "io2"
     volume_size = "32"
+    iops = 8000
   }
 
   tags = {
