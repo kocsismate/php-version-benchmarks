@@ -117,11 +117,12 @@ EOF
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 
-      "# Run the benchmark",
+      "# Setup the benchmark",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
 
-      var.disable_deeper_c_states ? "sudo sed -i 's/rd\\.shell=0\"/rd.shell=0 intel_idle.max_cstate=1\"/' /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg" : "echo 'skipped disabling deeper C states'",
+      var.disable_deeper_c_states ? "sudo sed -i 's/quiet\"/quiet intel_idle.max_cstate=1 processor.max_cstate=1\"/' /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg" : "echo 'skipped disabling deeper C states'",
+      "# original: GRUB_CMDLINE_LINUX_DEFAULT=\"console=tty0 console=ttyS0,115200n8 nvme_core.io_timeout=4294967295 rd.emergency=poweroff rd.shell=0 selinux=1 security=selinux quiet intel_idle.max_cstate=1 processor.max_cstate=1\""
     ]
   }
 
@@ -157,6 +158,9 @@ EOF
       var.runner == "host" ? "sudo service docker stop" : "echo 'skipped stopping docker service'",
       var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped disabling hyper threading'",
       var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped disabling turbo boost'",
+
+      # Verify CPU settings
+      "sudo cat /etc/default/grub",
 
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
