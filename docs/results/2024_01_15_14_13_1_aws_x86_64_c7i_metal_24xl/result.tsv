@@ -1,0 +1,21 @@
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
+Laravel demo app	50	25	250	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	1.05073	1.05746	0.00194	1.05352	0.00	1.05273	0.00	39.00
+Laravel demo app	50	25	250	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	1.04186	1.04841	0.00171	1.04427	-0.88	1.04391	-0.84	39.53
+Laravel demo app	50	25	250	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	1.04081	1.04661	0.00145	1.04317	-0.98	1.04289	-0.93	38.68
+Laravel demo app	50	25	250	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	1.07649	1.08413	0.00172	1.07879	2.40	1.07859	2.46	39.90
+Laravel demo app	50	25	250	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	1.06848	1.08224	0.00374	1.07198	1.75	1.07082	1.72	47.85
+Symfony demo app	50	25	250	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	0.49243	0.49929	0.00131	0.49455	0.00	0.49440	0.00	32.65
+Symfony demo app	50	25	250	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	0.48798	0.49173	0.00099	0.49010	-0.90	0.49007	-0.87	32.89
+Symfony demo app	50	25	250	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	0.48764	0.49353	0.00111	0.49032	-0.86	0.49037	-0.81	33.00
+Symfony demo app	50	25	250	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.49209	0.53869	0.00885	0.49558	0.21	0.49372	-0.14	33.44
+Symfony demo app	50	25	250	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.51764	0.52245	0.00111	0.51967	5.08	0.51953	5.08	39.41
+bench.php	5	15	0	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	0.21599	0.21830	0.00068	0.21717	0.00	0.21706	0.00	25.19
+bench.php	5	15	0	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	0.21268	0.21614	0.00085	0.21483	-1.08	0.21490	-1.00	25.02
+bench.php	5	15	0	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	0.21351	0.21639	0.00080	0.21449	-1.24	0.21424	-1.30	24.97
+bench.php	5	15	0	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.23191	0.23413	0.00070	0.23296	7.27	0.23287	7.28	25.44
+bench.php	5	15	0	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.07516	0.07791	0.00090	0.07629	-64.87	0.07604	-64.97	26.21
+micro_bench.php	5	15	0	PHP 8.1	8f6610ce8871c1065682db84264fd3450a5db342	https://github.com/php/php-src/commit/8f6610ce8871c1065682db84264fd3450a5db342	1.35690	1.37728	0.00547	1.36805	0.00	1.36833	0.00	19.09
+micro_bench.php	5	15	0	PHP 8.2	5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	https://github.com/php/php-src/commit/5e2a586c9ae7e6be77b130de443c0a18a2ff4a00	1.36188	1.39089	0.00970	1.37733	0.68	1.37850	0.74	19.35
+micro_bench.php	5	15	0	PHP 8.3	719c74e91976415b8a9b9e49ba12211153a32f9e	https://github.com/php/php-src/commit/719c74e91976415b8a9b9e49ba12211153a32f9e	1.41377	1.43117	0.00492	1.42193	3.94	1.42227	3.94	19.28
+micro_bench.php	5	15	0	PHP 8.4	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	1.30615	1.32029	0.00343	1.31435	-3.93	1.31406	-3.97	19.67
+micro_bench.php	5	15	0	PHP 8.4 (JIT)	ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	https://github.com/php/php-src/commit/ad9ec2607ae9c31c307ed55cbe9c0d9f3be97905	0.62014	0.64329	0.00728	0.62903	-54.02	0.62619	-54.24	20.66
