@@ -16,7 +16,7 @@
 ## Introduction
 
 This is a fully automated benchmark suite for comparing the performance of any PHP releases or branches.
-The framework is heavily inspired by Intel's work from quite a few years ago: [https://01.org/node/3774](https://01.org/node/3774).
+The framework is heavily inspired by Intel's work from quite a few years ago: [https://01.org/node/3774](https://web.archive.org/web/20210614053522/https://01.org/node/3774).
 
 ## Results
 
