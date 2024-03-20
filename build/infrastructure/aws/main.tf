@@ -158,9 +158,11 @@ EOF
       var.runner == "host" ? "sudo service docker stop" : "echo 'skipped stopping docker service'",
       var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped disabling hyper threading'",
       var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped disabling turbo boost'",
+      "echo 0 | sudo tee /proc/sys/kernel/randomize_va_space", # Disable ASLR based on https://github.com/php/php-src/pull/13769
 
-      # Verify CPU settings
+      # Verify CPU and kernel settings
       "sudo cat /etc/default/grub",
+      "sudo cat /proc/sys/kernel/randomize_va_space",
 
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
