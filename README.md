@@ -28,7 +28,7 @@ You can simply download or clone this repository. You can also install it via [C
 running the command below:
 
 ```bash
-$ composer require kocsismate/php-version-benchmarks:dev-master
+$ composer require kocsismate/php-version-benchmarks:dev-main
 ```
 
 ## Usage
