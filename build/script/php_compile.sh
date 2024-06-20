@@ -26,6 +26,7 @@ opcache_option="--enable-opcache"
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
     --enable-option-checking=fatal \
     --enable-mbstring \
+    --with-mysqli=mysqlnd  \
     --enable-mysqlnd \
     --with-pdo-sqlite=/usr \
     --with-sqlite3=/usr \

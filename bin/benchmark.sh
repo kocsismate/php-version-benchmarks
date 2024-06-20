@@ -286,6 +286,10 @@ run_test () {
             run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
             ;;
 
+        wordpress)
+            run_real_benchmark "app/wordpress/index.php" "/" "prod"
+            ;;
+
         bench)
             run_micro_benchmark "app/zend/bench.php"
             ;;
@@ -362,7 +366,19 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
     ((TEST_NUMBER=TEST_NUMBER+1))
 
+    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress" ]]; then
+        sudo service docker start
+
+        db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
+        $run_as docker start "$db_container_id"
+
+        sleep 5
+    fi
+
     sleep 5
     run_benchmark
 
+    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress" ]]; then
+        sudo service docker stop
+    fi
 done
