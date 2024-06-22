@@ -10,35 +10,28 @@ if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
     run_as="sudo"
 fi
 
-# Install Laravel demo app
-laravel_test="$(grep "TEST_ID=laravel" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
-if [ "$laravel_test" -gt "0" ]; then
+install_laravel () {
     mkdir -p "$PROJECT_ROOT/app/laravel"
 
-    if [ -z "$(ls -A $PROJECT_ROOT/app/laravel)" ]; then
-        $run_as docker run --rm \
+    $run_as docker run --rm \
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
 
-        $run_as docker run --rm \
-            --volume $PROJECT_ROOT:/code \
-            --user $(id -u):$(id -g) \
-            composer update --prefer-lowest --no-interaction --working-dir=/code/app/laravel --classmap-authoritative
+    $run_as docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer update --prefer-lowest --no-interaction --working-dir=/code/app/laravel --classmap-authoritative
 
-        sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
-        sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
-    fi
+    sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
+    sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
 
     if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
         sudo chmod -R 777 "$PROJECT_ROOT/app/laravel/storage"
     fi
-fi
+}
 
-# Install Symfony demo app
-symfony_main_test="$(grep "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
-symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
-if [[ "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
+install_symfony () {
     mkdir -p "$PROJECT_ROOT/app/symfony"
 
     if [ -z "$(ls -A $PROJECT_ROOT/app/symfony)" ]; then
@@ -56,15 +49,13 @@ if [[ "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
     if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
         sudo chmod -R 777 "$PROJECT_ROOT/app/symfony/var"
     fi
-fi
+}
 
-# Install Wordpress
-wordpress_test="$(grep "TEST_ID=wordpress" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
-if [ "$wordpress_test" -gt "0" ]; then
+install_wordpress () {
     mkdir -p "$PROJECT_ROOT/app/wordpress"
 
     if [ -z "$(ls -A $PROJECT_ROOT/app/wordpress)" ]; then
-        git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress"
+        git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress" &
 
         if [[ "$INFRA_RUNNER" == "host" ]]; then
             for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
@@ -93,4 +84,25 @@ if [ "$wordpress_test" -gt "0" ]; then
             echo "TODO to implement..."
         fi
     fi
+}
+
+# Install Laravel demo app
+laravel_test="$(grep "TEST_ID=laravel" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+if [ "$laravel_test" -gt "0" ]; then
+    install_laravel &
 fi
+
+# Install Symfony demo app
+symfony_main_test="$(grep "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+if [[ "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
+    install_symfony &
+fi
+
+# Install Wordpress
+wordpress_test="$(grep "TEST_ID=wordpress" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+if [ "$wordpress_test" -gt "0" ]; then
+    install_wordpress &
+fi
+
+wait
