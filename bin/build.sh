@@ -2,7 +2,7 @@
 set -e
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" && "$INFRA_RUNNER" == "host" ]]; then
-    $PROJECT_ROOT/build/script/php_deps.sh
+    $PROJECT_ROOT/build/script/php_deps.sh &
 fi
 
 for php_config in $PROJECT_ROOT/config/php/*.ini; do
