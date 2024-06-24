@@ -183,7 +183,9 @@ print_result_footer () {
 }
 
 run_cgi () {
-    sleep 0.25
+    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
+        sleep 0.25
+    fi
 
     if [[ "$INFRA_RUNNER" == "host" ]]; then
         if [ "$PHP_OPCACHE" = "1" ]; then
@@ -372,10 +374,15 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
         db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
         $run_as docker start "$db_container_id"
 
-        sleep 5
+        sleep 9
     fi
 
-    sleep 5
+    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
+        sleep 5
+    else
+        sleep 1
+    fi
+
     run_benchmark
 
     if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress" ]]; then
