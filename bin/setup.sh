@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-laravel_version="10.2.6" # https://github.com/laravel/laravel/releases
-symfony_version="2.3.0" # https://github.com/symfony/demo/releases
+laravel_version="11.1.2" # https://github.com/laravel/laravel/releases
+symfony_version="2.6.0" # https://github.com/symfony/demo/releases
 wordpress_url="https://github.com/php/benchmarking-wordpress-6.2"
 
 run_as=""
@@ -14,14 +14,24 @@ install_laravel () {
     mkdir -p "$PROJECT_ROOT/app/laravel"
 
     $run_as docker run --rm \
-            --volume $PROJECT_ROOT:/code \
-            --user $(id -u):$(id -g) \
-            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
 
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
-        composer update --prefer-lowest --no-interaction --working-dir=/code/app/laravel --classmap-authoritative
+        composer config platform-check false --working-dir=/code/app/laravel
+
+    $run_as docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer config platform.php 8.2 --working-dir=/code/app/laravel
+
+    $run_as docker run --rm \
+        --volume $PROJECT_ROOT:/code \
+        --user $(id -u):$(id -g) \
+        composer update --no-interaction --classmap-authoritative --working-dir=/code/app/laravel
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
     sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
