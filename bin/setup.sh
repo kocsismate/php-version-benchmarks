@@ -16,22 +16,11 @@ install_laravel () {
     $run_as docker run --rm \
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
-        composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
-
-    $run_as docker run --rm \
-        --volume $PROJECT_ROOT:/code \
-        --user $(id -u):$(id -g) \
-        composer config platform-check false --working-dir=/code/app/laravel
-
-    $run_as docker run --rm \
-        --volume $PROJECT_ROOT:/code \
-        --user $(id -u):$(id -g) \
-        composer config platform.php 8.2 --working-dir=/code/app/laravel
-
-    $run_as docker run --rm \
-        --volume $PROJECT_ROOT:/code \
-        --user $(id -u):$(id -g) \
-        composer update --no-interaction --classmap-authoritative --working-dir=/code/app/laravel
+        setup bash -c "\
+            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app && \
+            composer config platform-check false --working-dir=/code/app/laravel && \
+            composer config platform.php 8.2 --working-dir=/code/app/laravel && \
+            composer update --no-interaction --classmap-authoritative --working-dir=/code/app/laravel"
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
     sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
@@ -48,12 +37,10 @@ install_symfony () {
         $run_as docker run --rm \
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
-            composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app
-
-        $run_as docker run --rm \
-            --volume $PROJECT_ROOT:/code \
-            --user $(id -u):$(id -g) \
-            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony
+            setup bash -c "\
+            composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
+            composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
+            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi
 
     if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
@@ -96,15 +83,21 @@ install_wordpress () {
     fi
 }
 
-# Install Laravel demo app
 laravel_test="$(grep "TEST_ID=laravel" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+symfony_main_test="$(grep "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+
+# Build docker image for setup
+if [[ "$laravel_test" -gt "0" || "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
+    $run_as docker build -t setup $PROJECT_ROOT/app
+fi
+
+# Install Laravel demo app
 if [ "$laravel_test" -gt "0" ]; then
     install_laravel &
 fi
 
 # Install Symfony demo app
-symfony_main_test="$(grep "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
-symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
 if [[ "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
     install_symfony &
 fi

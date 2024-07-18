@@ -66,7 +66,7 @@ resource "aws_instance" "host" {
       cd ${var.local_project_root}
       mkdir -p "./tmp/results/${var.result_root_dir}"
 
-      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/zend/ ./bin ./build ./config ./tmp/results/${var.result_root_dir} .dockerignore Dockerfile
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/Dockerfile ./app/zend/ ./bin ./build ./config ./tmp/results/${var.result_root_dir} .dockerignore Dockerfile
 EOF
   }
 
