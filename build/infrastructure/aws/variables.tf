@@ -36,6 +36,25 @@ variable "result_root_dir" {
   type = string
 }
 
+variable "tags" {
+  description = "Custom tags on AWS resources"
+  type        = map(string)
+
+  default = {
+    "Name" = "php-version-benchmark"
+  }
+}
+
+variable "scheduler_tag" {
+  description = "Identifies AWS resources to stop"
+  type        = map(string)
+
+  default = {
+    "key"   = "to_stop"
+    "value" = "true"
+  }
+}
+
 variable "termination_timeout_in_min" {
   type = number
 }

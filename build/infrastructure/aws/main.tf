@@ -46,9 +46,7 @@ resource "aws_instance" "host" {
     iops = 8000
   }
 
-  tags = {
-    Name = "php-benchmark-host"
-  }
+  tags = merge(var.tags, {(var.scheduler_tag["key"]) = var.scheduler_tag["value"]})
 
   connection {
     type = "ssh"
@@ -78,9 +76,6 @@ EOF
   provisioner "remote-exec" {
     inline = [
       "set -e",
-
-      "# Automatic termination",
-      "#echo 'sudo halt' | at now + ${var.termination_timeout_in_min} min",
 
       "# Update permissions",
       "sudo mkdir -p ${var.remote_project_root}",
@@ -234,4 +229,154 @@ resource "aws_security_group" "security_group" {
     cidr_blocks = [
       "0.0.0.0/0"]
   }
+}
+
+################################################
+#
+#            AUTOMATIC TERMINATION
+#
+################################################
+
+resource "aws_iam_role" "this" {
+  name               = "php-version-benchmark-termination-scheduler-lambda"
+  description        = "Allows Lambda functions to stop and start ec2 and rds resources"
+  assume_role_policy = data.aws_iam_policy_document.this.json
+  tags               = var.tags
+}
+
+data "aws_iam_policy_document" "this" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "termination_lambda" {
+  name   = "php-version-benchmark-termination-lambda-policy"
+  role   = aws_iam_role.this.id
+  policy = data.aws_iam_policy_document.termination_lambda.json
+}
+
+data "aws_iam_policy_document" "termination_lambda" {
+  statement {
+    actions = [
+      "tag:GetResources",
+      "ec2:StopInstances",
+      "ec2:StartInstances",
+      "autoscaling:DescribeAutoScalingInstances",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "termination_lambda_cloudwatch_alarm" {
+  name   = "php-version-benchmark-termination-cloudwatch-custom-policy-scheduler"
+  role   = aws_iam_role.this.id
+  policy = data.aws_iam_policy_document.termination_lambda_cloudwatch_alarm.json
+}
+
+data "aws_iam_policy_document" "termination_lambda_cloudwatch_alarm" {
+  statement {
+    actions = [
+      "cloudwatch:DisableAlarmActions",
+      "cloudwatch:EnableAlarmActions",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_logging" {
+  name   = "php-version-benchmark-termination-lambda-logging"
+  role   = aws_iam_role.this.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : "${aws_cloudwatch_log_group.this.arn}:*",
+        "Effect" : "Allow"
+      }
+    ]
+  })
+}
+
+# Convert *.py to .zip because AWS Lambda needs .zip
+data "archive_file" "package" {
+  type        = "zip"
+  source_dir  = "${var.local_project_root}/build/infrastructure/package/"
+  output_path = "${var.local_project_root}/tmp/aws-stop-start-resources.zip"
+}
+
+# Create Lambda function for stop or start aws resources
+resource "aws_lambda_function" "this" {
+  filename         = data.archive_file.package.output_path
+  source_code_hash = data.archive_file.package.output_base64sha256
+  function_name    = "php-version-benchmark-termination-lambda-function"
+  role             = aws_iam_role.this.arn
+  handler          = "scheduler.main.lambda_handler"
+  runtime          = "python3.10"
+  timeout          = "600"
+  kms_key_arn      = ""
+
+  environment {
+    variables = {
+      AWS_REGIONS                     = var.region
+      SCHEDULE_ACTION                 = "stop"
+      TAG_KEY                         = var.scheduler_tag["key"]
+      TAG_VALUE                       = var.scheduler_tag["value"]
+      EC2_SCHEDULE                    = "true"
+    }
+  }
+
+  tags = var.tags
+}
+
+locals {
+  rfc_3339_now = "${replace(var.now, " ", "T")}Z"
+  termination_time = timeadd(local.rfc_3339_now, "${var.termination_timeout_in_min}m")
+  termination_hour = formatdate("h", local.termination_time)
+  termination_minute = formatdate("m", local.termination_time)
+  termination_day = formatdate("D", local.termination_time)
+  termination_month = formatdate("M", local.termination_time)
+  termination_year = formatdate("YYYY", local.termination_time)
+  cloudwatch_schedule_expression = "cron(${local.termination_minute} ${local.termination_hour} ${local.termination_day} ${local.termination_month} ? ${local.termination_year})"
+}
+
+resource "aws_cloudwatch_event_rule" "this" {
+  name                = "php-version-benchmark-termination-lambda-scheduler"
+  description         = "Trigger lambda scheduler"
+  schedule_expression = local.cloudwatch_schedule_expression
+  tags                = var.tags
+}
+
+resource "aws_cloudwatch_event_target" "this" {
+  arn  = aws_lambda_function.this.arn
+  rule = aws_cloudwatch_event_rule.this.name
+}
+
+resource "aws_lambda_permission" "this" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  principal     = "events.amazonaws.com"
+  function_name = aws_lambda_function.this.function_name
+  source_arn    = aws_cloudwatch_event_rule.this.arn
+}
+
+resource "aws_cloudwatch_log_group" "this" {
+  name              = "/aws/lambda/php-version-benchmark-termination"
+  retention_in_days = 7
+  tags              = var.tags
 }

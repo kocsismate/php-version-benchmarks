@@ -2,6 +2,8 @@ vendor/
 .terraform/
 /app/*/*
 !/app/zend/*
+/build/infrastructure/config/
+!/build/infrastructure/config/aws.tfvars.dist
 /config/**/*.*
 !/config/**/*.dist
 /tmp/
