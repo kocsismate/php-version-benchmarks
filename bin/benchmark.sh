@@ -105,7 +105,7 @@ EOF
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
-        "$NOW:00" >> "$1.tsv"
+        "$NOW" >> "$1.tsv"
 
     if [[ ! -z "$cpu" ]]; then
         cpu=", "
@@ -121,7 +121,7 @@ EOF
 
     printf "| Environment   |%s|\n| Runner        |%s|\n$instance_type| Architecture  |%s\n| CPU           |%s|\n$cpu_settings| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n" \
         "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$architecture" \
-        "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW:00" >> "$1.md"
+        "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW UTC" >> "$1.md"
 }
 
 print_result_tsv_header () {
@@ -177,9 +177,9 @@ print_result_value () {
 }
 
 print_result_footer () {
-    now="$(date +'%Y-%m-%d %H:%M')"
+    now="$(TZ=UTC date +'%Y-%m-%d %H:%M:%S')"
 
-    printf "\n##### Generated: $now\n" >> "$1.md"
+    printf "\n##### Generated: $now UTC\n" >> "$1.md"
 }
 
 run_cgi () {

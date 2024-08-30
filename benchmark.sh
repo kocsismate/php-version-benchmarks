@@ -37,7 +37,7 @@ if [[ "$1" == "run" ]]; then
     fi
 
     export N="${3:-1}"
-    NOW="$(date +'%Y-%m-%d %H:%M')"
+    NOW="$(TZ=UTC date +'%Y-%m-%d %H:%M:%S')"
     export NOW
 
     DRY_RUN="0";
