@@ -117,6 +117,7 @@ variable "runner" {
 
 variable "docker_registry" {
   type = string
+  sensitive = true
 }
 
 variable "docker_repository" {
