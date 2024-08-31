@@ -1,6 +1,6 @@
 access_key = ""
 secret_key = ""
-region = "eu-central-1"
+region = "eu-west-1"
 availability_zone_index = 0
 
 image_user = "ec2-user"
