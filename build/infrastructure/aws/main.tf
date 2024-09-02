@@ -54,7 +54,7 @@ resource "aws_instance" "host" {
     user = var.image_user
     private_key = tls_private_key.ssh_key.private_key_pem
     timeout = "${var.termination_timeout_in_min}m"
-    agent = true
+    agent = false
   }
 
   provisioner "local-exec" {
