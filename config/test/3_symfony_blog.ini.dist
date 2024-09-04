@@ -1,5 +1,5 @@
-TEST_NAME="Symfony demo blog"
-TEST_ID=symfony_blog
+TEST_NAME="Symfony 2.6.0 demo blog"
+TEST_ID=symfony_blog_2_6_0
 TEST_WARMUP=25
 TEST_ITERATIONS=30
 TEST_REQUESTS=50
