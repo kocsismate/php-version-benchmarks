@@ -21,10 +21,13 @@ cd "$PHP_SOURCE_PATH"
 
 opcache_option="--enable-opcache"
 
+# --enable-werror \ commenting out due to dynasm errors
+
 ./configure \
     --with-config-file-path="$PHP_SOURCE_PATH" \
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
     --enable-option-checking=fatal \
+    --disable-debug \
     --enable-mbstring \
     --with-mysqli=mysqlnd  \
     --enable-mysqlnd \
@@ -35,7 +38,8 @@ opcache_option="--enable-opcache"
     $opcache_option \
     --with-openssl \
     --with-zlib \
-    --enable-cgi
+    --enable-cgi \
+    --with-valgrind
 
 make -j "$(nproc)"
 

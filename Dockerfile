@@ -21,7 +21,8 @@ ENV PHPIZE_DEPS \
         make \
         pkg-config \
         re2c \
-        bison
+        bison \
+        valgrind
 
 # persistent / runtime deps
 RUN set -eux; \
@@ -102,6 +103,8 @@ RUN set -eux; \
         \
 # make sure invalid --configure-flags are fatal errors instead of just warnings
         --enable-option-checking=fatal \
+# --enable-werror \ commenting out due to dynasm errors
+        --disable-debug \
         --enable-mbstring \
         --with-mysqli=mysqlnd \
 # --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
@@ -119,6 +122,7 @@ RUN set -eux; \
         --with-libdir="lib/$debMultiarch" \
         \
         --enable-cgi \
+        --with-valgrind \
     ; \
     make -j "$(nproc)"; \
     find -type f -name '*.a' -delete; \

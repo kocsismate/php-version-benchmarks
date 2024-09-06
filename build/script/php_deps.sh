@@ -14,6 +14,7 @@ sudo dnf install --allowerasing -y \
     pkg-config \
     re2c \
     bison \
+    valgrind-devel \
     ca-certificates \
     xz \
     dirmngr \

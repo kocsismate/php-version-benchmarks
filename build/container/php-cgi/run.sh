@@ -25,8 +25,12 @@ if [ "$1" = "quiet" ]; then
     php-cgi $opcache "-T$2" "/code/$3" > /dev/null
 elif [ "$1" = "verbose" ]; then
     php-cgi $opcache "-T$2" "/code/$3"
+elif [ "$1" = "instruction_count" ]; then
+    valgrind --tool=callgrind --dump-instr=no -- \
+        php-cgi $opcache "-T$2" "/code/$3" > /dev/null
 elif [ "$1" = "memory" ]; then
-    /usr/bin/time -v php-cgi $opcache "-T$2" "/code/$3" > /dev/null
+    /usr/bin/time -v \
+        php-cgi $opcache "-T$2" "/code/$3" > /dev/null
 else
     php-cgi $opcache -q "-T$2" "/code/$3"
 fi
