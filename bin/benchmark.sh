@@ -368,7 +368,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
     ((TEST_NUMBER=TEST_NUMBER+1))
 
-    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress" ]]; then
+    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress_6_2" ]]; then
         sudo service docker start
 
         db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
@@ -385,7 +385,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
 
     run_benchmark
 
-    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress" ]]; then
+    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress_6_2" ]]; then
         sudo service docker stop
     fi
 done
