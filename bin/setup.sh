@@ -40,7 +40,9 @@ install_symfony () {
             setup bash -c "\
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
             composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
-            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
+            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony && \
+            /bin/console cache:clear && \
+            /bin/console cache:warmup"
     fi
 
     if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
@@ -78,7 +80,7 @@ install_wordpress () {
                 --admin_user=wordpress --admin_password=wordpress --admin_email=benchmark@php.net
 
         elif [[ "$INFRA_RUNNER" == "docker" ]]; then
-            echo "TODO to implement..."
+            echo "Not implemented yet..."
         fi
     fi
 }
