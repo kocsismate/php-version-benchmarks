@@ -276,19 +276,19 @@ run_test () {
 
     case "$TEST_ID" in
 
-        laravel)
+        laravel_11_1_2)
             run_real_benchmark "app/laravel/public/index.php" "" "production"
             ;;
 
-        symfony_main)
+        symfony_main_2_6_0)
             run_real_benchmark "app/symfony/public/index.php" "/" "prod"
             ;;
 
-        symfony_blog)
+        symfony_blog_2_6_0)
             run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
             ;;
 
-        wordpress)
+        wordpress_6_2)
             run_real_benchmark "app/wordpress/index.php" "/" "prod"
             ;;
 
