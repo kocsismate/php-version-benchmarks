@@ -149,8 +149,6 @@ micro_bench.php	5	15	0	PHP 8.3	05989e9e2cfbc11a6bde3063a6be9ede22ee983e	https://
 micro_bench.php	5	15	0	PHP 8.4	e1630381b75c960cdc2ba83836be39fed88e211d	https://github.com/php/php-src/commit/e1630381b75c960cdc2ba83836be39fed88e211d	1.34916	1.37571	0.00650	1.36250	-0.06	1.36216	-0.03	20.06
 micro_bench.php	5	15	0	PHP 8.4 (JIT)	e1630381b75c960cdc2ba83836be39fed88e211d	https://github.com/php/php-src/commit/e1630381b75c960cdc2ba83836be39fed88e211d	1.34396	1.37058	0.00726	1.35965	-0.27	1.36165	-0.07	20.06
 
-
-
 URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
 2024_06_23_09_39_1_aws_x86_64_c7i_metal_24xl	aws_x86_64_c7i_metal_24xl	AWS x86_64 (c7i.24xl)	aws	host	c7i.metal-24xl	x86_64		48	188 GB	6.1.92-99.174.amzn2023.x86_64	Amazon Linux 2023.4.20240611	11.4.1	0	0	0	0	2024-06-23 09:39:00
 Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage

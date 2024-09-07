@@ -2,11 +2,11 @@
 set -e
 
 if [ ! -d "$1" ]; then
-    exit
+    exit 1
 fi
 
 if [ -z "$(ls -A $1)" ]; then
-    exit
+    exit 1
 fi
 
 for dir in $1/*/
@@ -14,12 +14,12 @@ do
     dir=${dir%*/}
     dirname="${dir##*/}"
 
-    mkdir -p "$2_$dirname"
+    mkdir -p "${2}_$dirname"
 
-    cp "$1/$dirname/environment.tsv" "$2_$dirname/environment.tsv"
+    cp "$1/$dirname/environment.tsv" "${2}_$dirname/environment.tsv"
 
-    cp "$1/$dirname/result.md" "$2_$dirname/result.md"
-    cp "$1/$dirname/result.tsv" "$2_$dirname/result.tsv"
+    cp "$1/$dirname/result.md" "${2}_$dirname/result.md"
+    cp "$1/$dirname/result.tsv" "${2}_$dirname/result.tsv"
 done
 
 database_dir="$PROJECT_ROOT/docs/results"
@@ -27,7 +27,7 @@ database_file="$database_dir/database.tsv"
 
 : > "$database_file"
 
-for dir in $database_dir/*/
+for dir in $database_dir/*/*/
 do
     dir=${dir%*/}
 

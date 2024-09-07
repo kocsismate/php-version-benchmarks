@@ -49,6 +49,7 @@ if [[ "$1" == "run" ]]; then
     RESULT_ROOT_DIR="${NOW//-/_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR// /_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR//:/_}"
+    RESULT_ROOT_DIR="$(echo "$NOW" | cut -c1-4)/$RESULT_ROOT_DIR"
     export RESULT_ROOT_DIR
     export INFRA_ENVIRONMENT
 
