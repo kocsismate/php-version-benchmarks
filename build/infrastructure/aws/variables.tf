@@ -115,6 +115,10 @@ variable "runner" {
   type = string
 }
 
+variable "measure_instruction_count" {
+  type = string
+}
+
 variable "docker_registry" {
   type = string
   sensitive = false

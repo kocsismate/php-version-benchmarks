@@ -109,6 +109,7 @@ EOF
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
+      "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count}\"",
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 
@@ -147,6 +148,7 @@ EOF
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
+      "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count}\"",
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
 

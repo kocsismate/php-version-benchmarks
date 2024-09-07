@@ -125,7 +125,13 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tInstruction count\n\tMemory usage\n" >> "$1.tsv"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        instruction_count_header_name="\tInstruction count"
+    else
+        instruction_count_header_name=""
+    fi
+
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%$instruction_count_header_name\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -134,11 +140,19 @@ print_result_md_header () {
         description="$description, $TEST_REQUESTS requests"
     fi
 
+if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    instruction_count_header_name="|  Instr count  "
+    instruction_count_header_separator="|---------------";
+else
+    instruction_count_header_name=""
+    instruction_count_header_separator="";
+fi
+
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % |  Instr count  |     Memory    |
-|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------|---------------|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % $instruction_count_header_name|     Memory    |
+|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------$instruction_count_header_separator|---------------|
 EOF
 }
 
@@ -148,7 +162,15 @@ print_result_value () {
     url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     results="$(cat "$1")"
-    instruction_count="$(cat "$2")"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        instruction_count_tsv_format="\t%d"
+        instruction_count_md_format="|%d"
+        instruction_count="$(cat "$2")"
+    else
+        instruction_count_tsv_format="%s"
+        instruction_count_md_format="%s"
+        instruction_count=""
+    fi
     memory_result="$(cat "$3")"
 
     min="$(min "$results")"
@@ -166,13 +188,13 @@ print_result_value () {
     std_dev="$(std_deviation "$results")"
     memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%d\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
         "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count" "$memory_usage" >> "$4.tsv"
 
     if [ "$5" -eq "1" ]; then
-        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%d|%.2f MB|\n" \
+        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%$instruction_count_md_format|%.2f MB|\n" \
             "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count" "$memory_usage" >> "$4.md"
     fi
 }
@@ -258,13 +280,17 @@ format_memory_log_file() {
 run_real_benchmark () {
     # Benchmark
     run_cgi "verbose" "0" "1" "$1" "$2" "$3"
-    run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+    fi
     run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     for b in $(seq $TEST_ITERATIONS); do
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
 
-    format_instruction_count_log_file "$instruction_count_log_file"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        format_instruction_count_log_file "$instruction_count_log_file"
+    fi
     format_memory_log_file "$memory_log_file"
 
     # Format log
@@ -276,11 +302,15 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     # Benchmark
-    run_cgi "instruction_count" "2" "2" "$1" "" "" 2>&1 | tee -a "$instruction_count_log_file"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        run_cgi "instruction_count" "2" "2" "$1" "" "" 2>&1 | tee -a "$instruction_count_log_file"
+    fi
     run_cgi "memory" "0" "$TEST_WARMUP" "$1" "" "" 2>&1 | tee -a "$memory_log_file"
     run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
 
-    format_instruction_count_log_file "$instruction_count_log_file"
+    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+        format_instruction_count_log_file "$instruction_count_log_file"
+    fi
     format_memory_log_file "$memory_log_file"
 
     # Format log

@@ -22,7 +22,7 @@ ENV PHPIZE_DEPS \
         pkg-config \
         re2c \
         bison \
-        valgrind
+        valgrind-devel
 
 # persistent / runtime deps
 RUN set -eux; \

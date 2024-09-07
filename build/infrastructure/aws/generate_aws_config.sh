@@ -53,6 +53,7 @@ infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
 runner = "$INFRA_RUNNER"
+measure_instruction_count = "$INFRA_MEASURE_INSTRUCTION_COUNT"
 docker_registry = "$INFRA_DOCKER_REGISTRY"
 docker_repository = "$INFRA_DOCKER_REPOSITORY"
 EOF
