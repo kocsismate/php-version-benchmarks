@@ -17,10 +17,11 @@ install_laravel () {
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         setup bash -c "\
-            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app && \
+            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
+            cp /code/app/laravel.composer.lock /code/app/laravel/composer.lock && \
             composer config platform-check false --working-dir=/code/app/laravel && \
             composer config platform.php 8.2 --working-dir=/code/app/laravel && \
-            composer update --no-interaction --classmap-authoritative --working-dir=/code/app/laravel"
+            composer install --classmap-authoritative --no-interaction --working-dir=/code/app/laravel"
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
     sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
@@ -38,11 +39,12 @@ install_symfony () {
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             setup bash -c "\
+            export APP_ENV=prod
+            export APP_DEBUG=false
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
             composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
-            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony && \
-            /bin/console cache:clear && \
-            /bin/console cache:warmup"
+            composer config platform-check false --working-dir=/code/app/symfony && \
+            composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi
 
     if [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
