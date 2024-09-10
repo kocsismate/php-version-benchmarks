@@ -1,7 +1,4 @@
 URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
-2021_11_11_09_20_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.252-195.483.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-11-11 09:20:00
-
-URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	Dedicated instance	Disabled deeper C-states	Disabled turbo boost	Disabled hyper-threading	Time
 2021_11_25_10_08_1_aws_arm64_c6g_4xlarge	aws_arm64_c6g_4xlarge	AWS ARM64 (c6g.4xlarge)	aws	host	c6g.4xlarge	aarch64		16	30 GB	4.14.252-195.483.amzn2.aarch64	Amazon Linux 2	0	0	0	0	2021-11-25 10:08:00
 Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Memory usage
 Laravel demo app	50	25	250	PHP 7.4	60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	https://github.com/php/php-src/commit/60fe575ce3d5ad0647d3c12698d0d3fcb0cb8f7b	1.33131	1.42081	0.01762	1.34195	0.00	1.33758	0.00	32.89
