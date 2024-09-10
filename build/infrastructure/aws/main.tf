@@ -181,7 +181,7 @@ EOF
       rm -f "${var.local_project_root}/tmp/ssh-key.pem"
 
       if [[ "${var.dry_run}" == "false" ]]; then
-        ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}"
+        ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}" "${var.now}"
       fi
     EOP
   }

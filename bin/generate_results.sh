@@ -22,12 +22,13 @@ do
     cp "$1/$dirname/result.tsv" "${2}_$dirname/result.tsv"
 done
 
-database_dir="$PROJECT_ROOT/docs/results"
+year="$(echo "$NOW" | cut -c1-4)"
+database_dir="$PROJECT_ROOT/docs/results/$year"
 database_file="$database_dir/database.tsv"
 
 : > "$database_file"
 
-for dir in $database_dir/*/*/
+for dir in $database_dir/*/
 do
     dir=${dir%*/}
 

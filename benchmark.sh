@@ -87,7 +87,7 @@ if [[ "$1" == "run" ]]; then
     done
 
     if [[ "$DRY_RUN" -eq "0" ]]; then
-        $PROJECT_ROOT/bin/generate_results.sh "$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR" "$PROJECT_ROOT/docs/results/$RESULT_ROOT_DIR"
+        $PROJECT_ROOT/bin/generate_results.sh "$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR" "$PROJECT_ROOT/docs/results/$RESULT_ROOT_DIR" "$NOW"
     fi
 
 elif [[ "$1" == "help" ]]; then
