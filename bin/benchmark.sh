@@ -125,13 +125,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
-        instruction_count_header_name="\tInstruction count"
-    else
-        instruction_count_header_name=""
-    fi
-
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%$instruction_count_header_name\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tInstruction count\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -164,12 +158,14 @@ print_result_value () {
     results="$(cat "$1")"
     if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
         instruction_count_tsv_format="\t%d"
+        instruction_count_tsv_value="$(cat "$2")"
         instruction_count_md_format="|%d"
-        instruction_count="$(cat "$2")"
+        instruction_count_md_value="$(cat "$2")"
     else
         instruction_count_tsv_format="%s"
+        instruction_count_tsv_value="%d"
         instruction_count_md_format="%s"
-        instruction_count=""
+        instruction_count_md_value=""
     fi
     memory_result="$(cat "$3")"
 
@@ -191,11 +187,11 @@ print_result_value () {
     printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count" "$memory_usage" >> "$4.tsv"
+        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count_tsv_value" "$memory_usage" >> "$4.tsv"
 
     if [ "$5" -eq "1" ]; then
         printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%$instruction_count_md_format|%.2f MB|\n" \
-            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count" "$memory_usage" >> "$4.md"
+            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count_md_value" "$memory_usage" >> "$4.md"
     fi
 }
 
