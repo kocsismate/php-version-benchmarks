@@ -1,0 +1,20 @@
+simple             %f
+simplecall         %f
+simpleucall        %f
+simpleudcall       %f
+mandel             %f
+mandel2            %f
+ackermann(7)       %f
+ary(50000)         %f
+ary2(50000)        %f
+ary3(2000)         %f
+fibo(30)           %f
+hash1(50000)       %f
+hash2(500)         %f
+heapsort(20000)    %f
+matrix(20)         %f
+nestedloop(12)     %f
+sieve(30)          %f
+strcat(200000)     %f
+---------------------------
+Total              %f

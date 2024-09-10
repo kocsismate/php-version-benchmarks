@@ -1,0 +1,346 @@
+X-Powered-By: PHP/%v
+Cache-Control: no-cache, private
+Date: %s GMT
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta name="view-transition" content="same-origin" />
+        <title>Symfony Demo application</title>
+        <link rel="alternate" type="application/rss+xml" title="Symfony Demo blog" href="/en/blog/rss.xml">
+
+
+<link rel="stylesheet" href="/assets/styles/app-%s.css">
+<link rel="stylesheet" href="/assets/vendor/@fortawesome/fontawesome-free/css/all-%s.css">
+<link rel="stylesheet" href="/assets/vendor/@fortawesome/fontawesome-free/css/v4-shims-%s.css">
+<link rel="stylesheet" href="/assets/vendor/highlight.js/styles/github-dark-dimmed-%s.css">
+<link rel="stylesheet" href="/assets/vendor/lato-font/css/lato-font-%s.css">
+<link rel="stylesheet" href="/assets/vendor/flatpickr/dist/flatpickr.min-%s.css">
+<link rel="stylesheet" href="/assets/@symfony/ux-live-component/live.min-%s.css">
+<script type="importmap">
+{
+    "imports": {
+        "app": "/assets/app-%s.js",
+        "/assets/bootstrap.js": "/assets/bootstrap-%s.js",
+        "/assets/styles/app.css": "data:application/javascript,",
+        "@fortawesome/fontawesome-free/css/all.css": "data:application/javascript,",
+        "@fortawesome/fontawesome-free/css/v4-shims.css": "data:application/javascript,",
+        "highlight.js/styles/github-dark-dimmed.css": "data:application/javascript,",
+        "lato-font/css/lato-font.css": "data:application/javascript,",
+        "bootstrap/js/dist/alert": "/assets/vendor/bootstrap/js/dist/alert-%s.js",
+        "bootstrap/js/dist/collapse": "/assets/vendor/bootstrap/js/dist/collapse-%s.js",
+        "bootstrap/js/dist/dropdown": "/assets/vendor/bootstrap/js/dist/dropdown-%s.js",
+        "bootstrap/js/dist/tab": "/assets/vendor/bootstrap/js/dist/tab-%s.js",
+        "bootstrap/js/dist/modal": "/assets/vendor/bootstrap/js/dist/modal-%s.js",
+        "jquery": "/assets/vendor/jquery/jquery.index-%s.js",
+        "/assets/js/highlight.js": "/assets/js/highlight-%s.js",
+        "/assets/js/doclinks.js": "/assets/js/doclinks-%s.js",
+        "/assets/js/flatpicker.js": "/assets/js/flatpicker-%s.js",
+        "@symfony/stimulus-bundle": "/assets/@symfony/stimulus-bundle/loader-%s.js",
+        "popper.js": "/assets/vendor/popper.js/popper.js.index-%s.js",
+        "highlight.js/lib/core": "/assets/vendor/highlight.js/lib/core-%s.js",
+        "highlight.js/lib/languages/php": "/assets/vendor/highlight.js/lib/languages/php-%s.js",
+        "highlight.js/lib/languages/twig": "/assets/vendor/highlight.js/lib/languages/twig-%s.js",
+        "flatpickr": "/assets/vendor/flatpickr/flatpickr.index-%s.js",
+        "flatpickr/dist/flatpickr.min.css": "data:application/javascript,",
+        "flatpickr/dist/l10n": "/assets/vendor/flatpickr/dist/l10n-%s.js",
+        "@hotwired/stimulus": "/assets/vendor/@hotwired/stimulus/stimulus.index-%s.js",
+        "/assets/@symfony/stimulus-bundle/controllers.js": "/assets/@symfony/stimulus-bundle/controllers-%s.js",
+        "/assets/@symfony/ux-live-component/live_controller.js": "/assets/@symfony/ux-live-component/live_controller-%s.js",
+        "/assets/@symfony/ux-live-component/live.min.css": "data:application/javascript,",
+        "/assets/controllers/login-controller.js": "/assets/controllers/login-controller-%s.js",
+        "admin": "/assets/admin-ead220e2acdd2d7ea45fb1a8963ace46.js",
+        "/assets/styles/admin.css": "data:application/javascript,document.head.appendChild%28Object.assign%28document.createElement%28%22link%22%29%2C%7Brel%3A%22stylesheet%22%2Chref%3A%22%2Fassets%2Fstyles%2Fadmin-%s.css%22%7D%29%29",
+        "/assets/js/jquery_global.js": "/assets/js/jquery_global-%s.js",
+        "/assets/styles/bootstrap-tagsinput.css": "data:application/javascript,document.head.appendChild%28Object.assign%28document.createElement%28%22link%22%29%2C%7Brel%3A%22stylesheet%22%2Chref%3A%22%2Fassets%2Fstyles%2Fbootstrap-tagsinput-%s.css%22%7D%29%29",
+        "bootstrap/dist/css/bootstrap.min.css": "data:application/javascript,document.head.appendChild%28Object.assign%28document.createElement%28%22link%22%29%2C%7Brel%3A%22stylesheet%22%2Chref%3A%22%2Fassets%2Fvendor%2Fbootstrap%2Fdist%2Fcss%2Fbootstrap.min-%s.css%22%7D%29%29",
+        "typeahead.js": "/assets/vendor/typeahead.js/typeahead.js.index-%s.js",
+        "bloodhound-js": "/assets/vendor/bloodhound-js/bloodhound-js.index-%s.js",
+        "object-assign": "/assets/vendor/object-assign/object-assign.index-%s.js",
+        "es6-promise": "/assets/vendor/es6-promise/es6-promise.index-%s.js",
+        "storage2": "/assets/vendor/storage2/storage2.index-%s.js",
+        "superagent": "/assets/vendor/superagent/superagent.index-%s.js",
+        "component-emitter": "/assets/vendor/component-emitter/component-emitter.index-%s.js",
+        "bootstrap-tagsinput": "/assets/vendor/bootstrap-tagsinput/bootstrap-tagsinput.index-%s.js",
+        "@symfony/ux-live-component": "/assets/@symfony/ux-live-component/live_controller-%s.js"
+    }
+}
+</script>
+<!-- ES Module Shims: Import maps polyfill for modules browsers without import maps support -->
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.8.2/dist/es-module-shims.js" crossorigin="anonymous" integrity="sha384-+dzlBT6NPToF0UZu7ZUA6ehxHY8h/TxJOZxzNXKhFD+5He5Hbex+0AIOiSsEaokw"></script>
+<link rel="modulepreload" href="/assets/app-%s.js">
+<link rel="modulepreload" href="/assets/bootstrap-%s.js">
+<link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/alert-%s.js">
+<link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/collapse-%s.js">
+<link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/dropdown-%s.js">
+<link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/tab-%s.js">
+<link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/modal-%s.js">
+<link rel="modulepreload" href="/assets/vendor/jquery/jquery.index-%s.js">
+<link rel="modulepreload" href="/assets/js/highlight-%s.js">
+<link rel="modulepreload" href="/assets/js/doclinks-%s.js">
+<link rel="modulepreload" href="/assets/js/flatpicker-%s.js">
+<link rel="modulepreload" href="/assets/@symfony/stimulus-bundle/loader-%s.js">
+<link rel="modulepreload" href="/assets/vendor/popper.js/popper.js.index-%s.js">
+<link rel="modulepreload" href="/assets/vendor/highlight.js/lib/core-%s.js">
+<link rel="modulepreload" href="/assets/vendor/highlight.js/lib/languages/php-%s.js">
+<link rel="modulepreload" href="/assets/vendor/highlight.js/lib/languages/twig-%s.js">
+<link rel="modulepreload" href="/assets/vendor/flatpickr/flatpickr.index-%s.js">
+<link rel="modulepreload" href="/assets/vendor/flatpickr/dist/l10n-%s.js">
+<link rel="modulepreload" href="/assets/vendor/@hotwired/stimulus/stimulus.index-%s.js">
+<link rel="modulepreload" href="/assets/@symfony/stimulus-bundle/controllers-%s.js">
+<link rel="modulepreload" href="/assets/@symfony/ux-live-component/live_controller-%s.js">
+<script type="module">import 'app';</script>                <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg">
+    </head>
+
+    <body id="homepage">
+
+
+        <div class="container body-container">
+                <div class="page-header">
+        <h1>Welcome to the <strong>Symfony Demo</strong> application</h1>
+
+                    <a href="#" class="nav-link dropdown-toggle language-selector-dropdown-button" data-toggle="modal" data-target="#locale-selector-modal" role="button" id="locales">
+        <i class="fa fa-solid fa-globe" aria-hidden="true"></i>
+                    <span class="current-language">English</span>
+                <span class="caret"></span>
+        <span class="sr-only">Choose language</span>
+    </a>
+
+    <div id="locale-selector-modal" class="modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-lg modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <p class="modal-title" lang="en">
+                                                Choose your language
+                    </p>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <ul class="locales">
+                                                                                                            <li class=" rtl" translate="no">
+                                <a class="stretched-link" lang="ar" hreflang="ar" href="/ar">
+                                    العربية
+                                    <small>ar</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="bg" hreflang="bg" href="/bg">
+                                    Български
+                                    <small>bg</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="bn" hreflang="bn" href="/bn">
+                                    বাংলা
+                                    <small>bn</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="bs" hreflang="bs" href="/bs">
+                                    Bosanski
+                                    <small>bs</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="ca" hreflang="ca" href="/ca">
+                                    Català
+                                    <small>ca</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="cs" hreflang="cs" href="/cs">
+                                    Čeština
+                                    <small>cs</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="de" hreflang="de" href="/de">
+                                    Deutsch
+                                    <small>de</small>
+                                </a>
+                            </li>
+                                                                                                            <li class="active " translate="no">
+                                <a class="stretched-link" lang="en" hreflang="en" href="/">
+                                    English
+                                    <small>en</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="es" hreflang="es" href="/es">
+                                    Español
+                                    <small>es</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="eu" hreflang="eu" href="/eu">
+                                    Euskara
+                                    <small>eu</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="fr" hreflang="fr" href="/fr">
+                                    Français
+                                    <small>fr</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="hr" hreflang="hr" href="/hr">
+                                    Hrvatski
+                                    <small>hr</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="id" hreflang="id" href="/id">
+                                    Indonesia
+                                    <small>id</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="it" hreflang="it" href="/it">
+                                    Italiano
+                                    <small>it</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="ja" hreflang="ja" href="/ja">
+                                    日本語
+                                    <small>ja</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="lt" hreflang="lt" href="/lt">
+                                    Lietuvių
+                                    <small>lt</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="ne" hreflang="ne" href="/ne">
+                                    नेपाली
+                                    <small>ne</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="nl" hreflang="nl" href="/nl">
+                                    Nederlands
+                                    <small>nl</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="pl" hreflang="pl" href="/pl">
+                                    Polski
+                                    <small>pl</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="pt_BR" hreflang="pt_BR" href="/pt_BR">
+                                    Português (brasil)
+                                    <small>pt_BR</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="ro" hreflang="ro" href="/ro">
+                                    Română
+                                    <small>ro</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="ru" hreflang="ru" href="/ru">
+                                    Русский
+                                    <small>ru</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="sl" hreflang="sl" href="/sl">
+                                    Slovenščina
+                                    <small>sl</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="sq" hreflang="sq" href="/sq">
+                                    Shqip
+                                    <small>sq</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="sr_Cyrl" hreflang="sr_Cyrl" href="/sr_Cyrl">
+                                    Српски (ћирилица)
+                                    <small>sr_Cyrl</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="sr_Latn" hreflang="sr_Latn" href="/sr_Latn">
+                                    Srpski (latinica)
+                                    <small>sr_Latn</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="tr" hreflang="tr" href="/tr">
+                                    Türkçe
+                                    <small>tr</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="uk" hreflang="uk" href="/uk">
+                                    Українська
+                                    <small>uk</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="vi" hreflang="vi" href="/vi">
+                                    Tiếng việt
+                                    <small>vi</small>
+                                </a>
+                            </li>
+                                                                                                            <li class=" " translate="no">
+                                <a class="stretched-link" lang="zh_CN" hreflang="zh_CN" href="/zh_CN">
+                                    中文（中国）
+                                    <small>zh_CN</small>
+                                </a>
+                            </li>
+                                            </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <div class="jumbotron">
+                <p>
+                    Browse the <strong>public section</strong> of the demo application.
+                </p>
+                <p>
+                    <a class="btn btn-primary btn-lg" href="/en/blog/">
+                        <i class="fa fa-users" aria-hidden="true"></i> Browse application
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <div class="col-sm">
+            <div class="jumbotron">
+                <p>
+                    Browse the <strong>admin backend</strong> of the demo application.
+                </p>
+                <p>
+                    <a class="btn btn-primary btn-lg" href="/en/admin/post/">
+                        <i class="fa fa-lock" aria-hidden="true"></i> Browse backend
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+        </div>
+
+
+                <!-- Page rendered on %s UTC -->
+    </body>
+</html>

@@ -259,6 +259,27 @@ run_cgi () {
     fi
 }
 
+assert_test_output() {
+    expectation_file="$1"
+    actual_file="$2"
+
+    if [[ "$INFRA_RUNNER" == "host" ]]; then
+        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert.php" "$expectation_file" "$actual_file"
+    else
+        if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
+            run_as=""
+            repository="$INFRA_DOCKER_REPOSITORY"
+        elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
+            run_as="sudo"
+            repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
+        fi
+
+        $run_as docker run --rm --log-driver=local \
+            --volume "$PROJECT_ROOT/app:/code/app:delegated" \
+            "$repository:$PHP_ID-latest" php /code/app/zend/assert.php "$expectation_file" "$actual_file"
+    fi
+}
+
 format_instruction_count_log_file() {
     result="$(grep "== Collected : " "$1")"
     echo "$result" > "$1"
@@ -275,7 +296,11 @@ format_memory_log_file() {
 
 run_real_benchmark () {
     # Benchmark
-    run_cgi "verbose" "0" "1" "$1" "$2" "$3"
+    run_cgi "verbose" "0" "1" "$1" "$2" "$3" | tee -a "$output_file"
+    if [ ! -z "$test_expectation_file" ]; then
+        assert_test_output "$test_expectation_file" "$output_file"
+    fi
+
     if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
         run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
     fi
@@ -318,7 +343,6 @@ run_micro_benchmark () {
 }
 
 run_test () {
-
     case "$TEST_ID" in
 
         laravel_11_1_2)
@@ -353,7 +377,10 @@ run_test () {
 }
 
 run_benchmark () {
-
+    test_expectation_file="${test_config//.ini/.expectation}"
+    if [ ! -f "$test_expectation_file" ]; then
+        test_expectation_file=""
+    fi
     result_dir="$infra_dir/${TEST_NUMBER}_${TEST_ID}"
     result_file="$result_dir/result"
 
@@ -374,6 +401,7 @@ run_benchmark () {
 
         log_dir="$result_dir"
         log_file="$log_dir/${PHP_ID}.log"
+        output_file="$log_dir/${PHP_ID}_output.txt"
         instruction_count_log_file="$log_dir/${PHP_ID}.instruction_count.log"
         memory_log_file="$log_dir/${PHP_ID}.memory.log"
         mkdir -p "$log_dir"

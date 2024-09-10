@@ -1,0 +1,37 @@
+empty_loop         %f
+func()             %f    %f
+undef_func()       %f    %f
+int_func()         %f    %f
+$x = self::$x      %f    %f
+self::$x = 0       %f    %f
+isset(self::$x)    %f    %f
+empty(self::$x)    %f    %f
+$x = Foo::$x       %f    %f
+Foo::$x = 0        %f    %f
+isset(Foo::$x)     %f    %f
+empty(Foo::$x)     %f    %f
+self::f()          %f    %f
+Foo::f()           %f    %f
+$x = $this->x      %f    %f
+$this->x = 0       %f    %f
+$this->x += 2      %f    %f
+++$this->x         %f    %f
+--$this->x         %f    %f
+$this->x++         %f    %f
+$this->x--         %f    %f
+isset($this->x)    %f    %f
+empty($this->x)    %f    %f
+$this->f()         %f    %f
+$x = Foo::TEST     %f    %f
+new Foo()          %f    %f
+$x = TEST          %f    %f
+$x = $_GET         %f    %f
+$x = $GLOBALS['v'] %f    %f
+$x = $hash['v']    %f    %f
+$x = $str[0]       %f    %f
+$x = $a ?: null    %f    %f
+$x = $f ?: tmp     %f    %f
+$x = $f ? $f : $a  %f    %f
+$x = $f ? $f : tmp %f    %f
+---------------------------
+Total              %f

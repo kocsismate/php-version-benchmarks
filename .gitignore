@@ -6,6 +6,7 @@ vendor/
 !/build/infrastructure/config/aws.tfvars.dist
 /config/**/*.*
 !/config/**/*.dist
+!/config/**/*.expectation
 /tmp/
 !.gitkeep
 
