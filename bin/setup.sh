@@ -17,7 +17,7 @@ install_laravel () {
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         setup bash -c "\
-            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app
+            composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app && \
             cp /code/app/laravel.composer.lock /code/app/laravel/composer.lock && \
             composer config platform-check false --working-dir=/code/app/laravel && \
             composer config platform.php 8.2 --working-dir=/code/app/laravel && \
