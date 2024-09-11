@@ -35,7 +35,7 @@ diff () {
 }
 
 print_environment () {
-    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDisabled deeper C-states\tDisabled turbo boost\tDisabled hyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -92,19 +92,28 @@ EOF
     cpu_settings=""
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         cpu_settings="${cpu_settings}, disabled deeper C-states"
+        deeper_c_states="0"
+    else
+        deeper_c_states="1"
     fi
 
     if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
         cpu_settings="${cpu_settings}, disabled turbo boost"
+        turbo_boost="0"
+    else
+        turbo_boost="1"
     fi
 
     if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
         cpu_settings="${cpu_settings}, disabled hyper-threading"
+        hyper_threading="0"
+    else
+        hyper_threading="1"
     fi
 
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$INFRA_DISABLE_DEEPER_C_STATES" "$INFRA_DISABLE_TURBO_BOOST" "$INFRA_DISABLE_HYPER_THREADING" \
+        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
     if [[ ! -z "$cpu" ]]; then
