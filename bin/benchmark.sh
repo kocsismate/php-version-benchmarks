@@ -111,6 +111,10 @@ EOF
         hyper_threading="1"
     fi
 
+    if [ ! -z "$cpu_settings" ]; then
+        cpu_settings="${cpu_settings:2}"
+    fi
+
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
@@ -171,8 +175,8 @@ print_result_value () {
         instruction_count_md_format="|%d"
         instruction_count_md_value="$(cat "$2")"
     else
-        instruction_count_tsv_format="%s"
-        instruction_count_tsv_value="%d"
+        instruction_count_tsv_format="\t%d"
+        instruction_count_tsv_value="0"
         instruction_count_md_format="%s"
         instruction_count_md_value=""
     fi
@@ -277,7 +281,7 @@ assert_test_output() {
     actual_file="$2"
 
     if [[ "$INFRA_RUNNER" == "host" ]]; then
-        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert.php" "$expectation_file" "$actual_file"
+        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert_output.php" "$expectation_file" "$actual_file"
     else
         if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
             run_as=""
@@ -289,7 +293,7 @@ assert_test_output() {
 
         $run_as docker run --rm --log-driver=local \
             --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            "$repository:$PHP_ID-latest" php /code/app/zend/assert.php "$expectation_file" "$actual_file"
+            "$repository:$PHP_ID-latest" php /code/app/zend/assert_output.php "$expectation_file" "$actual_file"
     fi
 }
 
@@ -336,6 +340,10 @@ run_real_benchmark () {
 
 run_micro_benchmark () {
     # Benchmark
+    run_cgi "verbose" "0" "1" "$1" "" "" | tee -a "$output_file"
+    if [ ! -z "$test_expectation_file" ]; then
+        assert_test_output "$test_expectation_file" "$output_file"
+    fi
     if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
         run_cgi "instruction_count" "2" "2" "$1" "" "" 2>&1 | tee -a "$instruction_count_log_file"
     fi

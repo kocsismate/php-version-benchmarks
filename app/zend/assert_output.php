@@ -30,7 +30,7 @@ function assertEquals(string $expected, string $actual): void
             [
                 '.+',
                 '\d+',
-                '\d+\.\d+',
+                '-?\d+\.\d+',
                 '\d+\.\d+.\d+(?:-dev)*',
             ],
             $quotedExpectedLine
