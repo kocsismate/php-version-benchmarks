@@ -166,6 +166,7 @@ EOF
 print_result_value () {
     var="PHP_COMMITS_$PHP_ID"
     commit_hash="${!var}"
+    commit_hash="$(echo "$commit_hash" | cut -c1-10)"
     url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     results="$(cat "$1")"
