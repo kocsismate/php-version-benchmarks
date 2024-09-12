@@ -1,24 +1,7 @@
 X-Powered-By: PHP/%v
 Content-Type: text/html; charset=UTF-8
+Link: <http://localhost/php-benchmark/app/wordpress/index.php?rest_route=/>; rel="https://api.w.org/"
 
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>689</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>698</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>701</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "scheme" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>722</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>689</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>698</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "host" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>701</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "scheme" in <b>/php-benchmark/app/wordpress/wp-includes/canonical.php</b> on line <b>722</b><br />
-<br />
-<b>Warning</b>:  Undefined array key "REQUEST_METHOD" in <b>/php-benchmark/app/wordpress/wp-includes/template-loader.php</b> on line <b>26</b><br />
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -26,13 +9,10 @@ Content-Type: text/html; charset=UTF-8
        <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name='robots' content='max-image-preview:large' />
 <title>Wordpress</title>
-<br />
-<b>Warning</b>:  Undefined array key "SERVER_NAME" in <b>/php-benchmark/app/wordpress/wp-includes/general-template.php</b> on line <b>3714</b><br />
-<link rel='dns-prefetch' href='//wordpress.local' />
-<link rel="alternate" type="application/rss+xml" title="Wordpress &raquo; Feed" href="http://wordpress.local/php-benchmark/app/wordpress/?feed=rss2" />
-<link rel="alternate" type="application/rss+xml" title="Wordpress &raquo; Comments Feed" href="http://wordpress.local/php-benchmark/app/wordpress/?feed=comments-rss2" />
+<link rel="alternate" type="application/rss+xml" title="Wordpress &raquo; Feed" href="http://localhost/php-benchmark/app/wordpress/?feed=rss2" />
+<link rel="alternate" type="application/rss+xml" title="Wordpress &raquo; Comments Feed" href="http://localhost/php-benchmark/app/wordpress/?feed=comments-rss2" />
 <script>
-window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/svg\/","svgExt":".svg","source":{"concatemoji":"http:\/\/wordpress.local\/php-benchmark\/app\/wordpress\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.2"}};
+window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/svg\/","svgExt":".svg","source":{"concatemoji":"http:\/\/localhost\/php-benchmark\/app\/wordpress\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.2"}};
 /*! This file is auto-generated */
 !function(e,a,t){var n,r,o,i=a.createElement("canvas"),p=i.getContext&&i.getContext("2d");function s(e,t){p.clearRect(0,0,i.width,i.height),p.fillText(e,0,0);e=i.toDataURL();return p.clearRect(0,0,i.width,i.height),p.fillText(t,0,0),e===i.toDataURL()}function c(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(o=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},r=0;r<o.length;r++)t.supports[o[r]]=function(e){if(p&&p.fillText)switch(p.textBaseline="top",p.font="600 32px Arial",e){case"flag":return s("\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!s("\ud83c\uddfa\ud83c\uddf3","\ud83c\uddfa\u200b\ud83c\uddf3")&&!s("\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!s("\ud83e\udef1\ud83c\udffb\u200d\ud83e\udef2\ud83c\udfff","\ud83e\udef1\ud83c\udffb\u200b\ud83e\udef2\ud83c\udfff")}return!1}(o[r]),t.supports.everything=t.supports.everything&&t.supports[o[r]],"flag"!==o[r]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[o[r]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(e=t.source||{}).concatemoji?c(e.concatemoji):e.wpemoji&&e.twemoji&&(c(e.twemoji),c(e.wpemoji)))}(window,document,window._wpemojiSettings);
 </script>
@@ -61,7 +41,7 @@ img.emoji {
 <style id='wp-block-page-list-inline-css'>
 .wp-block-navigation .wp-block-page-list{align-items:var(--navigation-layout-align,initial);background-color:inherit;display:flex;flex-direction:var(--navigation-layout-direction,initial);flex-wrap:var(--navigation-layout-wrap,wrap);justify-content:var(--navigation-layout-justify,initial)}.wp-block-navigation .wp-block-navigation-item{background-color:inherit}
 </style>
-<link rel='stylesheet' id='wp-block-navigation-css' href='http://wordpress.local/php-benchmark/app/wordpress/wp-includes/blocks/navigation/style.min.css?ver=6.2' media='all' />
+<link rel='stylesheet' id='wp-block-navigation-css' href='http://localhost/php-benchmark/app/wordpress/wp-includes/blocks/navigation/style.min.css?ver=6.2' media='all' />
 <style id='wp-block-navigation-inline-css'>
 .wp-block-navigation{font-size: var(--wp--preset--font-size--small);}
 .wp-block-navigation a:where(:not(.wp-element-button)){color: inherit;text-decoration: none;}
@@ -138,10 +118,10 @@ body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: 
 <style id='wp-webfonts-inline-css'>
 @font-face{font-family:"DM Sans";font-style:normal;font-weight:400;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/dm-sans/DMSans-Regular.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"DM Sans";font-style:italic;font-weight:400;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/dm-sans/DMSans-Regular-Italic.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"DM Sans";font-style:normal;font-weight:700;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/dm-sans/DMSans-Bold.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"DM Sans";font-style:italic;font-weight:700;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/dm-sans/DMSans-Bold-Italic.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:300;font-display:block;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/ibm-plex-mono/IBMPlexMono-Light.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:block;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"IBM Plex Mono";font-style:italic;font-weight:400;font-display:block;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/ibm-plex-mono/IBMPlexMono-Italic.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;font-display:block;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:Inter;font-style:normal;font-weight:200 900;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/inter/Inter-VariableFont_slnt,wght.ttf') format('truetype');font-stretch:normal;}@font-face{font-family:"Source Serif Pro";font-style:normal;font-weight:200 900;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/source-serif-pro/SourceSerif4Variable-Roman.ttf.woff2') format('woff2');font-stretch:normal;}@font-face{font-family:"Source Serif Pro";font-style:italic;font-weight:200 900;font-display:fallback;src:url('/php-benchmark/app/wordpress/wp-content/themes/twentytwentythree/assets/fonts/source-serif-pro/SourceSerif4Variable-Italic.ttf.woff2') format('woff2');font-stretch:normal;}
 </style>
-<script src='http://wordpress.local/php-benchmark/app/wordpress/wp-includes/blocks/navigation/view.min.js?ver=c24330f635f5cb9d5e0e' id='wp-block-navigation-view-js'></script>
-<script src='http://wordpress.local/php-benchmark/app/wordpress/wp-includes/blocks/navigation/view-modal.min.js?ver=f51363b18f0497ec84da' id='wp-block-navigation-view-2-js'></script>
-<link rel="https://api.w.org/" href="http://wordpress.local/php-benchmark/app/wordpress/index.php?rest_route=/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://wordpress.local/php-benchmark/app/wordpress/xmlrpc.php?rsd" />
-<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://wordpress.local/php-benchmark/app/wordpress/wp-includes/wlwmanifest.xml" />
+<script src='http://localhost/php-benchmark/app/wordpress/wp-includes/blocks/navigation/view.min.js?ver=c24330f635f5cb9d5e0e' id='wp-block-navigation-view-js'></script>
+<script src='http://localhost/php-benchmark/app/wordpress/wp-includes/blocks/navigation/view-modal.min.js?ver=f51363b18f0497ec84da' id='wp-block-navigation-view-2-js'></script>
+<link rel="https://api.w.org/" href="http://localhost/php-benchmark/app/wordpress/index.php?rest_route=/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://localhost/php-benchmark/app/wordpress/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://localhost/php-benchmark/app/wordpress/wp-includes/wlwmanifest.xml" />
 <meta name="generator" content="WordPress 6.2" />
 </head>
 
@@ -151,14 +131,14 @@ body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: 
 <div class="wp-block-group has-global-padding is-layout-constrained">
 
        <div class="wp-block-group alignwide is-content-justification-space-between is-layout-flex wp-container-3" style="padding-bottom:var(--wp--preset--spacing--40)">
-               <p class="wp-block-site-title"><a href="http://wordpress.local/php-benchmark/app/wordpress" target="_self" rel="home" aria-current="page">Wordpress</a></p>
+               <p class="wp-block-site-title"><a href="http://localhost/php-benchmark/app/wordpress" target="_self" rel="home" aria-current="page">Wordpress</a></p>
                <nav class="is-responsive items-justified-right is-fallback wp-block-navigation is-content-justification-right is-layout-flex wp-container-2" aria-label=""><button aria-haspopup="true" aria-label="Open menu" class="wp-block-navigation__responsive-container-open " data-micromodal-trigger="modal-1"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="7.5" width="16" height="1.5" /><rect x="4" y="15" width="16" height="1.5" /></svg></button>
                        <div class="wp-block-navigation__responsive-container  " style="" id="modal-1">
                                <div class="wp-block-navigation__responsive-close" tabindex="-1" data-micromodal-close>
                                        <div class="wp-block-navigation__responsive-dialog" aria-label="Menu">
                                                        <button aria-label="Close menu" data-micromodal-close class="wp-block-navigation__responsive-container-close"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M13 11.8l6.1-6.3-1-1-6.1 6.2-6.1-6.2-1 1 6.1 6.3-6.5 6.7 1 1 6.5-6.6 6.5 6.6 1-1z"></path></svg></button>
                                                <div class="wp-block-navigation__responsive-container-content" id="modal-1-content">
-                                                       <ul class="wp-block-page-list"><li class="wp-block-pages-list__item wp-block-navigation-item open-on-hover-click"><a class="wp-block-pages-list__item__link wp-block-navigation-item__content" href="http://wordpress.local/php-benchmark/app/wordpress/?page_id=2">Sample Page</a></li></ul>
+                                                       <ul class="wp-block-page-list"><li class="wp-block-pages-list__item wp-block-navigation-item open-on-hover-click"><a class="wp-block-pages-list__item__link wp-block-navigation-item__content" href="http://localhost/php-benchmark/app/wordpress/?page_id=2">Sample Page</a></li></ul>
                                                </div>
                                        </div>
                                </div>
@@ -179,9 +159,9 @@ body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: 
        <div class="wp-block-query alignwide has-global-padding is-layout-constrained">
                <ul class="is-flex-container columns-3 alignwide wp-block-post-template is-layout-flow"><li class="wp-block-post post-1 post type-post status-publish format-standard hentry category-uncategorized">
 
-                       <h2 class="wp-block-post-title"><a href="http://wordpress.local/php-benchmark/app/wordpress/?p=1" target="_self" >Hello world!</a></h2>
+                       <h2 class="wp-block-post-title"><a href="http://localhost/php-benchmark/app/wordpress/?p=1" target="_self" >Hello world!</a></h2>
                        <div class="wp-block-post-excerpt"><p class="wp-block-post-excerpt__excerpt">Welcome to WordPress. This is your first post. Edit or delete it, then start writing! </p></div>
-                       <div class="wp-block-post-date"><time datetime="%s"><a href="http://wordpress.local/php-benchmark/app/wordpress/?p=1">%s</a></time></div>
+                       <div class="wp-block-post-date"><time datetime="%s"><a href="http://localhost/php-benchmark/app/wordpress/?p=1">%s</a></time></div>
 
 
                        <div style="height:var(--wp--preset--spacing--40)" aria-hidden="true" class="wp-block-spacer"></div>
@@ -234,7 +214,7 @@ body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: 
 <div class="wp-block-group has-global-padding is-layout-constrained">
 
        <div class="wp-block-group alignwide is-content-justification-space-between is-layout-flex wp-container-13" style="padding-top:var(--wp--preset--spacing--40)">
-               <p class="wp-block-site-title"><a href="http://wordpress.local/php-benchmark/app/wordpress" target="_self" rel="home" aria-current="page">Wordpress</a></p>
+               <p class="wp-block-site-title"><a href="http://localhost/php-benchmark/app/wordpress" target="_self" rel="home" aria-current="page">Wordpress</a></p>
 
                <p class="has-text-align-right">
                Proudly powered by <a href="https://wordpress.org" rel="nofollow">WordPress</a>%s</p>

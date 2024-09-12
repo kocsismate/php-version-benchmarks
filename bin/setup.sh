@@ -78,7 +78,7 @@ install_wordpress () {
 
             $php_executable -d error_reporting=0 $PROJECT_ROOT/app/wordpress/wp-cli.phar core install \
                 --path=$PROJECT_ROOT/app/wordpress/ \
-                --allow-root --url=wordpress.local --title=Wordpress \
+                --allow-root --url=localhost --title=Wordpress \
                 --admin_user=wordpress --admin_password=wordpress --admin_email=benchmark@php.net
 
         elif [[ "$INFRA_RUNNER" == "docker" ]]; then

@@ -225,6 +225,10 @@ run_cgi () {
         export CONTENT_TYPE="text/html; charset=utf-8"
         export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
         export REQUEST_URI="$5"
+        export HTTP_HOST="localhost"
+        export SERVER_NAME="localhost"
+        export REQUEST_METHOD="GET"
+        export REDIRECT_STATUS="200"
         export APP_ENV="$6"
         export APP_DEBUG=false
         export SESSION_DRIVER=cookie
