@@ -49,8 +49,10 @@ cp "$PROJECT_ROOT/build/container/php-cgi/custom-php.ini" "$PHP_SOURCE_PATH/conf
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 if [[ "$PHP_JIT" = "1" ]]; then
-    sed -i "s/JIT_BUFFER_SIZE/32M/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_MODE/tracing/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_BUFFER_SIZE/64M/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 else
+    sed -i "s/JIT_MODE/disable/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
     sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 fi
 
@@ -73,10 +75,11 @@ else
     opcache_enabled=0
 fi
 
-if $php_cli_executable -i | grep -q "opcache.jit_buffer_size => 0"; then
-    jit_enabled=0
-else
-    jit_enabled=1
+jit_enabled=0
+if $php_cli_executable -i | grep -q "opcache.jit => tracing"; then
+    if $php_cli_executable -i | grep -q "opcache.jit_buffer_size => 64"; then
+        jit_enabled=1
+    fi
 fi
 
 if [[ "$PHP_OPCACHE" = "1" && "$opcache_enabled" = "0" ]]; then
