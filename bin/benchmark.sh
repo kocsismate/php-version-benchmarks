@@ -147,7 +147,7 @@ print_result_md_header () {
         description="$description, $TEST_REQUESTS requests"
     fi
 
-if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
     instruction_count_header_name="|  Instr count  "
     instruction_count_header_separator="|---------------";
 else
@@ -170,7 +170,7 @@ print_result_value () {
     url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     results="$(cat "$1")"
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         instruction_count_tsv_format="\t%d"
         instruction_count_tsv_value="$(cat "$2")"
         instruction_count_md_format="|%d"
@@ -319,7 +319,7 @@ run_real_benchmark () {
         assert_test_output "$test_expectation_file" "$output_file"
     fi
 
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
     fi
     run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
@@ -327,7 +327,7 @@ run_real_benchmark () {
         run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
     done
 
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         format_instruction_count_log_file "$instruction_count_log_file"
     fi
     format_memory_log_file "$memory_log_file"
@@ -345,13 +345,13 @@ run_micro_benchmark () {
     if [ ! -z "$test_expectation_file" ]; then
         assert_test_output "$test_expectation_file" "$output_file"
     fi
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         run_cgi "instruction_count" "2" "2" "$1" "" "" 2>&1 | tee -a "$instruction_count_log_file"
     fi
     run_cgi "memory" "0" "$TEST_WARMUP" "$1" "" "" 2>&1 | tee -a "$memory_log_file"
     run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
 
-    if [ "$INFRA_INSTRUCTION_COUNT" == "1" ]; then
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         format_instruction_count_log_file "$instruction_count_log_file"
     fi
     format_memory_log_file "$memory_log_file"
