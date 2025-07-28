@@ -43,6 +43,7 @@ install_symfony () {
             export APP_DEBUG=false
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
             composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
+            composer update symfony/polyfill-intl-icu:1.32.0 --working-dir=/code/app/symfony && \
             composer config platform-check false --working-dir=/code/app/symfony && \
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi
