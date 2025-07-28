@@ -221,7 +221,7 @@ run_cgi () {
     fi
 
     if [[ "$INFRA_RUNNER" == "host" ]]; then
-        if [ "$PHP_OPCACHE" = "1" ]; then
+        if [ "$PHP_OPCACHE" = "2" ]; then
             opcache="-d zend_extension=$php_source_path/modules/opcache.so"
         else
             opcache=""

@@ -1,0 +1,14 @@
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Deeper C-states	Turbo boost	Hyper-threading	Time
+2025/2025_07_28_21_50_44_1_aws_x86_64_c7i_4xlarge	aws_x86_64_c7i_4xlarge	AWS x86_64 (c7i.4xlarge)	aws	host	c7i.4xlarge	x86_64		8	30 GB	6.1.144-170.251.amzn2023.x86_64	Amazon Linux 2023.8.20250721	11.5.0	0	1	1	0	2025-07-28 21:50:44
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Average	Average diff %	Median	Median diff %	Instruction count	Memory usage
+Laravel 11.1.2 demo app	50	50	100	PHP - master	b30ccf9158	https://github.com/php/php-src/commit/b30ccf9158	0.29412	0.30431	0.00173	0.29539	0.00	0.29503	0.00	0	42.16
+Laravel 11.1.2 demo app	50	50	100	PHP 8.4	5295fc07d5	https://github.com/php/php-src/commit/5295fc07d5	0.29649	0.30017	0.00064	0.29745	0.70	0.29734	0.78	0	41.85
+Symfony 2.6.0 demo app	50	50	100	PHP - master	b30ccf9158	https://github.com/php/php-src/commit/b30ccf9158	0.47156	0.51165	0.00544	0.47405	0.00	0.47325	0.00	0	37.91
+Symfony 2.6.0 demo app	50	50	100	PHP 8.4	5295fc07d5	https://github.com/php/php-src/commit/5295fc07d5	0.47489	0.52880	0.00735	0.47769	0.77	0.47660	0.71	0	37.67
+Wordpress 6.2 main page	10	80	20	PHP - master	b30ccf9158	https://github.com/php/php-src/commit/b30ccf9158	0.43206	0.46810	0.00707	0.44862	0.00	0.44862	0.00	0	43.30
+Wordpress 6.2 main page	10	80	20	PHP 8.4	5295fc07d5	https://github.com/php/php-src/commit/5295fc07d5	0.43684	0.47436	0.00852	0.45577	1.59	0.45743	1.96	0	43.26
+bench.php	10	50	0	PHP - master	b30ccf9158	https://github.com/php/php-src/commit/b30ccf9158	0.13707	0.13923	0.00047	0.13771	0.00	0.13764	0.00	0	26.53
+bench.php	10	50	0	PHP 8.4	5295fc07d5	https://github.com/php/php-src/commit/5295fc07d5	0.14029	0.14161	0.00031	0.14084	2.27	0.14082	2.31	0	26.24
+micro_bench.php	10	50	0	PHP - master	b30ccf9158	https://github.com/php/php-src/commit/b30ccf9158	0.84488	0.85148	0.00147	0.84823	0.00	0.84844	0.00	0	20.82
+micro_bench.php	10	50	0	PHP 8.4	5295fc07d5	https://github.com/php/php-src/commit/5295fc07d5	0.81655	0.82131	0.00094	0.81867	-3.48	0.81858	-3.52	0	20.47
+

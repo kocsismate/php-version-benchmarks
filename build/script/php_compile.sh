@@ -19,8 +19,6 @@ export PHP_LDFLAGS="-Wl,-O1 -no-pie"
 cd "$PHP_SOURCE_PATH"
 ./buildconf
 
-opcache_option="--enable-opcache"
-
 # --enable-werror \ commenting out due to dynasm errors
 
 ./configure \
@@ -35,7 +33,6 @@ opcache_option="--enable-opcache"
     --with-sqlite3=/usr \
     --with-curl \
     --with-libedit \
-    $opcache_option \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
@@ -58,7 +55,7 @@ fi
 
 # Ensure about correct config
 
-if [ "$PHP_OPCACHE" = "1" ]; then
+if [ "$PHP_OPCACHE" = "2" ]; then
     opcache="-d zend_extension=$PHP_SOURCE_PATH/modules/opcache.so"
 else
     opcache=""
@@ -82,10 +79,10 @@ if $php_cli_executable -i | grep -q "opcache.jit => tracing"; then
     fi
 fi
 
-if [[ "$PHP_OPCACHE" = "1" && "$opcache_enabled" = "0" ]]; then
+if [[ -n "$PHP_OPCACHE" && "$opcache_enabled" = "0" ]]; then
     echo "OPCache should be enabled"
     exit 1
-elif [[ "$PHP_OPCACHE" = "0" && "$opcache_enabled" = "1" ]]; then
+elif [[ -z "$PHP_OPCACHE" && "$opcache_enabled" = "1" ]]; then
     echo "OPCache should not be enabled"
     exit 1
 fi

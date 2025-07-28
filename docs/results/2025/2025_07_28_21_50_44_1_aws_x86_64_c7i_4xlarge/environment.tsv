@@ -1,0 +1,2 @@
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Deeper C-states	Turbo boost	Hyper-threading	Time
+2025/2025_07_28_21_50_44_1_aws_x86_64_c7i_4xlarge	aws_x86_64_c7i_4xlarge	AWS x86_64 (c7i.4xlarge)	aws	host	c7i.4xlarge	x86_64		8	30 GB	6.1.144-170.251.amzn2023.x86_64	Amazon Linux 2023.8.20250721	11.5.0	0	1	1	0	2025-07-28 21:50:44

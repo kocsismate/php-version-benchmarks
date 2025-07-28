@@ -3,7 +3,7 @@ set -e
 
 /code/build/container/php-cgi/config.sh
 
-if [ "$PHP_OPCACHE" = "1" ]; then
+if [ "$PHP_OPCACHE" = "2" ]; then
     OPCACHE_PATH="$(cd /usr/local/lib/php/extensions/ && find . -path "./*/opcache.so")"
     opcache="-d zend_extension=/usr/local/lib/php/extensions/$OPCACHE_PATH"
 else

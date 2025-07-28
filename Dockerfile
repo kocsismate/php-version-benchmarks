@@ -109,7 +109,6 @@ RUN set -eux; \
         --with-mysqli=mysqlnd \
 # --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
         --enable-mysqlnd \
-        --enable-opcache \
 # always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
         --with-pdo-sqlite=/usr \
         \

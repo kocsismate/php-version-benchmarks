@@ -11,7 +11,7 @@ else
     sed -i "s/JIT_BUFFER_SIZE/0/g" /usr/local/etc/php/conf.d/zz-custom-php.ini
 fi
 
-if [ "$PHP_OPCACHE" = "1" ]; then
+if [ "$PHP_OPCACHE" = "2" ]; then
     OPCACHE_PATH="$(cd /usr/local/lib/php/extensions/ && find . -path "./*/opcache.so")"
     opcache="-d zend_extension=/usr/local/lib/php/extensions/$OPCACHE_PATH"
 else
