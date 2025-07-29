@@ -6,3 +6,4 @@ availability_zone_index = 0
 image_user = "ec2-user"
 termination_timeout_in_min = 60
 remote_project_root = "/php-benchmark"
+github_token = ""

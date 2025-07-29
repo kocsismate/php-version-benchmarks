@@ -17,6 +17,7 @@ install_laravel () {
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         setup bash -c "\
+            composer config --global github-oauth.github.com '$GITHUB_TOKEN' && \
             composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app && \
             cp /code/app/laravel.composer.lock /code/app/laravel/composer.lock && \
             composer config platform-check false --working-dir=/code/app/laravel && \
@@ -41,6 +42,7 @@ install_symfony () {
             setup bash -c "\
             export APP_ENV=prod
             export APP_DEBUG=false
+            composer config --global github-oauth.github.com '$GITHUB_TOKEN' && \
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
             composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
             composer update symfony/polyfill-intl-icu:1.32.0 --working-dir=/code/app/symfony && \

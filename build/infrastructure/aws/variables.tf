@@ -127,3 +127,8 @@ variable "docker_registry" {
 variable "docker_repository" {
   type = string
 }
+
+variable "github_token" {
+  type = string
+  sensitive = false
+}
