@@ -12,8 +12,7 @@ function assertEquals(string $expected, string $actual): void
     $actualArray = explode("\n", $actual);
     $actualArrayCount = count($actualArray);
     if ($expectedArrayCount !== $actualArrayCount) {
-        echo "Expected and actual output does not have the same number of lines ($expectedArrayCount vs $actualArrayCount).\n";
-        echo "Output: \n$actual\n";
+        echo "\nExpected and actual output does not have the same number of lines (expected: $expectedArrayCount, actual: $actualArrayCount).\n";
         exit(1);
     }
 

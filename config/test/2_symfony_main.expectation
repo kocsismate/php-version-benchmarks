@@ -14,8 +14,6 @@ Content-Type: text/html; charset=UTF-8
 
 
 <link rel="stylesheet" href="/assets/styles/app-%s.css">
-<link rel="stylesheet" href="/assets/vendor/@fortawesome/fontawesome-free/css/all-%s.css">
-<link rel="stylesheet" href="/assets/vendor/@fortawesome/fontawesome-free/css/v4-shims-%s.css">
 <link rel="stylesheet" href="/assets/vendor/highlight.js/styles/github-dark-dimmed-%s.css">
 <link rel="stylesheet" href="/assets/vendor/lato-font/css/lato-font-%s.css">
 <link rel="stylesheet" href="/assets/vendor/flatpickr/dist/flatpickr.min-%s.css">
@@ -26,8 +24,6 @@ Content-Type: text/html; charset=UTF-8
         "app": "/assets/app-%s.js",
         "/assets/bootstrap.js": "/assets/bootstrap-%s.js",
         "/assets/styles/app.css": "data:application/javascript,",
-        "@fortawesome/fontawesome-free/css/all.css": "data:application/javascript,",
-        "@fortawesome/fontawesome-free/css/v4-shims.css": "data:application/javascript,",
         "highlight.js/styles/github-dark-dimmed.css": "data:application/javascript,",
         "lato-font/css/lato-font.css": "data:application/javascript,",
         "bootstrap/js/dist/alert": "/assets/vendor/bootstrap/js/dist/alert-%s.js",
@@ -51,8 +47,9 @@ Content-Type: text/html; charset=UTF-8
         "/assets/@symfony/stimulus-bundle/controllers.js": "/assets/@symfony/stimulus-bundle/controllers-%s.js",
         "/assets/@symfony/ux-live-component/live_controller.js": "/assets/@symfony/ux-live-component/live_controller-%s.js",
         "/assets/@symfony/ux-live-component/live.min.css": "data:application/javascript,",
+        "/assets/controllers/csrf_protection_controller.js": "/assets/controllers/csrf_protection_controller-%s.js",
         "/assets/controllers/login-controller.js": "/assets/controllers/login-controller-%s.js",
-        "admin": "/assets/admin-ead220e2acdd2d7ea45fb1a8963ace46.js",
+        "admin": "/assets/admin-%s.js",
         "/assets/styles/admin.css": "data:application/javascript,document.head.appendChild%28Object.assign%28document.createElement%28%22link%22%29%2C%7Brel%3A%22stylesheet%22%2Chref%3A%22%2Fassets%2Fstyles%2Fadmin-%s.css%22%7D%29%29",
         "/assets/js/jquery_global.js": "/assets/js/jquery_global-%s.js",
         "/assets/styles/bootstrap-tagsinput.css": "data:application/javascript,document.head.appendChild%28Object.assign%28document.createElement%28%22link%22%29%2C%7Brel%3A%22stylesheet%22%2Chref%3A%22%2Fassets%2Fstyles%2Fbootstrap-tagsinput-%s.css%22%7D%29%29",
@@ -68,9 +65,16 @@ Content-Type: text/html; charset=UTF-8
         "@symfony/ux-live-component": "/assets/@symfony/ux-live-component/live_controller-%s.js"
     }
 }
+</script><script async>
+if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (function () {
+    const script = document.createElement('script');
+    script.src = 'https://ga.jspm.io/npm:es-module-shims@%v/dist/es-module-shims.js';
+    script.setAttribute('async', 'async');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.setAttribute('integrity', 'sha384-%s');
+    document.head.appendChild(script);
+})();
 </script>
-<!-- ES Module Shims: Import maps polyfill for modules browsers without import maps support -->
-<script async src="https://ga.jspm.io/npm:es-module-shims@1.8.2/dist/es-module-shims.js" crossorigin="anonymous" integrity="sha384-+dzlBT6NPToF0UZu7ZUA6ehxHY8h/TxJOZxzNXKhFD+5He5Hbex+0AIOiSsEaokw"></script>
 <link rel="modulepreload" href="/assets/app-%s.js">
 <link rel="modulepreload" href="/assets/bootstrap-%s.js">
 <link rel="modulepreload" href="/assets/vendor/bootstrap/js/dist/alert-%s.js">
@@ -103,7 +107,7 @@ Content-Type: text/html; charset=UTF-8
         <h1>Welcome to the <strong>Symfony Demo</strong> application</h1>
 
                     <a href="#" class="nav-link dropdown-toggle language-selector-dropdown-button" data-toggle="modal" data-target="#locale-selector-modal" role="button" id="locales">
-        <i class="fa fa-solid fa-globe" aria-hidden="true"></i>
+        <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" style="position: relative; top: -2px;" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0m.6-3h16.8M3.6 15h16.8"></path><path d="M11.5 3a17 17 0 0 0 0 18m1-18a17 17 0 0 1 0 18"></path></g></svg>
                     <span class="current-language">English</span>
                 <span class="caret"></span>
         <span class="sr-only">Choose language</span>
@@ -319,7 +323,7 @@ Content-Type: text/html; charset=UTF-8
                 </p>
                 <p>
                     <a class="btn btn-primary btn-lg" href="/en/blog/">
-                        <i class="fa fa-users" aria-hidden="true"></i> Browse application
+                        <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" style="position: relative; top: -2px;" font-size="21px" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0-4 0m-2 8v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1M15 5a2 2 0 1 0 4 0a2 2 0 0 0-4 0m2 5h2a2 2 0 0 1 2 2v1M5 5a2 2 0 1 0 4 0a2 2 0 0 0-4 0m-2 8v-1a2 2 0 0 1 2-2h2"></path></svg> Browse application
                     </a>
                 </p>
             </div>
@@ -332,7 +336,7 @@ Content-Type: text/html; charset=UTF-8
                 </p>
                 <p>
                     <a class="btn btn-primary btn-lg" href="/en/admin/post/">
-                        <i class="fa fa-lock" aria-hidden="true"></i> Browse backend
+                        <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" style="position: relative; top: -2px;" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"></path><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0-2 0m-3-5V7a4 4 0 1 1 8 0v4"></path></g></svg> Browse backend
                     </a>
                 </p>
             </div>

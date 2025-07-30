@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-laravel_version="11.1.2" # https://github.com/laravel/laravel/releases
-symfony_version="2.6.0" # https://github.com/symfony/demo/releases
+laravel_version="12.2.0" # https://github.com/laravel/laravel/releases
+symfony_version="2.7.0" # https://github.com/symfony/demo/releases
 wordpress_url="https://github.com/php/benchmarking-wordpress-6.2"
 
 run_as=""
@@ -42,10 +42,9 @@ install_symfony () {
             setup bash -c "\
             export APP_ENV=prod
             export APP_DEBUG=false
+            export APP_SECRET=random
             composer config --global github-oauth.github.com '$GITHUB_TOKEN' && \
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
-            composer update symfony/ux-twig-component:2.18.1 --working-dir=/code/app/symfony && \
-            composer update symfony/polyfill-intl-icu:1.32.0 --working-dir=/code/app/symfony && \
             composer config platform-check false --working-dir=/code/app/symfony && \
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi

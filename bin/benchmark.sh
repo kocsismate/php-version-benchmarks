@@ -236,6 +236,7 @@ run_cgi () {
         export REDIRECT_STATUS="200"
         export APP_ENV="$6"
         export APP_DEBUG=false
+        export APP_SECRET=random
         export SESSION_DRIVER=cookie
         export LOG_LEVEL=warning
         export DB_CONNECTION=sqlite

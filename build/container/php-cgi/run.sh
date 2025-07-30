@@ -15,6 +15,7 @@ export SCRIPT_FILENAME="/code/$3"
 export REQUEST_URI="$4"
 export APP_ENV="$5"
 export APP_DEBUG=false
+export APP_SECRET=random
 export SESSION_DRIVER=cookie
 export LOG_LEVEL=warning
 export DB_CONNECTION=sqlite
