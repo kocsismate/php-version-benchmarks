@@ -19,6 +19,12 @@ export PHP_LDFLAGS="-Wl,-O1 -no-pie"
 cd "$PHP_SOURCE_PATH"
 ./buildconf
 
+if [ "$PHP_OPCACHE" = "2" ]; then
+    opcache_option="--enable-opcache"
+else
+    opcache_option=""
+fi
+
 # --enable-werror \ commenting out due to dynasm errors
 
 ./configure \
@@ -33,6 +39,7 @@ cd "$PHP_SOURCE_PATH"
     --with-sqlite3=/usr \
     --with-curl \
     --with-libedit \
+    $opcache_option \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
