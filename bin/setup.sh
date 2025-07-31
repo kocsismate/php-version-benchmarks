@@ -17,7 +17,8 @@ install_laravel () {
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         setup bash -c "\
-            composer config --global github-oauth.github.com '$GITHUB_TOKEN' && \
+            set -e \
+            [[ -n '$GITHUB_TOKEN' ]] && composer config --global github-oauth.github.com '$GITHUB_TOKEN'; \
             composer create-project laravel/laravel laravel $laravel_version --no-interaction --working-dir=/code/app && \
             cp /code/app/laravel.composer.lock /code/app/laravel/composer.lock && \
             composer config platform-check false --working-dir=/code/app/laravel && \
@@ -40,10 +41,11 @@ install_symfony () {
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             setup bash -c "\
+            set -e
             export APP_ENV=prod
             export APP_DEBUG=false
             export APP_SECRET=random
-            composer config --global github-oauth.github.com '$GITHUB_TOKEN' && \
+            [[ -n '$GITHUB_TOKEN' ]] && composer config --global github-oauth.github.com '$GITHUB_TOKEN'; \
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
             composer config platform-check false --working-dir=/code/app/symfony && \
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
