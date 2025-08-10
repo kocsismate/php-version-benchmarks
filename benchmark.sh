@@ -6,12 +6,10 @@ export PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ "$1" == "run" ]]; then
 
-    if [[ "$2" == "local" ]]; then
-        INFRA_ENVIRONMENT="local"
-    elif [[ "$2" == "aws" ]]; then
+    if [[ "$2" == "aws" ]]; then
         INFRA_ENVIRONMENT="aws"
     else
-        echo "Available environments: local, aws"
+        echo "Available environments: aws"
         exit 1
     fi
 
@@ -70,10 +68,6 @@ if [[ "$1" == "run" ]]; then
 
         export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
     done
-
-    if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
-        $PROJECT_ROOT/bin/setup.sh
-    fi
 
     for RUN in $(seq "$N"); do
         export RUN

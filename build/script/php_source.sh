@@ -20,7 +20,7 @@ if [ "$1" == "local" ]; then
     if [ ! -z "$PHP_COMMIT" ]; then
         (cd "$PHP_SOURCE_PATH" && git checkout "$PHP_COMMIT")
     fi
-elif [[ "$INFRA_RUNNER" == "host" ]]; then
+else
     if [ -z "$PHP_BASE_SOURCE_PATH" ]; then
         var="PHP_COMMITS_$PHP_ID"
 

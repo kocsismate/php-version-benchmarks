@@ -39,20 +39,6 @@ All the configuration of the benchmark is done via `.ini` files in the `config` 
 are bundled with the benchmark (having `.ini.dist` extension in their names). Feel free to rename them by removing the
 `.dist` suffix in order to take advantage of them.
 
-### Usage with Docker
-
-As a prerequisite, you need the following:
-
-- a UNIX system (Linux, Mac)
-- git
-- a recent version of Docker
-
-Run the following command to execute the benchmark suite locally:
-
-```bash
-./benchmark.sh run local
-```
-
 ### Usage on AWS EC2
 
 As a prerequisite, you need the following:

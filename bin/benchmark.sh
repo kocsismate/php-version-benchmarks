@@ -45,13 +45,11 @@ cat << EOF > "$1.md"
 EOF
 
     instance_type=""
-    if [[ "$INFRA_ENVIRONMENT" != "local" ]]; then
-        instance_type="$INFRA_INSTANCE_TYPE"
-        if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
-            instance_type="${instance_type} (dedicated)"
-        fi
-        instance_type="| Instance type |$instance_type|\n"
+    instance_type="$INFRA_INSTANCE_TYPE"
+    if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
+        instance_type="${instance_type} (dedicated)"
     fi
+    instance_type="| Instance type |$instance_type|\n"
 
     architecture="$(uname -m)"
     kernel="$(uname -r)"
@@ -220,61 +218,47 @@ run_cgi () {
         sleep 0.25
     fi
 
-    if [[ "$INFRA_RUNNER" == "host" ]]; then
-        if [ "$PHP_OPCACHE" = "2" ]; then
-            opcache="-d zend_extension=$php_source_path/modules/opcache.so"
-        else
-            opcache=""
-        fi
+    if [ "$PHP_OPCACHE" = "2" ]; then
+        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
+    else
+        opcache=""
+    fi
 
-        export CONTENT_TYPE="text/html; charset=utf-8"
-        export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
-        export REQUEST_URI="$5"
-        export HTTP_HOST="localhost"
-        export SERVER_NAME="localhost"
-        export REQUEST_METHOD="GET"
-        export REDIRECT_STATUS="200"
-        export APP_ENV="$6"
-        export APP_DEBUG=false
-        export APP_SECRET=random
-        export SESSION_DRIVER=cookie
-        export LOG_LEVEL=warning
-        export DB_CONNECTION=sqlite
-        export LOG_CHANNEL=stderr
-        export BROADCAST_DRIVER=null
+    export CONTENT_TYPE="text/html; charset=utf-8"
+    export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
+    export REQUEST_URI="$5"
+    export HTTP_HOST="localhost"
+    export SERVER_NAME="localhost"
+    export REQUEST_METHOD="GET"
+    export REDIRECT_STATUS="200"
+    export APP_ENV="$6"
+    export APP_DEBUG=false
+    export APP_SECRET=random
+    export SESSION_DRIVER=cookie
+    export LOG_LEVEL=warning
+    export DB_CONNECTION=sqlite
+    export LOG_CHANNEL=stderr
+    export BROADCAST_DRIVER=null
 
-        cpu_count="$(nproc)"
-        last_cpu="$((cpu_count-1))"
+    cpu_count="$(nproc)"
+    last_cpu="$((cpu_count-1))"
 
-        if [ "$1" = "quiet" ]; then
-            taskset -c "$last_cpu" \
-                $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
-        elif [ "$1" = "verbose" ]; then
-            taskset -c "$last_cpu" \
-                $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
-        elif [ "$1" = "instruction_count" ]; then
-            taskset -c "$last_cpu" \
-                valgrind --tool=callgrind --dump-instr=no -- \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
-        elif [ "$1" = "memory" ]; then
-            /usr/bin/time -v taskset -c "$last_cpu" \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
-        else
-            taskset -c "$last_cpu" \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
-        fi
-    elif [[ "$INFRA_RUNNER" == "docker" ]]; then
-        if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
-            run_as=""
-            repository="$INFRA_DOCKER_REPOSITORY"
-        elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
-            run_as="sudo"
-            repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
-        fi
-
-        $run_as docker run --rm --log-driver=none --env-file "$PHP_CONFIG_FILE" \
-            --volume "$PROJECT_ROOT/build:/code/build:delegated" --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            --cpuset-cpus=0 "$repository:$PHP_ID-latest" /code/build/container/php-cgi/run.sh "$1" "$2,$3" "$4" "$5" "$6"
+    if [ "$1" = "quiet" ]; then
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$1" = "verbose" ]; then
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
+    elif [ "$1" = "instruction_count" ]; then
+        taskset -c "$last_cpu" \
+            valgrind --tool=callgrind --dump-instr=no -- \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$1" = "memory" ]; then
+        /usr/bin/time -v taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+    else
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
     fi
 }
 
@@ -282,21 +266,7 @@ assert_test_output() {
     expectation_file="$1"
     actual_file="$2"
 
-    if [[ "$INFRA_RUNNER" == "host" ]]; then
-        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert_output.php" "$expectation_file" "$actual_file"
-    else
-        if [[ "$INFRA_ENVIRONMENT" == "local" ]]; then
-            run_as=""
-            repository="$INFRA_DOCKER_REPOSITORY"
-        elif [[ "$INFRA_ENVIRONMENT" == "aws" ]]; then
-            run_as="sudo"
-            repository="$INFRA_DOCKER_REGISTRY/$INFRA_DOCKER_REPOSITORY"
-        fi
-
-        $run_as docker run --rm --log-driver=local \
-            --volume "$PROJECT_ROOT/app:/code/app:delegated" \
-            "$repository:$PHP_ID-latest" php /code/app/zend/assert_output.php "$expectation_file" "$actual_file"
-    fi
+    $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert_output.php" "$expectation_file" "$actual_file"
 }
 
 format_instruction_count_log_file() {
@@ -465,7 +435,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
     ((TEST_NUMBER=TEST_NUMBER+1))
 
-    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress_6_2" ]]; then
+    if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
         sudo service docker start
 
         db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
@@ -482,7 +452,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
 
     run_benchmark
 
-    if [[ "$INFRA_ENVIRONMENT" == "aws" && "$INFRA_RUNNER" == "host" && "$TEST_ID" == "wordpress_6_2" ]]; then
+    if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
         sudo service docker stop
     fi
 done

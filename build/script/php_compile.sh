@@ -48,7 +48,7 @@ fi
 make -j "$(nproc)"
 
 mkdir -p "$PHP_SOURCE_PATH/conf.d/"
-cp "$PROJECT_ROOT/build/container/php-cgi/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
