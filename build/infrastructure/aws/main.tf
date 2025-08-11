@@ -107,6 +107,10 @@ EOF
       "export INFRA_NAME=\"${var.infra_name}\"",
       "export INFRA_INSTANCE_TYPE=\"${var.instance_type}\"",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
+      "export INFRA_DEDICATED_INSTANCE=\"${var.use_dedicated_instance ? 1 : 0}\"",
+      "export INFRA_DISABLE_DEEPER_C_STATES=\"${var.disable_deeper_c_states ? 1 : 0}\"",
+      "export INFRA_DISABLE_TURBO_BOOST=\"${var.disable_turbo_boost ? 1 : 0}\"",
+      "export INFRA_DISABLE_HYPER_THREADING=\"${var.disable_hyper_threading ? 1 : 0}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count}\"",
@@ -117,8 +121,7 @@ EOF
       "# Setup the benchmark",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/bin/setup.sh",
-
-      var.disable_deeper_c_states ? "sudo sed -i 's/quiet\"/quiet intel_idle.max_cstate=1 processor.max_cstate=1\"/' /etc/default/grub && sudo grub2-mkconfig -o /boot/grub2/grub.cfg" : "echo 'skipped disabling deeper C states'",
+      "${var.remote_project_root}/build/script/system_settings.sh boot",
     ]
   }
 
@@ -126,7 +129,7 @@ EOF
     inline = [
       "set -e",
 
-      var.disable_deeper_c_states ? "sudo reboot&" : "echo ''"
+      "sudo reboot&"
     ]
     on_failure = continue
   }
@@ -157,7 +160,7 @@ EOF
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
 
-      "${var.remote_project_root}/build/script/system_settings.sh",
+      "${var.remote_project_root}/build/script/system_settings.sh before_benchmark",
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
   }

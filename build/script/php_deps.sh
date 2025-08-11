@@ -18,6 +18,7 @@ sudo dnf install --allowerasing -y \
     ca-certificates \
     xz \
     dirmngr \
+    libcgroup-tools \
     libargon2-devel \
     libcurl-devel \
     libedit-devel \

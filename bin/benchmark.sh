@@ -236,22 +236,18 @@ run_cgi () {
     export LOG_CHANNEL=stderr
     export BROADCAST_DRIVER=null
 
-    cpu_count="$(nproc)"
-    last_cpu="$((cpu_count-1))"
-
     if [ "$1" = "quiet" ]; then
-        taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:bench \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "verbose" ]; then
-        taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
+        $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
     elif [ "$1" = "instruction_count" ]; then
-        taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:bench \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "memory" ]; then
-        /usr/bin/time -v taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+        sudo cgexec -g cpuset:bench \
+            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     else
         echo "Invalid php-cgi run mode"
         exit 1
@@ -265,22 +261,21 @@ run_cli () {
         opcache=""
     fi
 
-    cpu_count="$(nproc)"
-    last_cpu="$((cpu_count-1))"
-
     if [ "$1" = "quiet" ]; then
-        taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:bench \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
     elif [ "$1" = "verbose" ]; then
-        taskset -c "$last_cpu" \
+        $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
+    elif [ "$1" = "normal" ]; then
+        sudo cgexec -g cpuset:bench \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "instruction_count" ]; then
-        taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:bench \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
     elif [ "$1" = "memory" ]; then
-        /usr/bin/time -v taskset -c "$last_cpu" \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null # TODO check if taskset should be the first command to execute
+        sudo cgexec -g cpuset:bench /usr/bin/time -v \
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
     else
         echo "Invalid php-cli run mode"
         exit 1
@@ -418,7 +413,7 @@ run_micro_benchmark () {
                 run_cli "quiet" "$1"
             done
 
-            run_cli "verbose" "$1" 2>&1 | tee -a "$log_file"
+            run_cli "normal" "$1" 2>&1 | tee -a "$log_file"
         done
 
         sleep 0.2
@@ -502,7 +497,6 @@ run_benchmark () {
 
     echo "" >> "$final_result_file.md"
     cat "$result_file.md" >> "$final_result_file.md"
-
 }
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
