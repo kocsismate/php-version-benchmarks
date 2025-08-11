@@ -1,6 +1,3 @@
-X-Powered-By: PHP/%v
-Content-type: text/html; charset=UTF-8
-
 simple             %f
 simplecall         %f
 simpleucall        %f

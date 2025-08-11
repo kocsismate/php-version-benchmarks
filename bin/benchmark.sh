@@ -214,10 +214,6 @@ print_result_footer () {
 }
 
 run_cgi () {
-    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
-        sleep 0.25
-    fi
-
     if [ "$PHP_OPCACHE" = "2" ]; then
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     else
@@ -257,8 +253,37 @@ run_cgi () {
         /usr/bin/time -v taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     else
+        echo "Invalid php-cgi run mode"
+        exit 1
+    fi
+}
+
+run_cli () {
+    if [ "$PHP_OPCACHE" = "2" ]; then
+        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
+    else
+        opcache=""
+    fi
+
+    cpu_count="$(nproc)"
+    last_cpu="$((cpu_count-1))"
+
+    if [ "$1" = "quiet" ]; then
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4"
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
+    elif [ "$1" = "verbose" ]; then
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
+    elif [ "$1" = "instruction_count" ]; then
+        taskset -c "$last_cpu" \
+            valgrind --tool=callgrind --dump-instr=no -- \
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
+    elif [ "$1" = "memory" ]; then
+        /usr/bin/time -v taskset -c "$last_cpu" \
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null # TODO check if taskset should be the first command to execute
+    else
+        echo "Invalid php-cli run mode"
+        exit 1
     fi
 }
 
@@ -283,61 +308,153 @@ format_memory_log_file() {
     rm "$1.original"
 }
 
-run_real_benchmark () {
-    # Benchmark
-    run_cgi "verbose" "0" "1" "$1" "$2" "$3" | tee -a "$output_file"
-    if [ ! -z "$test_expectation_file" ]; then
-        assert_test_output "$test_expectation_file" "$output_file"
-    fi
+load_php_config () {
+    source $PHP_CONFIG_FILE
+    export PHP_CONFIG_FILE
+    php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
-    fi
-    run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
-    for b in $(seq $TEST_ITERATIONS); do
-        run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+    log_dir="$result_dir"
+    log_file="$log_dir/${PHP_ID}.log"
+    output_file="$log_dir/${PHP_ID}_output.txt"
+    instruction_count_log_file="$log_dir/${PHP_ID}.instruction_count.log"
+    memory_log_file="$log_dir/${PHP_ID}.memory.log"
+    mkdir -p "$log_dir"
+}
+
+run_real_benchmark () {
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        load_php_config
+
+        echo "---------------------------------------------------------------------------------------"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+        echo "---------------------------------------------------------------------------------------"
+
+        # Verifying output
+        run_cgi "verbose" "0" "1" "$1" "$2" "$3" | tee -a "$output_file"
+        if [ ! -z "$test_expectation_file" ]; then
+            assert_test_output "$test_expectation_file" "$output_file"
+        fi
+
+        # Measuring instruction count
+        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+            run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+        fi
+
+        # Measuring memory usage
+        run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     done
 
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        format_instruction_count_log_file "$instruction_count_log_file"
+    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
+        sleep 5
+    else
+        sleep 2
     fi
-    format_memory_log_file "$memory_log_file"
 
-    # Format log
-    sed -i".original" "/^[[:space:]]*$/d" "$log_file"
-    sed -i".original" "s/Elapsed time\: //g" "$log_file"
-    sed -i".original" "s/ sec//g" "$log_file"
-    rm "$log_file.original"
+    # Benchmark
+    for i in $(seq $TEST_ITERATIONS); do
+        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+            load_php_config
+
+            echo "---------------------------------------------------------------------------------------"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "---------------------------------------------------------------------------------------"
+
+            run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+        done
+
+        sleep 0.2
+    done
+
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        load_php_config
+
+        # Format benchmark log
+        sed -i".original" "/^[[:space:]]*$/d" "$log_file"
+        sed -i".original" "s/Elapsed time\: //g" "$log_file"
+        sed -i".original" "s/ sec//g" "$log_file"
+        rm "$log_file.original"
+    done
 }
 
 run_micro_benchmark () {
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        load_php_config
+
+        echo "---------------------------------------------------------------------------------------"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+        echo "---------------------------------------------------------------------------------------"
+
+        # Verifying output
+        run_cli "verbose" "$1" | tee -a "$output_file"
+        if [ ! -z "$test_expectation_file" ]; then
+            assert_test_output "$test_expectation_file" "$output_file"
+        fi
+
+        # Measuring instruction count
+        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+            run_cli "instruction_count" "$1" 2>&1 | tee -a "$instruction_count_log_file"
+        fi
+
+        # Measuring memory usage
+        run_cli "memory" "$1" 2>&1 | tee -a "$memory_log_file"
+    done
+
+    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
+        sleep 5
+    else
+        sleep 2
+    fi
+
     # Benchmark
-    run_cgi "verbose" "0" "1" "$1" "" "" | tee -a "$output_file"
-    if [ ! -z "$test_expectation_file" ]; then
-        assert_test_output "$test_expectation_file" "$output_file"
-    fi
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        run_cgi "instruction_count" "2" "2" "$1" "" "" 2>&1 | tee -a "$instruction_count_log_file"
-    fi
-    run_cgi "memory" "0" "$TEST_WARMUP" "$1" "" "" 2>&1 | tee -a "$memory_log_file"
-    run_cgi "normal" "$TEST_WARMUP" "$TEST_ITERATIONS" "$1" "" "" 2>&1 | tee -a "$log_file"
+    for i in $(seq $TEST_ITERATIONS); do
+        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+            load_php_config
 
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        format_instruction_count_log_file "$instruction_count_log_file"
-    fi
-    format_memory_log_file "$memory_log_file"
+            echo "---------------------------------------------------------------------------------------"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "---------------------------------------------------------------------------------------"
 
-    # Format log
-    results="$(grep "Total" "$log_file")"
-    echo "$results" > "$log_file"
-    sed -i".original" "s/Total              //g" "$log_file"
-    sed -i".original" -e "1,${TEST_WARMUP}d" "$log_file"
-    rm "$log_file.original"
+            for w in $(seq $TEST_WARMUP); do
+                run_cli "quiet" "$1"
+            done
+
+            run_cli "verbose" "$1" 2>&1 | tee -a "$log_file"
+        done
+
+        sleep 0.2
+    done
+
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        load_php_config
+
+        # Format benchmark log
+        results="$(grep "Total" "$log_file")"
+        echo "$results" > "$log_file"
+        sed -i".original" "s/Total              //g" "$log_file"
+        sed -i".original" -e "1,${TEST_WARMUP}d" "$log_file"
+        rm "$log_file.original"
+    done
 }
 
-run_test () {
-    case "$TEST_ID" in
+run_benchmark () {
+    test_expectation_file="${test_config//.ini/.expectation}"
+    if [ ! -f "$test_expectation_file" ]; then
+        test_expectation_file=""
+    fi
+    result_dir="$infra_dir/${TEST_NUMBER}_${TEST_ID}"
+    result_file="$result_dir/result"
 
+    mkdir -p "$result_dir"
+    touch "$result_file.tsv"
+    touch "$result_file.md"
+
+    print_result_tsv_header "$result_file"
+    print_result_md_header "$result_file"
+
+    first_average=""
+    first_median=""
+
+    case "$TEST_ID" in
         laravel_*)
             run_real_benchmark "app/laravel/public/index.php" "" "production"
             ;;
@@ -364,46 +481,20 @@ run_test () {
 
         *)
             echo "Invalid test ID!"
+            exit 1
             ;;
     esac
 
-}
-
-run_benchmark () {
-    test_expectation_file="${test_config//.ini/.expectation}"
-    if [ ! -f "$test_expectation_file" ]; then
-        test_expectation_file=""
-    fi
-    result_dir="$infra_dir/${TEST_NUMBER}_${TEST_ID}"
-    result_file="$result_dir/result"
-
-    mkdir -p "$result_dir"
-    touch "$result_file.tsv"
-    touch "$result_file.md"
-
-    print_result_tsv_header "$result_file"
-    print_result_md_header "$result_file"
-
-    first_average="";
-    first_median="";
-
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        source $PHP_CONFIG_FILE
-        export PHP_CONFIG_FILE
-        php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
+        load_php_config
 
-        log_dir="$result_dir"
-        log_file="$log_dir/${PHP_ID}.log"
-        output_file="$log_dir/${PHP_ID}_output.txt"
-        instruction_count_log_file="$log_dir/${PHP_ID}.instruction_count.log"
-        memory_log_file="$log_dir/${PHP_ID}.memory.log"
-        mkdir -p "$log_dir"
+        # Format instruction count log
+        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+            format_instruction_count_log_file "$instruction_count_log_file"
+        fi
 
-        echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
-        echo "---------------------------------------------------------------------------------------"
-
-        run_test
+        # Format memory log
+        format_memory_log_file "$memory_log_file"
 
         print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$result_file" "1"
         print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$final_result_file" "0"
@@ -436,6 +527,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     ((TEST_NUMBER=TEST_NUMBER+1))
 
     if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
+        sudo systemctl start containerd.service
         sudo service docker start
 
         db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
@@ -444,15 +536,10 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
         sleep 9
     fi
 
-    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
-        sleep 5
-    else
-        sleep 1
-    fi
-
     run_benchmark
 
     if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
         sudo service docker stop
+        sudo systemctl stop containerd.service
     fi
 done

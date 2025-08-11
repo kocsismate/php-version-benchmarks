@@ -1,6 +1,3 @@
-X-Powered-By: PHP/%v
-Content-type: text/html; charset=UTF-8
-
 empty_loop         %f
 func()             %f    %f
 undef_func()       %f    %f
