@@ -157,22 +157,7 @@ EOF
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
 
-      var.disable_hyper_threading ? "for cpunum in $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut -s -d, -f2- | tr ',' '\n' | sort -un); do echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpunum/online; done" : "echo 'skipped disabling hyper threading'",
-      var.disable_turbo_boost ? "sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'" : "echo 'skipped disabling turbo boost'",
-      "echo 0 | sudo tee /proc/sys/kernel/randomize_va_space", # Disable ASLR based on https://github.com/php/php-src/pull/13769
-
-      # Stop unnecessary background services - list based on sudo systemctl list-unit-files --type=service --state=running
-      "sudo service auditd stop", # logs system calls and security events
-      "sudo systemctl stop chronyd", # time synchronization daemon
-      "sudo service docker stop", # Docker service
-      "sudo systemctl stop containerd.service", # container service
-      "sudo mv -f ${var.remote_project_root}/build/journald.conf /etc/systemd/journald.conf",
-      "sudo service systemd-journald restart",
-
-      # Verify CPU, kernel, and OS config
-      "sudo cat /etc/default/grub",
-      "sudo cat /proc/sys/kernel/randomize_va_space",
-
+      "${var.remote_project_root}/build/script/system_settings.sh",
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
   }
