@@ -73,6 +73,9 @@ dedicate_irq () {
 }
 
 assign_cpu_core_to_cgroup () {
+    echo "NUMA settings:"
+    lscpu | grep NUMA
+
     numa_file="/sys/devices/system/cpu/cpu${last_cpu}/numa_node"
 
     if [[ -f "$numa_file" ]]; then
@@ -96,7 +99,7 @@ assign_cpu_core_to_cgroup () {
     sudo mkdir -p "$cgroup_path"
 
     # Assign isolated cores to the cgroup
-    echo "Assign isolated cores to the bench cgroup"
+    echo "Assigning isolated core to the bench cgroup"
     echo "$last_cpu" | sudo tee $cgroup_path/cpuset.cpus
     echo "$numa_node" | sudo tee $cgroup_path/cpuset.mems
 }

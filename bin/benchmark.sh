@@ -237,7 +237,7 @@ run_cgi () {
     export BROADCAST_DRIVER=null
 
     if [ "$1" = "quiet" ]; then
-        sudo cgexec -g cpuset:bench \
+        taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "verbose" ]; then
         $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
@@ -262,12 +262,12 @@ run_cli () {
     fi
 
     if [ "$1" = "quiet" ]; then
-        sudo cgexec -g cpuset:bench \
+        taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
     elif [ "$1" = "verbose" ]; then
         $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "normal" ]; then
-        sudo cgexec -g cpuset:bench \
+        taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "instruction_count" ]; then
         sudo cgexec -g cpuset:bench \
@@ -448,6 +448,9 @@ run_benchmark () {
 
     first_average=""
     first_median=""
+
+    cpu_count="$(nproc)"
+    last_cpu="$((cpu_count-1))"
 
     case "$TEST_ID" in
         laravel_*)
