@@ -237,6 +237,7 @@ run_cgi () {
     export BROADCAST_DRIVER=null
 
     if [ "$1" = "quiet" ]; then
+        sleep 0.6
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "verbose" ]; then
@@ -267,6 +268,7 @@ run_cli () {
     elif [ "$1" = "verbose" ]; then
         $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "normal" ]; then
+        sleep 0.6
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "instruction_count" ]; then
@@ -339,11 +341,7 @@ run_real_benchmark () {
         run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     done
 
-    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
-        sleep 5
-    else
-        sleep 2
-    fi
+    sleep 7
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -356,8 +354,6 @@ run_real_benchmark () {
 
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
         done
-
-        sleep 0.2
     done
 
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
@@ -394,11 +390,7 @@ run_micro_benchmark () {
         run_cli "memory" "$1" 2>&1 | tee -a "$memory_log_file"
     done
 
-    if [[ -z "$INFRA_DISABLE_TURBO_BOOST" ]]; then
-        sleep 5
-    else
-        sleep 2
-    fi
+    sleep 7
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -415,8 +407,6 @@ run_micro_benchmark () {
 
             run_cli "normal" "$1" 2>&1 | tee -a "$log_file"
         done
-
-        sleep 0.2
     done
 
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
