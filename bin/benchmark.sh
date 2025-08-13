@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
+abs () {
+    local x="$1"
+
+    printf "%.20f" "$(echo "scale=20; x=$x; if (x < 0) x = - (x); x" | bc -l)"
+}
+
+diff () {
+  awk -v t1="$1" -v t2="$2" 'BEGIN{print (t1/t2-1) * 100}'
+}
+
 min () {
   echo "$1" | awk 'BEGIN{a=999999}{if ($1<0+a) a=$1}END{print a}'
 }
@@ -9,29 +19,130 @@ max () {
   echo "$1" | awk 'BEGIN{a=0}{if ($1>0+a) a=$1}END{print a}'
 }
 
-average () {
-  echo "$1" | awk '{sum+=$1}END{print sum/NR}'
+mean () {
+   local numbers=($1)
+   local n="$2"
+   local sum=0
+
+   for val in "${numbers[@]}"; do
+       sum="$(echo "scale=20; $sum + $val" | bc -l)"
+   done
+
+   printf "%.20f" "$(echo "scale=20; $sum / ${#numbers[@]}" | bc -l)"
 }
 
 median () {
-  arr=($(printf '%f\n' "${@}" | sort -n))
-  nel=${#arr[@]}
-  if (( $nel % 2 == 1 )); then
-    val="${arr[ $(($nel/2)) ]}"
-  else
-    (( j=nel/2 ))
-    (( k=j-1 ))
-    val=$(echo "scale=6;(${arr[j]}" + "${arr[k]})/2"|bc -l)
-  fi
-  echo $val
+    local arr=("$@")
+    # Sort numbers numerically
+    local sorted=($(printf "%s\n" "${arr[@]}" | sort -n))
+
+    local n="${#sorted[@]}"
+    local mid="$((n/2))"
+
+    if (( n % 2 == 1 )); then
+        # Odd length: middle element
+        printf "%.20f" "${sorted[$mid]}"
+    else
+        # Even length: average of two middle elements
+        printf "%.20f" "$(echo "scale=20; (${sorted[$mid-1]} + ${sorted[$mid]}) / 2" | bc -l)"
+    fi
 }
 
-std_deviation () {
-    echo "$1" | awk '{sum+=$1; sumsq+=$1*$1}END{print sqrt(sumsq/NR - (sum/NR)**2)}'
+variance () {
+    local numbers="$1"
+    local mean="$2"
+    local n="$3"
+
+    local sum_sq_diff=0
+    for val in $numbers; do
+      diff="$(echo "scale=20; $val - $mean" | bc -l)"
+      sq_diff="$(echo "scale=20; $diff * $diff" | bc -l)"
+      sum_sq_diff="$(echo "scale=20; $sum_sq_diff + $sq_diff" | bc -l)"
+    done
+
+    # sample variance: divide by n-1 instead of n
+    printf "%.20f" "$(echo "scale=20; $sum_sq_diff / ($n - 1)" | bc -l)"
 }
 
-diff () {
-  awk -v t1="$1" -v t2="$2" 'BEGIN{print (t1/t2-1) * 100}'
+# sample standard deviation
+std_dev () {
+    local numbers="$1"
+    local mean="$2"
+    local var="$3"
+    local n="$4"
+
+    printf "%.20f" "$(echo "scale=20; sqrt($var)" | bc -l)"
+}
+
+relative_std_dev () {
+    local mean="$1"
+    local std_dev="$2"
+
+    printf "%.20f" "$(echo "scale=20; $std_dev / $mean * 100" | bc -l)"
+}
+
+welch_t () {
+    local mean1="$1"
+    local var1="$2"
+    local n1="$3"
+    local mean2="$4"
+    local var2="$5"
+    local n2="$6"
+
+    local t_num="$(echo "scale=20; $mean1 - $mean2" | bc -l)"
+    local t_denom="$(echo "scale=20; sqrt($var1 / $n1 + $var2 / $n2)" | bc -l)"
+
+    printf "%.20f" "$(echo "scale=20; $t_num / $t_denom" | bc -l)"
+}
+
+# Degrees of freedom (Welch–Satterthwaite)
+degrees_of_freedom () {
+    local mean1="$1"
+    local var1="$2"
+    local n1="$3"
+
+    local mean1="$4"
+    local mean2="$5"
+    local n2="$6"
+
+    df_num="$(echo "scale=20; ($var1 / $n1 + $var2 / $n2)^2" | bc -l)"
+    df_denom="$(echo "scale=20; (($var1 / $n1)^2) / ($n1 - 1) + (($var2 / $n2)^2) / ($n2 - 1)" | bc -l)"
+
+    printf "%.20f" "$(echo "scale=20; $df_num / $df_denom" | bc -l)"
+}
+
+p_value () {
+    local input1=($1)
+    local mean1="$2"
+    local var1="$3"
+    local n1="${#input1[@]}"
+
+    local input2=($4)
+    local mean2="$5"
+    local var2="$6"
+    local n2="${#input2[@]}"
+
+    if (( n1 < 2 || n2 < 2 )); then
+        echo "Each dataset must have at least 2 values" >&2
+        return 1
+    fi
+
+    t_stat="$(welch_t "$mean1" "$var1" "$n1" "$mean2" "$var2" "$n2")"
+    df="$(degrees_of_freedom "$mean1" "$var1" "$n1" "$mean2" "$var2" "$n2")"
+
+    local x="$(echo "scale=12; $df / ($df + $t_stat^2)" | bc -l)"
+    # Using regularized incomplete beta approximation (simplified)
+    local a="$(echo "scale=12; $df/2" | bc -l)"
+    local b=0.5
+    # Approximation of incomplete beta function using continued fraction
+    # Here we use a simple bash approximation for demonstration
+    # For higher accuracy, a proper beta function implementation is needed
+    # Two-tailed p-value
+    printf "%.20f" "$(echo "scale=12; 2* (1 - (0.5 + 0.5*sqrt(1 - $x)))" | bc -l)"
+
+    #echo "T-statistic: $t_stat"
+    #echo "Degrees of freedom: $df"
+    #echo "Two-tailed p-value: $p_val"
 }
 
 print_environment () {
@@ -136,7 +247,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tAverage\tAverage diff %%\tMedian\tMedian diff %%\tInstruction count\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\Rel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -145,19 +256,19 @@ print_result_md_header () {
         description="$description, $TEST_REQUESTS requests"
     fi
 
-if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-    instruction_count_header_name="|  Instr count  "
-    instruction_count_header_separator="|---------------";
-else
-    instruction_count_header_name=""
-    instruction_count_header_separator="";
-fi
+    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+        instruction_count_header_name="|  Instr count  "
+        instruction_count_header_separator="|---------------";
+    else
+        instruction_count_header_name=""
+        instruction_count_header_separator="";
+    fi
 
 cat << EOF >> "$1.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   |   Average  |  Average diff % |   Median   | Median diff % $instruction_count_header_name|     Memory    |
-|-------------|-------------|-------------|--------------|------------|-----------------|------------|---------------$instruction_count_header_separator|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | P-value $instruction_count_header_name|     Memory    |
+|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|---------$instruction_count_header_separator|---------------|
 EOF
 }
 
@@ -168,6 +279,10 @@ print_result_value () {
     url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     results="$(cat "$1")"
+    if [ -z "$first_results" ]; then
+        first_results="$results"
+    fi
+
     if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         instruction_count_tsv_format="\t%d"
         instruction_count_tsv_value="$(cat "$2")"
@@ -181,29 +296,57 @@ print_result_value () {
     fi
     memory_result="$(cat "$3")"
 
-    min="$(min "$results")"
-    max="$(max "$results")"
-    average="$(average "$results")"
-    if [ -z "$first_average" ]; then
-        first_average="$average"
+    echo ""
+    echo "Descriptive statistics for $PHP_ID:"
+
+    local n_arr=($results)
+    local n="$(echo "${#n_arr[@]}")"
+    echo "N: $n"
+
+    local min="$(min "$results")"
+    echo "Min: $min"
+
+    local max="$(max "$results")"
+    echo "Max: $max"
+
+    local mean="$(mean "$results")"
+    if [ -z "$first_mean" ]; then
+        first_mean="$mean"
     fi
-    average_diff="$(diff "$average" "$first_average")"
-    median="$(median $results)"
+    local mean_diff="$(diff "$mean" "$first_mean")"
+    echo "Mean: $mean ($mean_diff %)"
+
+    local median="$(median $results)"
     if [ -z "$first_median" ]; then
         first_median="$median"
     fi
-    median_diff="$(diff "$median" "$first_median")"
-    std_dev="$(std_deviation "$results")"
-    memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
+    local median_diff="$(diff "$median" "$first_median")"
+    echo "Median: $median ($median_diff %)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f$instruction_count_tsv_format\t%.2f\n" \
+    local var="$(variance "$results" "$mean" "$n")"
+    if [ -z "$first_var" ]; then
+        first_var="$var"
+    fi
+    echo "Variance: $var"
+
+    local std_dev="$(std_dev "$results" "$median" "$var" "$n")"
+    local relative_std_dev="$(relative_std_dev "$mean" "$std_dev")"
+    echo "Std dev: $std_dev ($relative_std_dev)"
+
+    local p_value="$(p_value "$first_results" "$results")"
+    echo "Two tailed P-value: $p_value"
+    echo ""
+
+    local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
+
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count_tsv_value" "$memory_usage" >> "$4.tsv"
+        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$p_value" "$instruction_count_tsv_value" "$memory_usage" >> "$4.tsv"
 
     if [ "$5" -eq "1" ]; then
-        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%$instruction_count_md_format|%.2f MB|\n" \
-            "$PHP_NAME" "$min" "$max" "$std_dev" "$average" "$average_diff" "$median" "$median_diff" "$instruction_count_md_value" "$memory_usage" >> "$4.md"
+        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f$instruction_count_md_format|%.2f MB|\n" \
+            "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$p_value" "$instruction_count_md_value" "$memory_usage" >> "$4.md"
     fi
 }
 
@@ -436,8 +579,9 @@ run_benchmark () {
     print_result_tsv_header "$result_file"
     print_result_md_header "$result_file"
 
-    first_average=""
+    first_mean=""
     first_median=""
+    first_results=""
 
     cpu_count="$(nproc)"
     last_cpu="$((cpu_count-1))"
