@@ -7,6 +7,11 @@ ini_set("display_errors", true);
 
 function assertEquals(string $expected, string $actual): void
 {
+    $actual = preg_replace("/^Elapsed time: [0-9.]+ sec$/m", "", $actual);
+
+    $expected = trim($expected);
+    $actual = trim($actual);
+
     $expectedArray = explode("\n", $expected);
     $expectedArrayCount = count($expectedArray);
     $actualArray = explode("\n", $actual);
