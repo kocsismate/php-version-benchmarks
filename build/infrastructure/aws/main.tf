@@ -43,7 +43,7 @@ resource "aws_instance" "host" {
   root_block_device {
     volume_type = "io2"
     volume_size = "32"
-    iops = 8000
+    iops = 4000
   }
 
   tags = merge(var.tags, {(var.scheduler_tag["key"]) = var.scheduler_tag["value"]})
