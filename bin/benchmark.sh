@@ -452,7 +452,7 @@ run_cgi () {
 
     # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$1" = "quiet" ]; then
-        sleep 0.6
+        sleep 0.25
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "verbose" ]; then
@@ -486,7 +486,7 @@ run_cli () {
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "normal" ]; then
-        sleep 0.6
+        sleep 0.8
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "instruction_count" ]; then
@@ -559,7 +559,7 @@ run_real_benchmark () {
         run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     done
 
-    sleep 7
+    sleep 3
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -608,7 +608,7 @@ run_micro_benchmark () {
         run_cli "memory" "$1" 2>&1 | tee -a "$memory_log_file"
     done
 
-    sleep 7
+    sleep 3
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
