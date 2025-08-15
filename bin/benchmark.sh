@@ -4,7 +4,7 @@ set -e
 abs () {
     local x="$1"
 
-    printf "%.20f" "$(echo "scale=20; x=$x; if (x < 0) x = - (x); x" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; x=$x; if (x < 0) x = - (x); x" | bc -l)"
 }
 
 diff () {
@@ -25,10 +25,10 @@ mean () {
    local sum=0
 
    for val in "${numbers[@]}"; do
-       sum="$(echo "scale=20; $sum + $val" | bc -l)"
+       sum="$(echo "scale=50; $sum + $val" | bc -l)"
    done
 
-   printf "%.20f" "$(echo "scale=20; $sum / ${#numbers[@]}" | bc -l)"
+   printf "%.50f" "$(echo "scale=50; $sum / ${#numbers[@]}" | bc -l)"
 }
 
 median () {
@@ -41,13 +41,14 @@ median () {
 
     if (( n % 2 == 1 )); then
         # Odd length: middle element
-        printf "%.20f" "${sorted[$mid]}"
+        printf "%.50f" "${sorted[$mid]}"
     else
         # Even length: average of two middle elements
-        printf "%.20f" "$(echo "scale=20; (${sorted[$mid-1]} + ${sorted[$mid]}) / 2" | bc -l)"
+        printf "%.50f" "$(echo "scale=50; (${sorted[$mid-1]} + ${sorted[$mid]}) / 2" | bc -l)"
     fi
 }
 
+ # sample variance: divides by n-1 instead of n
 variance () {
     local numbers="$1"
     local mean="$2"
@@ -55,30 +56,26 @@ variance () {
 
     local sum_sq_diff=0
     for val in $numbers; do
-      diff="$(echo "scale=20; $val - $mean" | bc -l)"
-      sq_diff="$(echo "scale=20; $diff * $diff" | bc -l)"
-      sum_sq_diff="$(echo "scale=20; $sum_sq_diff + $sq_diff" | bc -l)"
+      diff="$(echo "scale=50; $val - $mean" | bc -l)"
+      sq_diff="$(echo "scale=50; $diff * $diff" | bc -l)"
+      sum_sq_diff="$(echo "scale=50; $sum_sq_diff + $sq_diff" | bc -l)"
     done
 
-    # sample variance: divide by n-1 instead of n
-    printf "%.20f" "$(echo "scale=20; $sum_sq_diff / ($n - 1)" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; $sum_sq_diff / ($n - 1)" | bc -l)"
 }
 
 # sample standard deviation
 std_dev () {
-    local numbers="$1"
-    local mean="$2"
-    local var="$3"
-    local n="$4"
+    local var="$1"
 
-    printf "%.20f" "$(echo "scale=20; sqrt($var)" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; sqrt($var)" | bc -l)"
 }
 
 relative_std_dev () {
     local mean="$1"
     local std_dev="$2"
 
-    printf "%.20f" "$(echo "scale=20; $std_dev / $mean * 100" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; $std_dev / $mean * 100" | bc -l)"
 }
 
 welch_t () {
@@ -89,60 +86,124 @@ welch_t () {
     local var2="$5"
     local n2="$6"
 
-    local t_num="$(echo "scale=20; $mean1 - $mean2" | bc -l)"
-    local t_denom="$(echo "scale=20; sqrt($var1 / $n1 + $var2 / $n2)" | bc -l)"
+    local t_num="$(echo "scale=50; $mean1 - $mean2" | bc -l)"
+    local t_denom="$(echo "scale=50; sqrt($var1 / $n1 + $var2 / $n2)" | bc -l)"
 
-    printf "%.20f" "$(echo "scale=20; $t_num / $t_denom" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; $t_num / $t_denom" | bc -l)"
 }
 
 # Degrees of freedom (Welch–Satterthwaite)
 degrees_of_freedom () {
-    local mean1="$1"
-    local var1="$2"
-    local n1="$3"
+    local var1="$1"
+    local n1="$2"
 
-    local mean1="$4"
-    local mean2="$5"
-    local n2="$6"
+    local var2="$3"
+    local n2="$4"
 
-    df_num="$(echo "scale=20; ($var1 / $n1 + $var2 / $n2)^2" | bc -l)"
-    df_denom="$(echo "scale=20; (($var1 / $n1)^2) / ($n1 - 1) + (($var2 / $n2)^2) / ($n2 - 1)" | bc -l)"
+    df_num="$(echo "scale=50; ($var1 / $n1 + $var2 / $n2)^2" | bc -l)"
+    df_denom="$(echo "scale=50; (($var1 / $n1)^2) / ($n1 - 1) + (($var2 / $n2)^2) / ($n2 - 1)" | bc -l)"
 
-    printf "%.20f" "$(echo "scale=20; $df_num / $df_denom" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; $df_num / $df_denom" | bc -l)"
 }
 
-p_value () {
-    local input1=($1)
-    local mean1="$2"
-    local var1="$3"
-    local n1="${#input1[@]}"
+p_value() {
+    local df="$1"
+    local t="$2"
 
-    local input2=($4)
-    local mean2="$5"
-    local var2="$6"
-    local n2="${#input2[@]}"
-
-    if (( n1 < 2 || n2 < 2 )); then
-        echo "Each dataset must have at least 2 values" >&2
-        return 1
+    if [ "$(echo "$t == 0" | bc -l)" -eq 1 ]; then
+        echo "1"
+        return
     fi
 
-    t_stat="$(welch_t "$mean1" "$var1" "$n1" "$mean2" "$var2" "$n2")"
-    df="$(degrees_of_freedom "$mean1" "$var1" "$n1" "$mean2" "$var2" "$n2")"
+    # header probabilities
+    header=(1.00 0.50 0.40 0.30 0.20 0.10 0.05 0.02 0.01 0.002 0.001)
 
-    local x="$(echo "scale=12; $df / ($df + $t_stat^2)" | bc -l)"
-    # Using regularized incomplete beta approximation (simplified)
-    local a="$(echo "scale=12; $df/2" | bc -l)"
-    local b=0.5
-    # Approximation of incomplete beta function using continued fraction
-    # Here we use a simple bash approximation for demonstration
-    # For higher accuracy, a proper beta function implementation is needed
-    # Two-tailed p-value
-    printf "%.20f" "$(echo "scale=12; 2* (1 - (0.5 + 0.5*sqrt(1 - $x)))" | bc -l)"
+    # table: first column = df threshold, then the critical t-values for the header columns
+    # columns separated by whitespace (tabs/spaces).
+    read -r -d '' TBL <<'TSV' || true
+1000000000000    0.000 0.674 0.842 1.036 1.282 1.645 1.960 2.326 2.576 3.090 3.291
+1000             0.000 0.675 0.842 1.037 1.282 1.646 1.962 2.330 2.581 3.098 3.300
+100              0.000 0.677 0.845 1.042 1.290 1.660 1.984 2.364 2.626 3.174 3.390
+80               0.000 0.678 0.846 1.043 1.292 1.664 1.990 2.374 2.639 3.195 3.416
+60               0.000 0.679 0.848 1.045 1.296 1.671 2.000 2.390 2.660 3.232 3.460
+40               0.000 0.681 0.851 1.050 1.303 1.684 2.021 2.423 2.704 3.307 3.551
+30               0.000 0.683 0.854 1.055 1.310 1.697 2.042 2.457 2.750 3.385 3.646
+29               0.000 0.683 0.854 1.055 1.311 1.699 2.045 2.462 2.756 3.396 3.659
+28               0.000 0.683 0.855 1.056 1.313 1.701 2.048 2.467 2.763 3.408 3.674
+27               0.000 0.684 0.855 1.057 1.314 1.703 2.052 2.473 2.771 3.421 3.690
+26               0.000 0.684 0.856 1.058 1.315 1.706 2.056 2.479 2.779 3.435 3.707
+25               0.000 0.684 0.856 1.058 1.316 1.708 2.060 2.485 2.787 3.450 3.725
+24               0.000 0.685 0.857 1.059 1.318 1.711 2.064 2.492 2.797 3.467 3.745
+23               0.000 0.685 0.858 1.060 1.319 1.714 2.069 2.500 2.807 3.485 3.768
+22               0.000 0.686 0.858 1.061 1.321 1.717 2.074 2.508 2.819 3.505 3.792
+21               0.000 0.686 0.859 1.063 1.323 1.721 2.080 2.518 2.831 3.527 3.819
+20               0.000 0.687 0.860 1.064 1.325 1.725 2.086 2.528 2.845 3.552 3.850
+19               0.000 0.688 0.861 1.066 1.328 1.729 2.093 2.539 2.861 3.579 3.883
+18               0.000 0.688 0.862 1.067 1.330 1.734 2.101 2.552 2.878 3.610 3.922
+17               0.000 0.689 0.863 1.069 1.333 1.740 2.110 2.567 2.898 3.646 3.965
+16               0.000 0.690 0.865 1.071 1.337 1.746 2.120 2.583 2.921 3.686 4.015
+15               0.000 0.691 0.866 1.074 1.341 1.753 2.131 2.602 2.947 3.733 4.073
+14               0.000 0.692 0.868 1.076 1.345 1.761 2.145 2.624 2.977 3.787 4.140
+13               0.000 0.694 0.870 1.079 1.350 1.771 2.160 2.650 3.012 3.852 4.221
+12               0.000 0.695 0.873 1.083 1.356 1.782 2.179 2.681 3.055 3.930 4.318
+11               0.000 0.697 0.876 1.088 1.363 1.796 2.201 2.718 3.106 4.025 4.437
+10               0.000 0.700 0.879 1.093 1.372 1.812 2.228 2.764 3.169 4.144 4.587
+9                0.000 0.703 0.883 1.100 1.383 1.833 2.262 2.821 3.250 4.297 4.781
+8                0.000 0.706 0.889 1.108 1.397 1.860 2.306 2.896 3.355 4.501 5.041
+7                0.000 0.711 0.896 1.119 1.415 1.895 2.365 2.998 3.499 4.785 5.408
+6                0.000 0.718 0.906 1.134 1.440 1.943 2.447 3.143 3.707 5.208 5.959
+5                0.000 0.727 0.920 1.156 1.476 2.015 2.571 3.365 4.032 5.893 6.869
+4                0.000 0.741 0.941 1.190 1.533 2.132 2.776 3.747 4.604 7.173 8.610
+3                0.000 0.765 0.978 1.250 1.638 2.353 3.182 4.541 5.841 10.215 12.924
+2                0.000 0.816 1.061 1.386 1.886 2.920 4.303 6.965 9.925 22.327 31.599
+1                0.000 1.000 1.376 1.963 3.078 6.314 12.71 31.82 63.66 318.31 636.62
+TSV
 
-    #echo "T-statistic: $t_stat"
-    #echo "Degrees of freedom: $df"
-    #echo "Two-tailed p-value: $p_val"
+    t="$(abs "$t")"
+
+    # pick row: first line in TBL such that df >= key
+    local row
+    row=$(awk -v df="$df" 'BEGIN{FS="[ \t]+"}
+        {
+          key = $1 + 0
+          if (df >= key) {
+            # print the rest of the line (skip the key)
+            $1 = ""; sub(/^[ \t]+/, "");
+            print; exit
+          }
+        }' <<< "$TBL")
+
+    if [ -z "$row" ]; then
+        echo "error: no table row selected for df=$df" >&2
+        return 2
+    fi
+
+    # read row values into array 'vals'
+    read -r -a vals <<< "$row"
+    local n="${#vals[@]}"
+
+    # loop through columns, find interval where t fits
+    for ((i=0; i < n-1; i++)); do
+        local curr=${vals[i]}
+        local next=${vals[i+1]}
+
+        # comparisons with bc (returns 1 or 0)
+        local ge="$(echo "scale=50; $t >= $curr" | bc -l)"
+        local lt="$(echo "scale=50; $t < $next" | bc -l)"
+
+        if [ "$ge" -eq 1 ] && [ "$lt" -eq 1 ]; then
+            # header[i] and header[i+1] used for interpolation
+            local h_i="${header[i]}"
+            local h_ip1="${header[i+1]}"
+
+            # p = header[i+1] + ((header[i] - header[i+1]) / (next - curr) * (t - curr))
+            printf "%.12f\n" "$(echo "scale=50; $h_ip1 + ( ($h_i - $h_ip1) / ($next - $curr) ) * ($t - $curr)" | bc -l)"
+            return 0
+        fi
+    done
+
+    # t beyond last interval -> return 0.001 (smallest p in table)
+    printf "%.12f\n" 0.001
 }
 
 print_environment () {
@@ -301,6 +362,9 @@ print_result_value () {
 
     local n_arr=($results)
     local n="$(echo "${#n_arr[@]}")"
+    if [ -z "$first_n" ]; then
+        first_n="$n"
+    fi
     echo "N: $n"
 
     local min="$(min "$results")"
@@ -314,27 +378,33 @@ print_result_value () {
         first_mean="$mean"
     fi
     local mean_diff="$(diff "$mean" "$first_mean")"
-    echo "Mean: $mean ($mean_diff %)"
+    printf "Mean: %.12f (%.12f %%)\n" "$mean" "$mean_diff"
 
     local median="$(median $results)"
     if [ -z "$first_median" ]; then
         first_median="$median"
     fi
     local median_diff="$(diff "$median" "$first_median")"
-    echo "Median: $median ($median_diff %)"
+    printf "Median: %.12f (%.12f %%)\n" "$median" "$median_diff"
 
     local var="$(variance "$results" "$mean" "$n")"
     if [ -z "$first_var" ]; then
         first_var="$var"
     fi
-    echo "Variance: $var"
+    printf "Variance: %.12f\n" "$var"
 
-    local std_dev="$(std_dev "$results" "$median" "$var" "$n")"
+    local std_dev="$(std_dev "$var")"
     local relative_std_dev="$(relative_std_dev "$mean" "$std_dev")"
-    echo "Std dev: $std_dev ($relative_std_dev)"
+    printf "Std dev: %.12f (%.12f %%)\n" "$std_dev" "$relative_std_dev"
 
-    local p_value="$(p_value "$first_results" "$results")"
-    echo "Two tailed P-value: $p_value"
+    local df="$(degrees_of_freedom "$first_var" "$first_n" "$var" "$n")"
+    printf "Degrees of freedom: %.12f\n" "$df"
+
+    local t_stat="$(welch_t "$first_mean" "$first_var" "$first_n" "$mean" "$var" "$n")"
+    printf "Welch's T-test: %.12f\n" "$t_stat"
+
+    local p_value="$(p_value "$df" "$t_stat")"
+    printf "Two tailed P-value: %.12f\n" "$p_value"
     echo ""
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
@@ -584,9 +654,11 @@ run_benchmark () {
     print_result_tsv_header "$result_file"
     print_result_md_header "$result_file"
 
+    first_results=""
+    first_n=""
     first_mean=""
     first_median=""
-    first_results=""
+    first_var=""
 
     cpu_count="$(nproc)"
     last_cpu="$((cpu_count-1))"
