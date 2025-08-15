@@ -184,6 +184,9 @@ verify () {
 
     echo "ASLR:"
     sudo cat /proc/sys/kernel/randomize_va_space
+
+    echo "TOP 25 processes:"
+    ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu | head -n 26
 }
 
 disable_hyper_threading
