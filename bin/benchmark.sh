@@ -374,17 +374,20 @@ run_cgi () {
     export APP_DEBUG=false
     export APP_SECRET=random
     export SESSION_DRIVER=cookie
+    export CACHE_STORE=null
     export LOG_LEVEL=warning
     export DB_CONNECTION=sqlite
     export LOG_CHANNEL=stderr
     export BROADCAST_DRIVER=null
 
+    # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$1" = "quiet" ]; then
         sleep 0.6
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$1" = "verbose" ]; then
-        $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
     elif [ "$1" = "instruction_count" ]; then
         sudo cgexec -g cpuset:bench \
             valgrind --tool=callgrind --dump-instr=no -- \
@@ -405,11 +408,13 @@ run_cli () {
         opcache=""
     fi
 
+    # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$1" = "quiet" ]; then
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
     elif [ "$1" = "verbose" ]; then
-        $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
     elif [ "$1" = "normal" ]; then
         sleep 0.6
         taskset -c "$last_cpu" \
