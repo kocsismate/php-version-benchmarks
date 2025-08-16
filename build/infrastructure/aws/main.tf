@@ -193,7 +193,7 @@ data "aws_ami" "host" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-minimal-2023*"]
+    values = ["al2023-ami-minimal-2023.8.202508*"]
   }
 
   filter {
