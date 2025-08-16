@@ -357,55 +357,48 @@ print_result_value () {
     fi
     memory_result="$(cat "$3")"
 
-    echo ""
-    echo "Descriptive statistics for $PHP_ID:"
-
     local n_arr=($results)
     local n="$(echo "${#n_arr[@]}")"
     if [ -z "$first_n" ]; then
         first_n="$n"
     fi
-    echo "N: $n"
-
     local min="$(min "$results")"
-    echo "Min: $min"
-
     local max="$(max "$results")"
-    echo "Max: $max"
-
     local mean="$(mean "$results")"
     if [ -z "$first_mean" ]; then
         first_mean="$mean"
     fi
     local mean_diff="$(diff "$mean" "$first_mean")"
-    printf "Mean: %.12f (%.12f %%)\n" "$mean" "$mean_diff"
-
     local median="$(median $results)"
     if [ -z "$first_median" ]; then
         first_median="$median"
     fi
     local median_diff="$(diff "$median" "$first_median")"
-    printf "Median: %.12f (%.12f %%)\n" "$median" "$median_diff"
-
     local var="$(variance "$results" "$mean" "$n")"
     if [ -z "$first_var" ]; then
         first_var="$var"
     fi
-    printf "Variance: %.12f\n" "$var"
-
     local std_dev="$(std_dev "$var")"
     local relative_std_dev="$(relative_std_dev "$mean" "$std_dev")"
-    printf "Std dev: %.12f (%.12f %%)\n" "$std_dev" "$relative_std_dev"
-
     local df="$(degrees_of_freedom "$first_var" "$first_n" "$var" "$n")"
-    printf "Degrees of freedom: %.12f\n" "$df"
-
     local t_stat="$(welch_t "$first_mean" "$first_var" "$first_n" "$mean" "$var" "$n")"
-    printf "Welch's T-test: %.12f\n" "$t_stat"
-
     local p_value="$(p_value "$df" "$t_stat")"
-    printf "Two tailed P-value: %.12f\n" "$p_value"
-    echo ""
+
+    if [ -z "$5" ]; then
+        echo ""
+        echo "Descriptive statistics for $PHP_ID:"
+        echo "N: $n"
+        echo "Min: $min"
+        echo "Max: $max"
+        printf "Mean: %.12f (%.12f %%)\n" "$mean" "$mean_diff"
+        printf "Median: %.12f (%.12f %%)\n" "$median" "$median_diff"
+        printf "Variance: %.12f\n" "$var"
+        printf "Std dev: %.12f (%.12f %%)\n" "$std_dev" "$relative_std_dev"
+        printf "Degrees of freedom: %.12f\n" "$df"
+        printf "Welch's T-test: %.12f\n" "$t_stat"
+        printf "Two tailed P-value: %.12f\n" "$p_value"
+        echo ""
+    fi
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
