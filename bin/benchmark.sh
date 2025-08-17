@@ -384,7 +384,7 @@ print_result_value () {
     local t_stat="$(welch_t "$first_mean" "$first_var" "$first_n" "$mean" "$var" "$n")"
     local p_value="$(p_value "$df" "$t_stat")"
 
-    if [ -z "$5" ]; then
+    if [ "$5" -eq "0" ]; then
         echo ""
         echo "Descriptive statistics for $PHP_ID:"
         echo "N: $n"
