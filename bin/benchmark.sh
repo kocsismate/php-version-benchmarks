@@ -420,6 +420,13 @@ print_result_footer () {
 }
 
 run_cgi () {
+    local mode="$1"
+    local warmup="$2"
+    local requests="$3"
+    local script="$4"
+    local uri="$5"
+    local env="$6"
+
     if [ "$PHP_OPCACHE" = "2" ]; then
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     else
@@ -428,12 +435,12 @@ run_cgi () {
 
     export CONTENT_TYPE="text/html; charset=utf-8"
     export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
-    export REQUEST_URI="$5"
+    export REQUEST_URI="$uri"
     export HTTP_HOST="localhost"
     export SERVER_NAME="localhost"
     export REQUEST_METHOD="GET"
     export REDIRECT_STATUS="200"
-    export APP_ENV="$6"
+    export APP_ENV="$env"
     export APP_DEBUG=false
     export APP_SECRET=random
     export SESSION_DRIVER=cookie
@@ -444,20 +451,20 @@ run_cgi () {
     export BROADCAST_DRIVER=null
 
     # TODO try to use sudo chrt -f 99 for real-time process
-    if [ "$1" = "quiet" ]; then
+    if [ "$mode" = "quiet" ]; then
         sleep 0.25
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
-    elif [ "$1" = "verbose" ]; then
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$mode" = "verbose" ]; then
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$2,$3" "$PROJECT_ROOT/$4"
-    elif [ "$1" = "instruction_count" ]; then
-        sudo cgexec -g cpuset:bench \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
+    elif [ "$mode" = "instruction_count" ]; then
+        taskset -c "$last_cpu" \
             valgrind --tool=callgrind --dump-instr=no -- \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
-    elif [ "$1" = "memory" ]; then
-        sudo cgexec -g cpuset:bench \
-            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$2,$3" "$PROJECT_ROOT/$4" > /dev/null
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$mode" = "memory" ]; then
+        taskset -c "$last_cpu" \
+            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     else
         echo "Invalid php-cgi run mode"
         exit 1
@@ -465,6 +472,11 @@ run_cgi () {
 }
 
 run_cli () {
+    local mode="$1"
+    local warmup="$2"
+    local requests="$3"
+    local script="$4"
+
     if [ "$PHP_OPCACHE" = "2" ]; then
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     else
@@ -472,23 +484,20 @@ run_cli () {
     fi
 
     # TODO try to use sudo chrt -f 99 for real-time process
-    if [ "$1" = "quiet" ]; then
-        taskset -c "$last_cpu" \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
-    elif [ "$1" = "verbose" ]; then
-        taskset -c "$last_cpu" \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
-    elif [ "$1" = "normal" ]; then
+    if [ "$mode" = "quiet" ]; then
         sleep 0.8
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2"
-    elif [ "$1" = "instruction_count" ]; then
-        sudo cgexec -g cpuset:bench \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+    elif [ "$mode" = "verbose" ]; then
+        taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
+    elif [ "$mode" = "instruction_count" ]; then
+        taskset -c "$last_cpu" \
             valgrind --tool=callgrind --dump-instr=no -- \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
-    elif [ "$1" = "memory" ]; then
-        sudo cgexec -g cpuset:bench /usr/bin/time -v \
-            $php_source_path/sapi/cli/php $opcache "$PROJECT_ROOT/$2" > /dev/null
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+    elif [ "$mode" = "memory" ]; then
+        /usr/bin/time -v taskset -c "$last_cpu" \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     else
         echo "Invalid php-cli run mode"
         exit 1
@@ -543,13 +552,13 @@ run_real_benchmark () {
             assert_test_output "$test_expectation_file" "$output_file"
         fi
 
+        # Measuring memory usage
+        run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
+
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
             run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
         fi
-
-        # Measuring memory usage
-        run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
     done
 
     sleep 3
@@ -587,18 +596,18 @@ run_micro_benchmark () {
         echo "---------------------------------------------------------------------------------------"
 
         # Verifying output
-        run_cli "verbose" "$1" | tee -a "$output_file"
+        run_cli "verbose" "0" "1" "$1" | tee -a "$output_file"
         if [ ! -z "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
 
+         # Measuring memory usage
+        run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
+
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cli "instruction_count" "$1" 2>&1 | tee -a "$instruction_count_log_file"
+            run_cli "instruction_count" "5" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
         fi
-
-        # Measuring memory usage
-        run_cli "memory" "$1" 2>&1 | tee -a "$memory_log_file"
     done
 
     sleep 3
@@ -612,11 +621,7 @@ run_micro_benchmark () {
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
             echo "---------------------------------------------------------------------------------------"
 
-            for w in $(seq $TEST_WARMUP); do
-                run_cli "quiet" "$1"
-            done
-
-            run_cli "normal" "$1" 2>&1 | tee -a "$log_file"
+            run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
         done
     done
 
@@ -624,10 +629,9 @@ run_micro_benchmark () {
         load_php_config
 
         # Format benchmark log
-        results="$(grep "Total" "$log_file")"
-        echo "$results" > "$log_file"
-        sed -i".original" "s/Total              //g" "$log_file"
-        sed -i".original" -e "1,${TEST_WARMUP}d" "$log_file"
+        sed -i".original" "/^[[:space:]]*$/d" "$log_file"
+        sed -i".original" "s/Elapsed time\: //g" "$log_file"
+        sed -i".original" "s/ sec//g" "$log_file"
         rm "$log_file.original"
     done
 }
