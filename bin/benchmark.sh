@@ -223,8 +223,8 @@ EOF
     fi
     instance_type="| Instance type |$instance_type|\n"
 
-    architecture="$(uname -m)"
-    kernel="$(uname -r)"
+    local architecture="$(uname -m)"
+    local kernel="$(uname -r)"
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         cpu="$(sysctl -n machdep.cpu.brand_string)"
@@ -312,9 +312,11 @@ print_result_tsv_header () {
 }
 
 print_result_md_header () {
-    description="$TEST_ITERATIONS consecutive runs"
-    if [ ! -z "$TEST_REQUESTS" ]; then
-        description="$description, $TEST_REQUESTS requests"
+    description="$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS"
+    if [ "$TEST_REQUESTS" -eq "1" ]; then
+        description="$description request"
+    else
+        description="$description requests"
     fi
 
     if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
@@ -355,7 +357,7 @@ print_result_value () {
         instruction_count_md_format="%s"
         instruction_count_md_value=""
     fi
-    memory_result="$(cat "$3")"
+    local memory_result="$(cat "$3")"
 
     local n_arr=($results)
     local n="$(echo "${#n_arr[@]}")"
@@ -411,12 +413,6 @@ print_result_value () {
         printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f$instruction_count_md_format|%.2f MB|\n" \
             "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$p_value" "$instruction_count_md_value" "$memory_usage" >> "$4.md"
     fi
-}
-
-print_result_footer () {
-    now="$(TZ=UTC date +'%Y-%m-%d %H:%M:%S')"
-
-    printf "\n##### Generated: $now UTC\n" >> "$1.md"
 }
 
 run_cgi () {
@@ -505,21 +501,21 @@ run_cli () {
 }
 
 assert_test_output() {
-    expectation_file="$1"
-    actual_file="$2"
+    local expectation_file="$1"
+    local actual_file="$2"
 
     $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert_output.php" "$expectation_file" "$actual_file"
 }
 
 format_instruction_count_log_file() {
-    result="$(grep "== Collected : " "$1")"
+    local result="$(grep "== Collected : " "$1")"
     echo "$result" > "$1"
     sed -i".original" -E "s/==[0-9]+== Collected : //g" "$1"
     rm "$1.original"
 }
 
 format_memory_log_file() {
-    result="$(grep "Maximum resident set size" "$1")"
+    local result="$(grep "Maximum resident set size" "$1")"
     echo "$result" > "$1"
     sed -i".original" "s/	Maximum resident set size (kbytes): //g" "$1"
     rm "$1.original"
