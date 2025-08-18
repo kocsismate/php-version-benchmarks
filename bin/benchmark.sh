@@ -481,7 +481,7 @@ run_cli () {
 
     # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$mode" = "quiet" ]; then
-        sleep 0.8
+        sleep 0.9
         taskset -c "$last_cpu" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "verbose" ]; then
