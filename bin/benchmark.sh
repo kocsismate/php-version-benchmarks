@@ -553,7 +553,7 @@ run_real_benchmark () {
 
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cgi "instruction_count" "10" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+            run_cgi "instruction_count" "$TEST_WARMUP" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
         fi
     done
 
@@ -602,7 +602,7 @@ run_micro_benchmark () {
 
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cli "instruction_count" "5" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
+            run_cli "instruction_count" "$TEST_WARMUP" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
         fi
     done
 
