@@ -48,7 +48,7 @@ median () {
     fi
 }
 
- # sample variance: divides by n-1 instead of n
+ # Sample variance: divides by n-1 instead of n
 variance () {
     local numbers="$1"
     local mean="$2"
@@ -64,7 +64,6 @@ variance () {
     printf "%.50f" "$(echo "scale=50; $sum_sq_diff / ($n - 1)" | bc -l)"
 }
 
-# sample standard deviation
 std_dev () {
     local var="$1"
 
@@ -78,7 +77,68 @@ relative_std_dev () {
     printf "%.50f" "$(echo "scale=50; $std_dev / $mean * 100" | bc -l)"
 }
 
-welch_t () {
+# Adjusted Fisher–Pearson standardized moment coefficient
+skewness () {
+    local nums=($1)
+    local mean="$2"
+    local std_dev="$3"
+    local n="$4"
+
+    if [ "$n" -lt 3 ]; then
+        echo "Need at least 3 values"
+        return 1
+    fi
+
+    local x
+    local sum=0
+    for x in "${nums[@]}"; do
+        # Standardize each data point by subtracting the mean and dividing by the sample standard deviation
+        local z="$(printf "%.50f" "$(echo "scale=50; ($x - $mean) / $std_dev" | bc -l)")"
+        # Cube each standardized value by raising it to the power of 3:
+        local cube_z="$(printf "%.50f" "$(echo "scale=50; $z^3" | bc -l)")"
+        # Sum all the cubed standardized values
+        local sum="$(printf "%.50f" "$(echo "scale=50; $sum + $cube_z" | bc -l)")"
+    done
+
+    # Correction factor: n / ((n-1) * (n-2))
+    local correction="$(printf "%.50f" "$(echo "scale=50; $n / (($n-1) * ($n-2))" | bc -l)")"
+
+    # Multiply the result by the correction factor to obtain the sample skewness
+    printf "%.50f" "$(echo "scale=50; $correction * $sum" | bc -l)"
+}
+
+# Check normality vs log-normality
+decide_distribution () {
+    local nums=($1)
+    local n="$2"
+    local skew_raw="$3"
+
+    # log-transformed skewness (only if all positive)
+    local lognums=()
+    for x in "${nums[@]}"; do
+        local logx="$(printf "%.50f" "$(echo "scale=50; l($x)" | bc -l)")"
+        lognums+=("$logx")
+    done
+
+    local lognum_n="${#lognums[@]}"
+    local lognum_mean="$(mean "${lognums[*]}" "$lognum_n")"
+    local lognum_variance="$(variance "${lognums[*]}" "$lognum_mean" "$lognum_n")"
+    local lognum_std_dev="$(std_dev "$lognum_variance")"
+    local skew_log="$(skewness "${lognums[*]}" "$lognum_mean" "$lognum_std_dev" "$lognum_n")"
+
+    # decision
+    abs_raw=$(abs "$skew_raw")
+    abs_log=$(abs "$skew_log")
+
+    cmp=$(echo "$abs_log < $abs_raw" | bc -l)
+    if [ "$cmp" -eq 1 ]; then
+        echo "log-normal"
+    else
+        echo "normal"
+    fi
+}
+
+welch_t_stat () {
     local mean1="$1"
     local var1="$2"
     local n1="$3"
@@ -106,7 +166,7 @@ degrees_of_freedom () {
     printf "%.50f" "$(echo "scale=50; $df_num / $df_denom" | bc -l)"
 }
 
-p_value() {
+welch_p_value() {
     local df="$1"
     local t="$2"
 
@@ -197,13 +257,123 @@ TSV
             local h_ip1="${header[i+1]}"
 
             # p = header[i+1] + ((header[i] - header[i+1]) / (next - curr) * (t - curr))
-            printf "%.12f\n" "$(echo "scale=50; $h_ip1 + ( ($h_i - $h_ip1) / ($next - $curr) ) * ($t - $curr)" | bc -l)"
+            printf "%.12f" "$(echo "scale=50; $h_ip1 + ( ($h_i - $h_ip1) / ($next - $curr) ) * ($t - $curr)" | bc -l)"
             return 0
         fi
     done
 
     # t beyond last interval -> return 0.001 (smallest p in table)
-    printf "%.12f\n" 0.001
+    printf "%.12f" 0.001
+}
+
+# Normal CDF approximation
+phi () {
+    local z="$1"
+
+    local phi="$(bc -l <<BCL
+scale=50
+z = $z
+p = 0.2316419
+b1 = 0.319381530
+b2 = -0.356563782
+b3 = 1.781477937
+b4 = -1.821255978
+b5 = 1.330274429
+
+t = 1 / (1 + p*z)
+poly = b1*t + b2*(t^2) + b3*(t^3) + b4*(t^4) + b5*(t^5)
+nd = e( - (z*z) / 2 ) / sqrt(2 * 4 * a(1))
+1 - nd * poly
+BCL
+    )"
+
+    printf "%.50f" "$phi"
+}
+
+# rank-biserial effect size
+effect_size () {
+    local n="$1"
+    local u="$2"
+
+    printf "%.50f" "$(echo "scale=50; (2*$u/($n*$n)) - 1" | bc -l)"
+}
+
+# Wilcoxon rank-sum using normal approximation and continuity correction
+wilcoxon_u_test () {
+    local file1="$1"
+    local file2="$2"
+    local n="$3"
+
+    # Combine samples
+    local combined="$(mktemp)"
+    nl -w1 -s' ' -nln "$file1" | sed 's/$/ A/' > "$combined"
+    nl -w1 -s' ' -nln "$file2" | sed 's/$/ B/' >> "$combined"
+
+    local sorted="$(mktemp)"
+    sort -k2,2n -k1,1n "$combined" > "$sorted"
+
+    # Assign ranks (average for ties)
+    ranks="$(mktemp)"
+    awk '
+    {
+      val=$2; grp=$3; i=NR
+      vals[i]=val; grps[i]=grp
+    }
+    END {
+      i=1
+      while (i<=NR) {
+        j=i
+        while (j<NR && vals[j]==vals[j+1]) j++
+        avg=(i+j)/2
+        for (k=i;k<=j;k++) {
+          print vals[k], grps[k], avg
+        }
+        i=j+1
+      }
+    }' "$sorted" > "$ranks"
+
+    # Compute rank sums
+    local ranks1="$(awk '$2=="A"{s+=$3} END{print s}' "$ranks")"
+    local ranks2="$(awk '$2=="B"{s+=$3} END{print s}' "$ranks")"
+    rm -f "$combined" "$sorted" "$ranks"
+
+    # Compute U
+    local u1="$(printf "%.50f" "$(echo "scale=50; $ranks1 - ($n*($n+1)/2)" | bc -l)")"
+    local u2="$(printf "%.50f" "$(echo "scale=50; $ranks2 - ($n*($n+1)/2)" | bc -l)")"
+
+    # Symmetric definition: U = min(Ux, Uy)
+    printf "%.50f" "$(echo "if ($u1 < $u2) $u1 else $u2" | bc -l)"
+}
+
+# Wilcoxon rank-sum using normal approximation and continuity correction
+wilcoxon_z_test () {
+    local n="$1"
+    local u="$2"
+
+    # Mean and sigma
+    local mu="$(echo "scale=50; $n*$n/2" | bc -l)"
+    local sigma="$(echo "scale=50; sqrt($n*$n*($n+$n+1)/12)" | bc -l)"
+
+    # Continuity correction
+    local cmp="$(echo "$u > $mu" | bc -l)"
+    local cc
+    if [ "$cmp" -eq 1 ]; then
+      cc="$(echo "scale=50; -0.5" | bc -l)"
+    else
+      cc="$(echo "scale=50; 0.5" | bc -l)"
+    fi
+
+    printf "%.50f" "$(echo "scale=50; ($u - $mu + $cc)/$sigma" | bc -l)"
+}
+
+# Two-sided p-value
+wilcoxon_p_value () {
+    local z="$1"
+
+    local abs_z="$(abs "$z")"
+    local phi="$(phi "$abs_z")"
+
+    printf "%.50f" "$(echo "scale=50; 2*(1-$phi)" | bc -l)"
 }
 
 print_environment () {
@@ -308,17 +478,30 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\Rel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkew\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
-    description="$TEST_ITERATIONS consecutive runs, $TEST_REQUESTS"
-    if [ "$TEST_REQUESTS" -eq "1" ]; then
-        description="$description request"
-    else
-        description="$description requests"
+    local result_file="$1"
+
+    local run_suffix=""
+    if [ "$TEST_ITERATIONS" -gt "1" ]; then
+        run_suffix="s"
     fi
 
+    local warmup_suffix=""
+    if [ "$TEST_WARMUP" -gt "1" ]; then
+        warmup_suffix="s"
+    fi
+
+    local request_suffix=""
+    if [ "$TEST_REQUESTS" -gt "1" ]; then
+        request_suffix="s"
+    fi
+
+    local description="$(printf "%d consecutive run%s, %d warmup%s, %d request%s" "$TEST_ITERATIONS" "$run_suffix" "$TEST_WARMUP" "$warmup_suffix" "$TEST_REQUESTS" "$request_suffix")"
+
+    local instruction_count_header_name instruction_count_header_separator
     if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         instruction_count_header_name="|  Instr count  "
         instruction_count_header_separator="|---------------";
@@ -327,37 +510,47 @@ print_result_md_header () {
         instruction_count_header_separator="";
     fi
 
-cat << EOF >> "$1.md"
+cat << EOF >> "$result_file.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | P-value $instruction_count_header_name|     Memory    |
-|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|---------$instruction_count_header_separator|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % |   Skew  | P-value $instruction_count_header_name|     Memory    |
+|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|---------|---------$instruction_count_header_separator|---------------|
 EOF
 }
 
 print_result_value () {
-    var="PHP_COMMITS_$PHP_ID"
-    commit_hash="${!var}"
-    commit_hash="$(echo "$commit_hash" | cut -c1-10)"
-    url="${PHP_REPO//.git/}/commit/$commit_hash"
+    local log_file="$1"
+    local instruction_count_log_file="$2"
+    local memory_log_file="$3"
+    local result_file="$4"
+    local md_format="$5"
 
-    results="$(cat "$1")"
+    local var="PHP_COMMITS_$PHP_ID"
+    local commit_hash="${!var}"
+    commit_hash="$(echo "$commit_hash" | cut -c1-10)"
+    local url="${PHP_REPO//.git/}/commit/$commit_hash"
+
+    local results="$(cat "$log_file")"
     if [ -z "$first_results" ]; then
         first_results="$results"
     fi
+    if [ -z "$first_log_file" ]; then
+        first_log_file="$log_file"
+    fi
 
+    local instruction_count_tsv_format instruction_count_tsv_value instruction_count_md_format instruction_count_md_value
     if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
         instruction_count_tsv_format="\t%d"
-        instruction_count_tsv_value="$(cat "$2")"
+        instruction_count_tsv_value="$(cat "$instruction_count_log_file")"
         instruction_count_md_format="|%d"
-        instruction_count_md_value="$(cat "$2")"
+        instruction_count_md_value="$(cat "$instruction_count_log_file")"
     else
         instruction_count_tsv_format="\t%d"
         instruction_count_tsv_value="0"
         instruction_count_md_format="%s"
         instruction_count_md_value=""
     fi
-    local memory_result="$(cat "$3")"
+    local memory_result="$(cat "$memory_log_file")"
 
     local n_arr=($results)
     local n="$(echo "${#n_arr[@]}")"
@@ -382,36 +575,51 @@ print_result_value () {
     fi
     local std_dev="$(std_dev "$var")"
     local relative_std_dev="$(relative_std_dev "$mean" "$std_dev")"
+    local skew="$(skewness "$results" "$mean" "$std_dev" "$n")"
+    local apparent_distribution="$(decide_distribution "$results" "$n" "$skew")"
     local df="$(degrees_of_freedom "$first_var" "$first_n" "$var" "$n")"
-    local t_stat="$(welch_t "$first_mean" "$first_var" "$first_n" "$mean" "$var" "$n")"
-    local p_value="$(p_value "$df" "$t_stat")"
+    local welch_t_stat="$(welch_t_stat "$first_mean" "$first_var" "$first_n" "$mean" "$var" "$n")"
+    local welch_p_value="$(welch_p_value "$df" "$welch_t_stat")"
+    local wilcoxon_u_value="$(wilcoxon_u_test "$first_log_file" "$log_file" "$n")"
+    local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u_value")"
+    local wilcoxon_p_value="$(wilcoxon_p_value "$wilcoxon_z_stat")"
+    local rrb="$(effect_size "$n" "$wilcoxon_u_value")"
 
-    if [ "$5" -eq "0" ]; then
-        echo ""
-        echo "Descriptive statistics for $PHP_ID:"
-        echo "N: $n"
-        echo "Min: $min"
-        echo "Max: $max"
-        printf "Mean: %.12f (%.12f %%)\n" "$mean" "$mean_diff"
-        printf "Median: %.12f (%.12f %%)\n" "$median" "$median_diff"
-        printf "Variance: %.12f\n" "$var"
-        printf "Std dev: %.12f (%.12f %%)\n" "$std_dev" "$relative_std_dev"
-        printf "Degrees of freedom: %.12f\n" "$df"
-        printf "Welch's T-test: %.12f\n" "$t_stat"
-        printf "Two tailed P-value: %.12f\n" "$p_value"
-        echo ""
+    if [ "$md_format" -eq "0" ]; then
+        echo "-----------------------------------------------------------------"
+        echo "$PHP_ID"
+        echo "-----------------------------------------------------------------"
+        echo "Descriptive statistics"
+        echo "- N                 : $n"
+        echo "- Min               : $min"
+        echo "- Max               : $max"
+        printf -- "- Mean              : %.5f (%.5f %%)\n" "$mean" "$mean_diff"
+        printf -- "- Median            : %.5f (%.5f %%)\n" "$median" "$median_diff"
+        printf -- "- Variance          : %.5f\n" "$var"
+        printf -- "- Std dev           : %.5f (%.5f %%)\n" "$std_dev" "$relative_std_dev"
+        printf -- "- Skewness          : %.5f\n" "$skew"
+        printf -- "- Distribution      : ~ %s\n" "$apparent_distribution"
+        echo "Welch's T test"
+        printf -- "- Degrees of freedom: %.5f\n" "$df"
+        printf -- "- Test statistic T  : %.5f\n" "$welch_t_stat"
+        printf -- "- Two tailed P-value: %.5f\n" "$welch_p_value"
+        echo "Wilcoxon U test"
+        printf -- "- U                 : %.5f\n" "$wilcoxon_u_value"
+        printf -- "- Test statistic Z  : %.5f\n" "$wilcoxon_z_stat"
+        printf -- "- Two tailed P-value: %.5f\n" "$wilcoxon_p_value"
+        printf -- "- Effect size       : %.5f (rank-biserial correlation)\n" "$rrb"
     fi
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$p_value" "$instruction_count_tsv_value" "$memory_usage" >> "$4.tsv"
+        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" >> "$result_file.tsv"
 
-    if [ "$5" -eq "1" ]; then
-        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f$instruction_count_md_format|%.2f MB|\n" \
-            "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$p_value" "$instruction_count_md_value" "$memory_usage" >> "$4.md"
+    if [ "$md_format" -eq "1" ]; then
+        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
+            "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
     fi
 }
 
@@ -647,6 +855,7 @@ run_benchmark () {
     print_result_tsv_header "$result_file"
     print_result_md_header "$result_file"
 
+    first_log_file=""
     first_results=""
     first_n=""
     first_mean=""
