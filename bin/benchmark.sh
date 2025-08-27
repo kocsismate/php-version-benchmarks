@@ -653,6 +653,8 @@ run_cgi () {
     export DB_CONNECTION=sqlite
     export LOG_CHANNEL=stderr
     export BROADCAST_DRIVER=null
+    export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:10000,muzzy_decay_ms:10000,background_thread:false"
 
     # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$mode" = "quiet" ]; then
@@ -686,6 +688,9 @@ run_cli () {
     else
         opcache=""
     fi
+
+    export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
 
     # TODO try to use sudo chrt -f 99 for real-time process
     if [ "$mode" = "quiet" ]; then
@@ -773,7 +778,7 @@ run_real_benchmark () {
             load_php_config
 
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
             echo "---------------------------------------------------------------------------------------"
 
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
@@ -822,7 +827,7 @@ run_micro_benchmark () {
             load_php_config
 
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
             echo "---------------------------------------------------------------------------------------"
 
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"

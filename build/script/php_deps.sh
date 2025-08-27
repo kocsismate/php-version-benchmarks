@@ -18,6 +18,8 @@ sudo dnf install --allowerasing -y \
     ca-certificates \
     xz \
     dirmngr \
+    jemalloc \
+    jemalloc-devel \
     libcgroup-tools \
     libargon2-devel \
     libcurl-devel \

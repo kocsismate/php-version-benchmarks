@@ -1,12 +1,21 @@
 #!/bin/sh
 set -e
 
-# Enable optimization (-O2)
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# https://github.com/docker-library/php/issues/272
-export CFLAGS="-fPIC -fno-pie -O2 -I/usr/include"
+# -fpic: generates position-independent code (for shared libraries).
+# -fno-pie: no runtime indirection from PIE.
+# -O2: predictable, stable optimizations.
+# -fno-asynchronous-unwind-tables: no runtime metadata noise.
+# -fno-stack-protector: no canaries (consistent stack layout).
+# -fno-plt: removes PLT indirection variance.
+# -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
+export CFLAGS="-fpic -fno-pie -O2 -fno-asynchronous-unwind-tables -fno-stack-protector -fno-plt -fexcess-precision=standard -ffp-contract=off -I/usr/include"
 export CPPFLAGS="$CFLAGS"
-export LDFLAGS="-Wl,-O1 -no-pie"
+# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
+# -Wl,-O1: stable section ordering.
+# -no-pie: reinforces non-PIE binary.
+# --sort-common: deterministic placement of COMMON symbols.
+# --build-id=none: removes build ID hash (avoids layout differences).
+export LDFLAGS="-Wl,-O1 -no-pie --sort-common -Wl,--build-id=none -L/usr/lib64 -ljemalloc"
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
@@ -35,7 +44,7 @@ fi
     --with-openssl \
     --with-zlib \
     --enable-cgi \
-    --with-valgrind
+    --with-valgrind || cat ./config.log
 
 make -j "$(nproc)"
 
