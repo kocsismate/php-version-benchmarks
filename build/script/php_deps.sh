@@ -7,8 +7,9 @@ sudo dnf install --allowerasing -y \
     util-linux \
     autoconf \
     file \
-    gcc \
-    gcc-c++ \
+    htop \
+    gcc14 \
+    gcc14-c++ \
     glibc-devel \
     make \
     pkg-config \
@@ -32,3 +33,7 @@ sudo dnf install --allowerasing -y \
     time \
     wget \
     bc
+
+# Add the following lines to install jemalloc:
+# jemalloc \
+# jemalloc-devel \

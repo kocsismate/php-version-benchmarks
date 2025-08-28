@@ -426,7 +426,7 @@ EOF
         os="${os/PRETTY_NAME=/}"
         os="${os//\"/}"
         os="$(echo "$os" | awk '{$1=$1;print}')"
-        gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
+        gcc_version="$(gcc14-gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
     fi
 
     cpu_settings=""
@@ -654,7 +654,11 @@ run_cgi () {
     export LOG_CHANNEL=stderr
     export BROADCAST_DRIVER=null
 
+    # TODO for jemalloc
+    # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
     # TODO try to use sudo chrt -f 99 for real-time process
+
     if [ "$mode" = "quiet" ]; then
         sleep 0.25
         taskset -c "$last_cpu" \
@@ -687,7 +691,11 @@ run_cli () {
         opcache=""
     fi
 
+    # TODO for jemalloc
+    # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
     # TODO try to use sudo chrt -f 99 for real-time process
+
     if [ "$mode" = "quiet" ]; then
         sleep 0.9
         taskset -c "$last_cpu" \

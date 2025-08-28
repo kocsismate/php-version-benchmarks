@@ -1,12 +1,24 @@
 #!/bin/sh
 set -e
 
-# Enable optimization (-O2)
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# https://github.com/docker-library/php/issues/272
-export CFLAGS="-fPIC -fno-pie -O2 -I/usr/include"
+# -fno-pic: does not generate position-independent code (for shared libraries).
+# -fno-pie: no runtime indirection from PIE.
+# -O2: predictable, stable optimizations.
+# -fno-asynchronous-unwind-tables: no runtime metadata noise.
+
+# Other options tried out:
+# -fno-stack-protector: no canaries (consistent stack layout).
+# -fno-plt: removes PLT indirection variance.
+# -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
+export CFLAGS="-fno-pic -fno-pie -fno-asynchronous-unwind-tables -O2"
 export CPPFLAGS="$CFLAGS"
-export LDFLAGS="-Wl,-O1 -no-pie"
+# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
+# -Wl,-O1: stable section ordering.
+# -no-pie: reinforces non-PIE binary.
+# --build-id=none: removes build ID hash (avoids layout differences).
+export LDFLAGS="-Wl,-O1 -no-pie -Wl,--build-id=none"
+export CC=gcc14-gcc
+export CXX=gcc14-g++
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
