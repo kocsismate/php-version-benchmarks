@@ -29,6 +29,15 @@ done
 wait
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
+    cpu_count="$(nproc)"
+    php_ini_count="$( set -- $PROJECT_ROOT/config/php/*.ini; [ -e "$1" ] && echo $# || echo 0)"
+    cpu_per_php="$((cpu_count / php_ini_count))"
+
+    echo "Setting up compilation..."
+    echo "CPU count: $cpu_count"
+    echo "php.ini count: $php_ini_count"
+    echo "CPU per php.ini count: $cpu_per_php"
+
     for php_config in $PROJECT_ROOT/config/php/*.ini; do
         source "$php_config"
         export $(cut -d= -f1 $php_config)
@@ -41,8 +50,8 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
 
         echo "Compiling $PHP_NAME..."
 
-        $PROJECT_ROOT/build/script/php_compile.sh
+        $PROJECT_ROOT/build/script/php_compile.sh "$cpu_per_php" &
     done
-fi
 
-wait
+    wait
+fi

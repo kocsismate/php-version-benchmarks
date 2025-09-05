@@ -49,7 +49,7 @@ fi
     --enable-cgi \
     --with-valgrind
 
-make -j "$(nproc)"
+make -j "$1"
 
 mkdir -p "$PHP_SOURCE_PATH/conf.d/"
 cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
