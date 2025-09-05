@@ -47,7 +47,7 @@ fi
     --with-openssl \
     --with-zlib \
     --enable-cgi \
-    --with-valgrind
+    --with-valgrind || cat ./config.log
 
 make -j "$1"
 
