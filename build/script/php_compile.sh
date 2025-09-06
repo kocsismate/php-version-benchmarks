@@ -10,13 +10,13 @@ set -e
 # -fno-stack-protector: no canaries (consistent stack layout).
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-export CFLAGS="-fno-pic -fno-pie -fno-asynchronous-unwind-tables -O2"
-export CPPFLAGS="$CFLAGS"
+cflags="-fno-pic -fno-pie -fno-asynchronous-unwind-tables -O2"
+cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
 # -no-pie: reinforces non-PIE binary.
 # --build-id=none: removes build ID hash (avoids layout differences).
-export LDFLAGS="-Wl,-O1 -no-pie -Wl,--build-id=none"
+export ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
 export CC=gcc14-gcc
 export CXX=gcc14-g++
 
@@ -31,7 +31,7 @@ fi
 
 # --enable-werror \ commenting out due to dynasm errors
 
-./configure \
+CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-config-file-path="$PHP_SOURCE_PATH" \
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
     --enable-option-checking=fatal \
