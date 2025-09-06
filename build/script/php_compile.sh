@@ -10,7 +10,7 @@ set -e
 # -fno-stack-protector: no canaries (consistent stack layout).
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -random-seed=1"
+cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
 cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
@@ -47,7 +47,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
-    --with-valgrind || cat ./config.log
+    --with-valgrind || { cat ./config.log; exit 1; }
 
 make -j "$1"
 

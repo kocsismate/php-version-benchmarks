@@ -648,10 +648,13 @@ run_cgi () {
     export APP_DEBUG=false
     export APP_SECRET=random
     export SESSION_DRIVER=cookie
+    export SESSION_DOMAIN=""
     export CACHE_STORE=null
     export LOG_LEVEL=warning
     export DB_CONNECTION=sqlite
     export LOG_CHANNEL=stderr
+    export LOG_DEPRECATIONS_CHANNEL=stderr
+    export LOG_DEPRECATIONS_TRACE=true
     export BROADCAST_DRIVER=null
 
     # TODO for jemalloc
