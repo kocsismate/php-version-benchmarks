@@ -2,6 +2,7 @@
 set -e
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" ]]; then
+    sudo service docker start &
     $PROJECT_ROOT/build/script/php_deps.sh &
 fi
 

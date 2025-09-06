@@ -77,25 +77,6 @@ EOF
     inline = [
       "set -e",
 
-      "# Update permissions",
-      "sudo mkdir -p ${var.remote_project_root}",
-      "sudo chmod -R 775 ${var.remote_project_root}",
-      "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
-      "cd ${var.remote_project_root}",
-
-      "# Unzip the archive",
-      "tar -xf /tmp/archive.tar.gz",
-
-      "sudo chmod -R 775 ${var.remote_project_root}",
-      "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
-
-      "# Update system packages",
-      "sudo dnf -y update",
-      "sudo dnf -y install git docker",
-
-      "sudo usermod -a -G docker ${var.image_user}" ,
-      "sudo service docker start",
-
       "# Setup environment",
       "export PROJECT_ROOT=\"${var.remote_project_root}\"",
       "export N=\"${var.runs}\"",
@@ -117,6 +98,21 @@ EOF
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
+
+      "# Update permissions",
+      "sudo mkdir -p ${var.remote_project_root}",
+      "sudo chmod -R 775 ${var.remote_project_root}",
+      "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
+      "cd ${var.remote_project_root}",
+
+      "# Unzip the archive",
+      "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root} &",
+
+      "# Install system dependencies",
+      "sudo dnf update -y && sudo dnf install --allowerasing -y git docker && sudo usermod -a -G docker ${var.image_user}",
+
+      "#Synchronize",
+      "wait",
 
       "# Setup the benchmark",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",

@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
 
-sudo dnf update -y
-sudo dnf groupinstall -y "Development Tools"
 sudo dnf install --allowerasing -y \
     util-linux \
     autoconf \

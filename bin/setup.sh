@@ -5,12 +5,10 @@ laravel_version="12.2.0" # https://github.com/laravel/laravel/releases
 symfony_version="2.7.0" # https://github.com/symfony/demo/releases
 wordpress_url="https://github.com/php/benchmarking-wordpress-6.2"
 
-run_as="sudo"
-
 install_laravel () {
     mkdir -p "$PROJECT_ROOT/app/laravel"
 
-    $run_as docker run --rm \
+    sudo docker run --rm \
         --volume $PROJECT_ROOT:/code \
         --user $(id -u):$(id -g) \
         setup bash -c "\
@@ -32,7 +30,7 @@ install_symfony () {
     mkdir -p "$PROJECT_ROOT/app/symfony"
 
     if [ -z "$(ls -A $PROJECT_ROOT/app/symfony)" ]; then
-        $run_as docker run --rm \
+        sudo docker run --rm \
             --volume $PROJECT_ROOT:/code \
             --user $(id -u):$(id -g) \
             setup bash -c "\
@@ -60,7 +58,7 @@ install_wordpress () {
             php_executable="$PROJECT_ROOT/tmp/$PHP_ID/sapi/cli/php"
         done
 
-        $run_as docker run \
+        sudo docker run \
             --name wordpress_db \
             --user $(id -u):$(id -g) \
             -p "3306:3306" \
@@ -85,7 +83,7 @@ symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini
 
 # Build docker image for setup
 if [[ "$laravel_test" -gt "0" || "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
-    $run_as docker build -t setup $PROJECT_ROOT/app
+    sudo docker build -t setup $PROJECT_ROOT/app
 fi
 
 # Install Laravel demo app
