@@ -22,7 +22,7 @@ $numericColumns = [
 ];
 
 $outHeaders = [
-    "Rel std dev % mean", "Mean MAD", "Mean diff % MAD", "Median diff % MAD", "Median diff % MAD", "Skew abs mean",
+    "Rel std dev % mean", "Mean MAD", "Mean diff % MAD", "Median MAD", "Median diff % MAD", "Skew abs mean",
 ];
 
 $outColumns = [
@@ -113,9 +113,9 @@ foreach ($tests as $testName => $phpGroups) {
     }
 
     // Overall summary row
-    $summaryRow = ["**Summary**"];
+    $summaryRow = ["**Mean**"];
     foreach ($outColumns as $column => $metricName) {
-        $results = calculate_metric($metricName, $columnResults[$column]);
+        $results = mean($columnResults[$column]);
         $summaryRow[] = sprintf("**%.5f**", $results);
     }
     fwrite($fh, "| " . implode(" | ", $summaryRow) . " |\n\n");
