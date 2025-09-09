@@ -105,11 +105,11 @@ EOF
       "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
       "cd ${var.remote_project_root}",
 
+      "# Install system dependencies",
+      "sudo dnf update -y && sudo dnf install --allowerasing -y git docker && sudo usermod -a -G docker ${var.image_user} &",
+
       "# Unzip the archive",
       "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root} &",
-
-      "# Install system dependencies",
-      "sudo dnf update -y && sudo dnf install --allowerasing -y git docker && sudo usermod -a -G docker ${var.image_user}",
 
       "#Synchronize",
       "wait",
