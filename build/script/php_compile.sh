@@ -1,6 +1,19 @@
 #!/bin/sh
 set -e
 
+echo "Default ld file:"
+ld --verbose
+
+new_ld="$(ld --verbose | sed '1,/using internal linker script:/d' | sed -n '/^==================================================/,/^==================================================/p' | sed '1d;$d')"
+new_ld="$(printf "%s" "$new_ld" | sed 's|\*(\.text \.stub \.text\.\* \.gnu\.linkonce\.t\.\*)|*(SORT(.text.*))\
+    *(.text .stub .gnu.linkonce.t.*)|')"
+cat > /tmp/my.ld <<EOF
+$new_ld
+EOF
+
+echo "Modified my.ld:"
+cat /tmp/my.ld
+
 # -fno-pic: does not generate position-independent code (for shared libraries).
 # -fno-pie: no runtime indirection from PIE.
 # -O2: predictable, stable optimizations.
@@ -10,15 +23,16 @@ set -e
 # -fno-stack-protector: no canaries (consistent stack layout).
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
+cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1 -ffunction-sections -fdata-sections"
 cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
 # -no-pie: reinforces non-PIE binary.
 # --build-id=none: removes build ID hash (avoids layout differences).
-ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
+ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none -Wl,-gc-sections -Wl,-T,/tmp/my.ld"
 export CC=gcc14-gcc
 export CXX=gcc14-g++
+export SOURCE_DATE_EPOCH=0
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
