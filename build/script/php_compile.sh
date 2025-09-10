@@ -10,15 +10,19 @@ set -e
 # -fno-stack-protector: no canaries (consistent stack layout).
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
+cflags="-fPIC -fpie -O2 -frandom-seed=1 -fno-reorder-blocks-and-partition -fno-ipa-cp-clone"
 cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
 # -no-pie: reinforces non-PIE binary.
 # --build-id=none: removes build ID hash (avoids layout differences).
-ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
+# -Wl,-T,my.ld
+
+#-Wl,-znow
+ldflags="-Wl,-O1 -pie -Wl,--emit-relocs"
 export CC=gcc14-gcc
 export CXX=gcc14-g++
+export SOURCE_DATE_EPOCH=0
 
 cd "$PHP_SOURCE_PATH"
 ./buildconf
@@ -47,6 +51,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
+    --with-pic="yes" \
     --with-valgrind || { cat ./config.log; exit 1; }
 
 make -j "$1"

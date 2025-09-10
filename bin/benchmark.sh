@@ -657,25 +657,37 @@ run_cgi () {
     export LOG_DEPRECATIONS_TRACE=true
     export BROADCAST_DRIVER=null
 
-    # TODO for jemalloc
-    # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
-    # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
+    export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
     # TODO try to use sudo chrt -f 99 for real-time process
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.25
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            $php_source_path/sapi/cgi/php-cgi-bolt $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "verbose" ]; then
         taskset -c "$last_cpu" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
+            $php_source_path/sapi/cgi/php-cgi-bolt $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
     elif [ "$mode" = "instruction_count" ]; then
         taskset -c "$last_cpu" \
             valgrind --tool=callgrind --dump-instr=no -- \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            $php_source_path/sapi/cgi/php-cgi-bolt $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "memory" ]; then
         taskset -c "$last_cpu" \
-            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi-bolt $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$mode" = "bolt" ]; then
+        taskset -c "$last_cpu" \
+            perf record --delay=100 -e cycles -j any,u -Fmax -o "/tmp/perf.data" -- \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+       perf2bolt $php_source_path/sapi/cgi/php-cgi -p "/tmp/perf.data" -o "/tmp/perf.data"
+
+       llvm-bolt $php_source_path/sapi/cgi/php-cgi -o "$php_source_path/sapi/cgi/php-cgi-bolt" \
+           -data=/tmp/perf.data \
+           -reorder-blocks=ext-tsp \
+           -reorder-functions=hfsort \
+           -split-functions \
+           -split-all-cold \
+           -use-gnu-stack
     else
         echo "Invalid php-cgi run mode"
         exit 1
@@ -695,8 +707,8 @@ run_cli () {
     fi
 
     # TODO for jemalloc
-    # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
-    # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
+    export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
+    export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
     # TODO try to use sudo chrt -f 99 for real-time process
 
     if [ "$mode" = "quiet" ]; then
@@ -760,6 +772,9 @@ run_real_benchmark () {
         echo "---------------------------------------------------------------------------------------"
         echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
+
+        # BOLT compilation
+        run_cgi "bolt" "0" "1000" "$1" "$2" "$3"
 
         # Verifying output
         run_cgi "verbose" "0" "1" "$1" "$2" "$3" | tee -a "$output_file"
