@@ -35,6 +35,16 @@ export CXX=gcc14-g++
 export SOURCE_DATE_EPOCH=0
 
 cd "$PHP_SOURCE_PATH"
+
+# Temporary revert
+if git cat-file -e "9659f3e53f4d10bf0b596c5143d61c73f1c220a9^{commit}" 2>/dev/null; then
+    git revert --no-edit "9659f3e53f4d10bf0b596c5143d61c73f1c220a9"
+    git revert --no-edit "49fdf496e2b6d6348941a7bf0437d5cf89e307f6"
+    git revert --no-edit "a5f2eee785d99ab97e2bfd877f015608d9e9f94e"
+    git revert --no-edit "4191843f6ab31077e3916f4a39251d7d6eda9aea"
+    git revert --no-edit "f18e99244b675a31a8ee5dea5dbfd75e5abf610a"
+fi
+
 ./buildconf
 
 if [ "$PHP_OPCACHE" = "2" ]; then
