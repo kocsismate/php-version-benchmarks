@@ -37,7 +37,6 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
     new_ld="$(ld --verbose | sed '1,/using internal linker script:/d' | sed -n '/^==================================================/,/^==================================================/p' | sed '1d;$d')"
     new_ld="$(printf "%s" "$new_ld" | sed 's|\*(\.text \.stub \.text\.\* \.gnu\.linkonce\.t\.\*)|*(SORT(.text.*))\
         *(.text .stub .gnu.linkonce.t.*)|')"
-    new_ld="$(printf "%s" "$new_ld" | sed 's|\.rodata         : { \*(\.rodata \.rodata\.\* \.gnu\.linkonce\.r\.\*) }|.rodata : { *(.rodata SORT(.rodata.*) .gnu.linkonce.r.*) }|')"
 
     cat > /tmp/my.ld <<EOF
 $new_ld
