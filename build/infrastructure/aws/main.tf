@@ -61,6 +61,8 @@ resource "aws_instance" "host" {
     command = <<EOF
       set -e
 
+      printf "%s" "${aws_instance.host.public_dns}" > "$PROJECT_ROOT/tmp/host_dns.txt"
+
       cd ${var.local_project_root}
       mkdir -p "./tmp/results/${var.result_root_dir}"
 

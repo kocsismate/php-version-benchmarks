@@ -84,11 +84,31 @@ if [[ "$1" == "run" ]]; then
         $PROJECT_ROOT/bin/generate_results.sh "$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR" "$PROJECT_ROOT/docs/results/$RESULT_ROOT_DIR" "$NOW"
     fi
 
+elif [[ "$1" == "ssh" ]]; then
+    host_dns_file="$PROJECT_ROOT/tmp/host_dns.txt"
+    if [ ! -f "$host_dns_file" ]; then
+        echo "Instance is not yet running"
+        exit 1;
+    fi
+    host_dns="$(cat "$host_dns_file")"
+
+    cd "$PROJECT_ROOT/build/infrastructure/$2/"
+    private_key_pem="$(terraform output -no-color "private_key_pem")"
+    private_key_file="$PROJECT_ROOT/tmp/ssh_key.pem"
+
+    printf "%s" "$private_key_pem" > "$private_key_file"
+    chmod 600 "$private_key_file"
+
+    ssh -o IdentitiesOnly=yes -i "$private_key_file" "ec2-user@$host_dns"
+
+    rm -f "$host_dns_file"
+    rm -f "$private_key_file"
+    cd "$PROJECT_ROOT"
 elif [[ "$1" == "help" ]]; then
 
     echo "Usage: ./benchmark.sh run [environment] [runs] [dry-run]"
     echo ""
-    echo "Available runners: local, aws"
+    echo "Available runners: aws"
 
 else
 
