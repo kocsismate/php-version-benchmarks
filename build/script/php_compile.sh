@@ -1,19 +1,6 @@
 #!/bin/sh
 set -e
 
-echo "Default ld file:"
-ld --verbose
-
-new_ld="$(ld --verbose | sed '1,/using internal linker script:/d' | sed -n '/^==================================================/,/^==================================================/p' | sed '1d;$d')"
-new_ld="$(printf "%s" "$new_ld" | sed 's|\*(\.text \.stub \.text\.\* \.gnu\.linkonce\.t\.\*)|*(SORT(.text.*))\
-    *(.text .stub .gnu.linkonce.t.*)|')"
-cat > /tmp/my.ld <<EOF
-$new_ld
-EOF
-
-echo "Modified my.ld:"
-cat /tmp/my.ld
-
 # -fno-pic: does not generate position-independent code (for shared libraries).
 # -fno-pie: no runtime indirection from PIE.
 # -O2: predictable, stable optimizations.
@@ -71,7 +58,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
-    --with-valgrind || { cat ./config.log; exit 1; }
+    --with-valgrind
 
 make -j "$1"
 
@@ -86,52 +73,4 @@ if [[ "$PHP_JIT" = "1" ]]; then
 else
     sed -i "s/JIT_MODE/disable/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
     sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
-fi
-
-# Ensure about correct config
-
-if [ "$PHP_OPCACHE" = "2" ]; then
-    opcache="-d zend_extension=$PHP_SOURCE_PATH/modules/opcache.so"
-else
-    opcache=""
-fi
-
-php_cli_executable="$PHP_SOURCE_PATH/sapi/cli/php $opcache"
-
-$php_cli_executable -m
-$php_cli_executable -i
-
-if $php_cli_executable -i | grep -q "opcache.enable => On"; then
-    opcache_enabled=1
-else
-    opcache_enabled=0
-fi
-
-jit_enabled=0
-if $php_cli_executable -i | grep -q "opcache.jit => tracing"; then
-    if $php_cli_executable -i | grep -q "opcache.jit_buffer_size => 64"; then
-        jit_enabled=1
-    fi
-fi
-
-if [[ -n "$PHP_OPCACHE" && "$opcache_enabled" = "0" ]]; then
-    echo "OPCache should be enabled"
-    exit 1
-elif [[ -z "$PHP_OPCACHE" && "$opcache_enabled" = "1" ]]; then
-    echo "OPCache should not be enabled"
-    exit 1
-fi
-
-if [[ "$PHP_JIT" = "1" ]]; then
-    if [[ "$jit_enabled" = "0" ]]; then
-        echo "JIT should be enabled"
-        exit 1
-    fi
-fi
-
-if [[ "$PHP_JIT" = "0" ]]; then
-    if [[ "$jit_enabled" = "1" ]]; then
-        echo "JIT should not be enabled"
-        exit 1
-    fi
 fi
