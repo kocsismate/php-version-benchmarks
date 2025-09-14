@@ -29,7 +29,11 @@ if git merge-base --is-ancestor "9659f3e53f4d10bf0b596c5143d61c73f1c220a9" HEAD;
 fi
 
 if git merge-base --is-ancestor "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" HEAD; then
-    git revert --no-edit "49fdf496e2b6d6348941a7bf0437d5cf89e307f6"
+    git revert --no-edit "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" || true
+    git checkout --theirs -- NEWS
+    git checkout --theirs -- UPGRADING
+    git add .
+    git commit --no-edit
 fi
 
 if git merge-base --is-ancestor "a5f2eee785d99ab97e2bfd877f015608d9e9f94e" HEAD; then
