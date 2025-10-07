@@ -23,29 +23,31 @@ export SOURCE_DATE_EPOCH=0
 
 cd "$PHP_SOURCE_PATH"
 
-# Temporary revert
-if git merge-base --is-ancestor "9659f3e53f4d10bf0b596c5143d61c73f1c220a9" HEAD; then
-    git revert --no-edit "9659f3e53f4d10bf0b596c5143d61c73f1c220a9"
-fi
+if ! git merge-base --is-ancestor "fc353966f3976f733a2d038ce9b29016c4e9d5a7" HEAD; then
+    # Temporary revert
+    if git merge-base --is-ancestor "9659f3e53f4d10bf0b596c5143d61c73f1c220a9" HEAD; then
+        git revert --no-edit "9659f3e53f4d10bf0b596c5143d61c73f1c220a9"
+    fi
 
-if git merge-base --is-ancestor "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" HEAD; then
-    git revert --no-edit "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" || true
-    git checkout --theirs -- NEWS
-    git checkout --theirs -- UPGRADING
-    git add .
-    git commit --no-edit
-fi
+    if git merge-base --is-ancestor "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" HEAD; then
+        git revert --no-edit "49fdf496e2b6d6348941a7bf0437d5cf89e307f6" || true
+        git checkout --theirs -- NEWS
+        git checkout --theirs -- UPGRADING
+        git add .
+        git commit --no-edit
+    fi
 
-if git merge-base --is-ancestor "a5f2eee785d99ab97e2bfd877f015608d9e9f94e" HEAD; then
-    git revert --no-edit "a5f2eee785d99ab97e2bfd877f015608d9e9f94e"
-fi
+    if git merge-base --is-ancestor "a5f2eee785d99ab97e2bfd877f015608d9e9f94e" HEAD; then
+        git revert --no-edit "a5f2eee785d99ab97e2bfd877f015608d9e9f94e"
+    fi
 
-if git merge-base --is-ancestor "4191843f6ab31077e3916f4a39251d7d6eda9aea" HEAD; then
-    git revert --no-edit "4191843f6ab31077e3916f4a39251d7d6eda9aea"
-fi
+    if git merge-base --is-ancestor "4191843f6ab31077e3916f4a39251d7d6eda9aea" HEAD; then
+        git revert --no-edit "4191843f6ab31077e3916f4a39251d7d6eda9aea"
+    fi
 
-if git merge-base --is-ancestor "f18e99244b675a31a8ee5dea5dbfd75e5abf610a" HEAD; then
-    git revert --no-edit "f18e99244b675a31a8ee5dea5dbfd75e5abf610a"
+    if git merge-base --is-ancestor "f18e99244b675a31a8ee5dea5dbfd75e5abf610a" HEAD; then
+        git revert --no-edit "f18e99244b675a31a8ee5dea5dbfd75e5abf610a"
+    fi
 fi
 
 ./buildconf
