@@ -129,5 +129,7 @@ EOF
                 exit 1
             fi
         fi
+
+        size $PHP_SOURCE_PATH/sapi/cgi/php-cgi --format=SysV
     done
 fi
