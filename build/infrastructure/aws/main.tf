@@ -61,7 +61,7 @@ resource "aws_instance" "host" {
     command = <<EOF
       set -e
 
-      printf "%s" "${aws_instance.host.public_dns}" > "$PROJECT_ROOT/tmp/host_dns.txt"
+      printf "%s" "${aws_instance.host.public_dns}" > "${var.local_project_root}/tmp/host_dns.txt"
 
       cd ${var.local_project_root}
       mkdir -p "./tmp/results/${var.result_root_dir}"
@@ -182,6 +182,21 @@ EOF
         ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}" "${var.now}"
       fi
     EOP
+  }
+}
+
+resource "null_resource" "cleanup" {
+  depends_on = [aws_instance.host]
+  triggers = {
+    always = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      set -e
+
+      rm -f "${var.local_project_root}/tmp/host_dns.txt"
+EOF
   }
 }
 

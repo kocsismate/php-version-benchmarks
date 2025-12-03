@@ -101,7 +101,6 @@ elif [[ "$1" == "ssh" ]]; then
 
     ssh -o IdentitiesOnly=yes -i "$private_key_file" "ec2-user@$host_dns"
 
-    rm -f "$host_dns_file"
     rm -f "$private_key_file"
     cd "$PROJECT_ROOT"
 elif [[ "$1" == "help" ]]; then
