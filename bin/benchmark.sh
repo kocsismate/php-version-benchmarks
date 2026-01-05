@@ -799,7 +799,7 @@ run_real_benchmark () {
         echo "---------------------------------------------------------------------------------------"
 
         # Verifying output
-        run_cgi "verbose" "0" "1" "$1" "$2" "$3" | tee -a "$output_file"
+        run_cgi "verbose" "0" "1" "$1" "$2" "$3" 2>&1 | tee -a "$output_file"
         if [ ! -z "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
@@ -850,7 +850,7 @@ run_micro_benchmark () {
         echo "---------------------------------------------------------------------------------------"
 
         # Verifying output
-        run_cli "verbose" "0" "1" "$1" | tee -a "$output_file"
+        run_cli "verbose" "0" "1" "$1" 2>&1 | tee -a "$output_file"
         if [ ! -z "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
