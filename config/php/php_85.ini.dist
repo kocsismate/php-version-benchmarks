@@ -6,5 +6,5 @@ PHP_REPO=https://github.com/php/php-src.git
 PHP_BRANCH=PHP-8.5
 PHP_COMMIT=
 
-PHP_OPCACHE=2
+PHP_OPCACHE=1
 PHP_JIT=0
