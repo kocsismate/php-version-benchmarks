@@ -753,9 +753,46 @@ load_php_config () {
     mkdir -p "$log_dir"
 }
 
+reset_symfony () {
+    # Update config based on PHP version
+    sed -i".original" "/        enable_native_lazy_objects: true/d" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    if git --git-dir=$php_source_path/.git --work-tree=$php_source_path merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
+        sed -i".original" "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    fi
+
+    # Regenerate cache
+    rm -rf "$PROJECT_ROOT/app/symfony/var/cache/prod"
+    rm -rf "$PROJECT_ROOT/app/symfony/var/cache"
+    if [[ -d "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" ]]; then
+        cp -r "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" "$PROJECT_ROOT/app/symfony/var/cache"
+    else
+        export APP_ENV=prod
+        export APP_DEBUG=false
+        export APP_SECRET=random
+        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
+
+        mkdir -p "$PROJECT_ROOT/tmp/app/symfony"
+        cp -r "$PROJECT_ROOT/app/symfony/var/cache" "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID"
+    fi
+}
+
+reset_apps () {
+    case "$TEST_ID" in
+        symfony_main_*)
+            reset_symfony
+            ;;
+
+        symfony_blog_*)
+            reset_symfony
+            ;;
+    esac
+}
+
 run_real_benchmark () {
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         load_php_config
+
+        reset_apps
 
         echo "---------------------------------------------------------------------------------------"
         echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
@@ -782,6 +819,8 @@ run_real_benchmark () {
     for i in $(seq $TEST_ITERATIONS); do
         for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
             load_php_config
+
+            reset_apps
 
             echo "---------------------------------------------------------------------------------------"
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
@@ -816,7 +855,7 @@ run_micro_benchmark () {
             assert_test_output "$test_expectation_file" "$output_file"
         fi
 
-         # Measuring memory usage
+        # Measuring memory usage
         run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
 
         # Measuring instruction count
@@ -947,7 +986,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
     ((TEST_NUMBER=TEST_NUMBER+1))
 
-    if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
+    if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
         sudo systemctl start containerd.service
         sudo service docker start
 
@@ -959,7 +998,7 @@ for test_config in $PROJECT_ROOT/config/test/*.ini; do
 
     run_benchmark
 
-    if [[ "$TEST_ID" == "wordpress_6_2" ]]; then
+    if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
         sudo service docker stop
         sudo systemctl stop containerd.service
     fi

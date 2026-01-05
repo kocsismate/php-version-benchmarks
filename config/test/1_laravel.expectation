@@ -1,9 +1,9 @@
 X-Powered-By: PHP/%v
-Content-Type: text/html; charset=UTF-8
+Content-Type: text/html; charset=utf-8
 Cache-Control: no-cache, private
 Date: %s GMT
 Set-Cookie: XSRF-TOKEN=%s; expires=%s GMT; Max-Age=%d; path=/; samesite=lax
-Set-Cookie: laravel_session=%s; expires=%s GMT; Max-Age=%d; path=/; httponly; samesite=lax
+Set-Cookie: laravel-session=%s; expires=%s GMT; Max-Age=%d; path=/; httponly; samesite=lax
 Set-Cookie: %s; expires=%s GMT; Max-Age=%d; path=/; httponly; samesite=lax
 
 <!DOCTYPE html>

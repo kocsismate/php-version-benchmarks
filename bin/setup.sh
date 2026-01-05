@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-laravel_version="12.2.0" # https://github.com/laravel/laravel/releases
-symfony_version="2.7.0" # https://github.com/symfony/demo/releases
-wordpress_url="https://github.com/php/benchmarking-wordpress-6.2"
+laravel_version="12.11.0" # https://github.com/laravel/laravel/releases
+symfony_version="2.8.0" # https://github.com/symfony/demo/releases
+wordpress_url="https://github.com/kocsismate/benchmarking-wordpress-6.9"
 
 install_laravel () {
     mkdir -p "$PROJECT_ROOT/app/laravel"
@@ -21,7 +21,7 @@ install_laravel () {
             composer install --classmap-authoritative --no-interaction --working-dir=/code/app/laravel"
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
-    sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
+    #sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
 
     sudo chmod -R 777 "$PROJECT_ROOT/app/laravel/storage"
 }
@@ -40,6 +40,7 @@ install_symfony () {
             export APP_SECRET=random
             [[ -n '$GITHUB_TOKEN' ]] && composer config --global github-oauth.github.com '$GITHUB_TOKEN'; \
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
+            composer update symfony/config:7.3.6 symfony/dependency-injection:7.3.9 doctrine/persistence:3.4.3 doctrine/orm:3.6.0 doctrine/doctrine-bundle:2.18.2 --working-dir=/code/app/symfony && \
             composer config platform-check false --working-dir=/code/app/symfony && \
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi
@@ -74,6 +75,9 @@ install_wordpress () {
             --path=$PROJECT_ROOT/app/wordpress/ \
             --allow-root --url=localhost --title=Wordpress \
             --admin_user=wordpress --admin_password=wordpress --admin_email=benchmark@php.net
+
+        sed -i".original" "s/\t\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\t\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-includes/load.php"
+        sed -i".original" "s/\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-load.php"
     fi
 }
 

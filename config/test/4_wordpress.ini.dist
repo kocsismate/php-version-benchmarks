@@ -1,5 +1,5 @@
-TEST_NAME="Wordpress 6.2 main page"
-TEST_ID=wordpress_6_2
+TEST_NAME="Wordpress 6.9 main page"
+TEST_ID=wordpress_6_9
 TEST_WARMUP=20
 TEST_ITERATIONS=100
 TEST_REQUESTS=20

@@ -65,11 +65,10 @@ Content-Type: text/html; charset=UTF-8
         "@symfony/ux-live-component": "/assets/@symfony/ux-live-component/live_controller-%s.js"
     }
 }
-</script><script async>
+</script><script>
 if (!HTMLScriptElement.supports || !HTMLScriptElement.supports('importmap')) (function () {
     const script = document.createElement('script');
     script.src = 'https://ga.jspm.io/npm:es-module-shims@%v/dist/es-module-shims.js';
-    script.setAttribute('async', 'async');
     script.setAttribute('crossorigin', 'anonymous');
     script.setAttribute('integrity', 'sha384-%s');
     document.head.appendChild(script);
