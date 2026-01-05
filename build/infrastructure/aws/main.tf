@@ -63,6 +63,9 @@ resource "aws_instance" "host" {
 
       printf "%s" "${aws_instance.host.public_dns}" > "${var.local_project_root}/tmp/host_dns.txt"
 
+      echo "${tls_private_key.ssh_key.private_key_pem}" > ${var.local_project_root}/tmp/ssh-key.pem
+      chmod 600 "${var.local_project_root}/tmp/ssh-key.pem"
+
       cd ${var.local_project_root}
       mkdir -p "./tmp/results/${var.result_root_dir}"
 
@@ -169,14 +172,9 @@ EOF
 
       rm -f "${var.local_project_root}/tmp/archive.tar.gz"
 
-      echo "${tls_private_key.ssh_key.private_key_pem}" > ${var.local_project_root}/tmp/ssh-key.pem
-      chmod 600 "${var.local_project_root}/tmp/ssh-key.pem"
-
       mkdir -p "${var.local_project_root}/tmp/results/${var.result_root_dir}"
 
       scp -o "IdentitiesOnly=yes" -o ControlPath=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.local_project_root}/tmp/ssh-key.pem" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
-
-      rm -f "${var.local_project_root}/tmp/ssh-key.pem"
 
       if [[ "${var.dry_run}" == "false" ]]; then
         ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}" "${var.now}"
@@ -196,6 +194,7 @@ resource "null_resource" "cleanup" {
       set -e
 
       rm -f "${var.local_project_root}/tmp/host_dns.txt"
+      rm -f "${var.local_project_root}/tmp/ssh-key.pem"
 EOF
   }
 }
