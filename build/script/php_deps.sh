@@ -26,6 +26,7 @@ sudo dnf install --allowerasing -y \
     sqlite-devel \
     libxml2-devel \
     openssl-devel \
+    libicu-devel \
     rsync \
     zlib-devel \
     time \

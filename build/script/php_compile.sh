@@ -66,6 +66,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --enable-option-checking=fatal \
     --disable-debug \
     --enable-mbstring \
+    --enable-intl \
     --with-mysqli=mysqlnd  \
     --enable-mysqlnd \
     --with-pdo-sqlite=/usr \
