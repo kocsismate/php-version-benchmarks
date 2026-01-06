@@ -1,0 +1,26 @@
+
+
+URI	ID	Name	Environment	Runner	Instance type	Architecture	CPU	CPU cores	RAM	Kernel	OS	GCC	Dedicated instance	Deeper C-states	Turbo boost	Hyper-threading	Time
+2026/2026_01_06_08_44_05_1_aws_x86_64_c7i_metal_24xl	aws_x86_64_c7i_metal_24xl	AWS x86_64 (c7i.24xl)	aws	host	c7i.metal-24xl	x86_64		48	188 GB	6.1.158-178.288.amzn2023.x86_64	Amazon Linux 2023.9.20251117	14.2.1	1	0	0	0	2026-01-06 08:44:05
+Test name	Test warmup	Test iterations	Test requests	PHP	PHP Commit hash	PHP Commit URL	Min	Max	Std dev	Rel std dev %	Mean	Mean diff %	Median	Median diff %	Skew	P-value	Instruction count	Memory usage
+Laravel 12.11.0 demo app	50	100	100	PHP 8.2	8c303713f1	https://github.com/php/php-src/commit/8c303713f1	0.47919	0.48206	0.00052	0.10817	0.48029	0.00	0.48021	0.00	0.526	0.999	0	46.33
+Laravel 12.11.0 demo app	50	100	100	PHP 8.3	604aec3956	https://github.com/php/php-src/commit/604aec3956	0.47983	0.48930	0.00126	0.26243	0.48113	0.17	0.48078	0.12	3.369	0.000	0	46.50
+Laravel 12.11.0 demo app	50	100	100	PHP 8.4	1c9f117d74	https://github.com/php/php-src/commit/1c9f117d74	0.48414	0.48824	0.00063	0.12975	0.48528	1.04	0.48521	1.04	1.966	0.000	0	48.17
+Laravel 12.11.0 demo app	50	100	100	PHP 8.5	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.47572	0.47864	0.00062	0.12970	0.47692	-0.70	0.47680	-0.71	0.551	0.000	0	48.44
+Laravel 12.11.0 demo app	50	100	100	PHP 8.5 (JIT)	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.45702	0.45995	0.00046	0.09955	0.45796	-4.65	0.45794	-4.64	0.865	0.000	0	58.11
+Symfony 2.8.0 demo app	50	100	100	PHP 8.2	8c303713f1	https://github.com/php/php-src/commit/8c303713f1	0.80635	1.10334	0.09777	10.61950	0.92069	0.00	0.88613	0.00	0.643	0.999	0	45.74
+Symfony 2.8.0 demo app	50	100	100	PHP 8.3	604aec3956	https://github.com/php/php-src/commit/604aec3956	0.80386	1.07955	0.07582	8.60232	0.88141	-4.27	0.86927	-1.90	0.934	0.012	0	46.02
+Symfony 2.8.0 demo app	50	100	100	PHP 8.4	1c9f117d74	https://github.com/php/php-src/commit/1c9f117d74	0.79713	0.93219	0.04118	4.94453	0.83281	-9.54	0.81861	-7.62	0.937	0.000	0	47.55
+Symfony 2.8.0 demo app	50	100	100	PHP 8.5	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.79596	1.09369	0.12164	13.85196	0.87816	-4.62	0.81164	-8.41	1.116	0.000	0	47.30
+Symfony 2.8.0 demo app	50	100	100	PHP 8.5 (JIT)	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.76893	1.03383	0.10273	12.02534	0.85424	-7.22	0.81072	-8.51	0.817	0.000	0	54.83
+Wordpress 6.9 main page	20	100	20	PHP 8.2	8c303713f1	https://github.com/php/php-src/commit/8c303713f1	0.70314	0.71316	0.00273	0.38721	0.70624	0.00	0.70466	0.00	0.593	0.999	0	53.49
+Wordpress 6.9 main page	20	100	20	PHP 8.3	604aec3956	https://github.com/php/php-src/commit/604aec3956	0.70176	0.72538	0.00336	0.47621	0.70494	-0.18	0.70352	-0.16	2.491	0.000	0	53.76
+Wordpress 6.9 main page	20	100	20	PHP 8.4	1c9f117d74	https://github.com/php/php-src/commit/1c9f117d74	0.69572	0.70389	0.00254	0.36324	0.69919	-1.00	0.69774	-0.98	0.496	0.000	0	54.49
+Wordpress 6.9 main page	20	100	20	PHP 8.5	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.69386	0.71822	0.00366	0.52516	0.69712	-1.29	0.69547	-1.30	2.857	0.000	0	54.85
+Wordpress 6.9 main page	20	100	20	PHP 8.5 (JIT)	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.61920	0.62627	0.00227	0.36424	0.62190	-11.94	0.62067	-11.92	0.577	0.000	0	78.22
+bench.php	10	100	2	PHP 8.2	8c303713f1	https://github.com/php/php-src/commit/8c303713f1	0.43805	0.48805	0.00841	1.89389	0.44398	0.00	0.44179	0.00	3.451	0.999	0	29.68
+bench.php	10	100	2	PHP 8.3	604aec3956	https://github.com/php/php-src/commit/604aec3956	0.42640	0.49685	0.01163	2.68310	0.43342	-2.38	0.42990	-2.69	3.157	0.000	0	29.71
+bench.php	10	100	2	PHP 8.4	1c9f117d74	https://github.com/php/php-src/commit/1c9f117d74	0.42762	0.54684	0.02559	5.85394	0.43715	-1.54	0.43069	-2.51	3.768	0.000	0	30.84
+bench.php	10	100	2	PHP 8.5	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.43610	0.55364	0.02440	5.47918	0.44533	0.30	0.43908	-0.61	3.774	0.000	0	31.08
+bench.php	10	100	2	PHP 8.5 (JIT)	9b089edcbd	https://github.com/php/php-src/commit/9b089edcbd	0.14717	0.15213	0.00101	0.67686	0.14923	-66.39	0.14925	-66.22	0.313	0.000	0	31.91
+
