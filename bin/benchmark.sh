@@ -670,21 +670,20 @@ run_cgi () {
     # TODO for jemalloc
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
-    # TODO try to use sudo chrt -f 99 for real-time process
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.25
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
     elif [ "$mode" = "instruction_count" ]; then
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "memory" ]; then
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     else
         echo "Invalid php-cgi run mode"
@@ -711,17 +710,17 @@ run_cli () {
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.9
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
     elif [ "$mode" = "instruction_count" ]; then
-        taskset -c "$last_cpu" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "memory" ]; then
-        /usr/bin/time -v taskset -c "$last_cpu" \
+        /usr/bin/time -v sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     else
         echo "Invalid php-cli run mode"
