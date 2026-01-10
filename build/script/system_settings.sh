@@ -145,9 +145,24 @@ unlimit_stack () {
     echo "$INFRA_IMAGE_USER hard stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
 }
 
+unlimit_memory () {
+    echo "$INFRA_IMAGE_USER soft memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$INFRA_IMAGE_USER hard memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+}
+
 set_unlimited_stack () {
     sudo ulimit -s unlimited
 }
+
+set_huge_pages () {
+    echo "1024" | sudo tee -a /proc/sys/vm/nr_hugepages > /dev/null
+
+    local user_group
+    user_group="$(id -g "$INFRA_IMAGE_USER")"
+    sudo sysctl -w "vm.hugetlb_shm_group=$user_group"
+
+    echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/enabled > /dev/null
+    echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/defrag > /dev/null
 }
 
 verify_boot_parameters () {
@@ -246,6 +261,9 @@ verify () {
     echo "System limits:"
     ulimit -a
 
+    echo "Huge pages:"
+    cat /proc/meminfo | grep "Huge"
+
     echo "TOP 25 processes:"
     ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu | head -n 26
 }
@@ -261,6 +279,7 @@ echo "Benchmark is assigned to CPU core $last_cpu"
 if [[ "$1" == "boot" ]]; then
     set_boot_parameters
     unlimit_stack
+    unlimit_memory
 
     verify_boot_parameters
 elif [[ "$1" == "before_benchmark" ]]; then
@@ -272,6 +291,7 @@ elif [[ "$1" == "before_benchmark" ]]; then
     stop_unnecessary_services
     disable_selinux_checks
     set_unlimited_stack
+    set_huge_pages
 
     verify
 else

@@ -666,6 +666,7 @@ run_cgi () {
     export LOG_DEPRECATIONS_CHANNEL=stderr
     export LOG_DEPRECATIONS_TRACE=true
     export BROADCAST_DRIVER=null
+    export USE_ZEND_ALLOC_HUGE_PAGES=1
 
     # TODO for jemalloc
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
@@ -703,10 +704,11 @@ run_cli () {
         opcache=""
     fi
 
+    export USE_ZEND_ALLOC_HUGE_PAGES=1
+
     # TODO for jemalloc
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
-    # TODO try to use sudo chrt -f 99 for real-time process
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.9
