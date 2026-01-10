@@ -52,12 +52,16 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --enable-cgi \
     --with-valgrind
 
+OPCACHE_FILE_PATH="$PHP_SOURCE_PATH/opcache_files"
+mkdir -p "$OPCACHE_FILE_PATH"
+
 make -j "$1"
 
 mkdir -p "$PHP_SOURCE_PATH/conf.d/"
 cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+sed -i "s|OPCACHE_FILE_PATH|$OPCACHE_FILE_PATH|g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 if [[ "$PHP_JIT" = "1" ]]; then
     sed -i "s/JIT_MODE/tracing/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
