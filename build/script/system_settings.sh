@@ -120,6 +120,11 @@ stop_unnecessary_services () {
     sudo cp -f $PROJECT_ROOT/build/journald.conf /etc/systemd/journald.conf # optimize journald config
     sudo service systemd-journald restart
     sudo sysctl -w kernel.nmi_watchdog=0
+}
+
+disable_selinux_checks () {
+    sudo setenforce 0
+}
 
 unlimit_stack () {
     echo "$INFRA_IMAGE_USER soft stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
@@ -221,6 +226,7 @@ elif [[ "$1" == "before_benchmark" ]]; then
     assign_cpu_core_to_cgroup
     disable_aslr
     stop_unnecessary_services
+    disable_selinux_checks
     set_unlimited_stack
 
     verify
