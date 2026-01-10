@@ -35,7 +35,7 @@ disable_turbo_boost () {
         echo "Disabling turbo boost"
         sudo sh -c 'echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo'
     else
-        echo 'Skipped disabling turbo boost'
+        echo "Skipped disabling turbo boost"
     fi
 }
 
@@ -100,8 +100,8 @@ assign_cpu_core_to_cgroup () {
 
     # Assign isolated cores to the cgroup
     echo "Assigning isolated core to the bench cgroup"
-    echo "$last_cpu" | sudo tee $cgroup_path/cpuset.cpus
-    echo "$numa_node" | sudo tee $cgroup_path/cpuset.mems
+    echo "$last_cpu" | sudo tee $cgroup_path/cpuset.cpus > /dev/null
+    echo "$numa_node" | sudo tee $cgroup_path/cpuset.mems > /dev/null
 }
 
 disable_aslr () {
@@ -119,6 +119,15 @@ stop_unnecessary_services () {
     sudo systemctl stop containerd.service # container service
     sudo cp -f $PROJECT_ROOT/build/journald.conf /etc/systemd/journald.conf # optimize journald config
     sudo service systemd-journald restart
+
+unlimit_stack () {
+    echo "$INFRA_IMAGE_USER soft stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$INFRA_IMAGE_USER hard stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+}
+
+set_unlimited_stack () {
+    sudo ulimit -s unlimited
+}
 }
 
 verify_boot_parameters () {
@@ -185,6 +194,9 @@ verify () {
     echo "ASLR:"
     sudo cat /proc/sys/kernel/randomize_va_space
 
+    echo "System limits:"
+    ulimit -a
+
     echo "TOP 25 processes:"
     ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu | head -n 26
 }
@@ -199,6 +211,7 @@ echo "Benchmark is assigned to CPU core $last_cpu"
 
 if [[ "$1" == "boot" ]]; then
     set_boot_parameters
+    unlimit_stack
 
     verify_boot_parameters
 elif [[ "$1" == "before_benchmark" ]]; then
@@ -207,6 +220,7 @@ elif [[ "$1" == "before_benchmark" ]]; then
     assign_cpu_core_to_cgroup
     disable_aslr
     stop_unnecessary_services
+    set_unlimited_stack
 
     verify
 else
