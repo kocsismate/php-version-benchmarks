@@ -119,6 +119,7 @@ stop_unnecessary_services () {
     sudo systemctl stop containerd.service # container service
     sudo cp -f $PROJECT_ROOT/build/journald.conf /etc/systemd/journald.conf # optimize journald config
     sudo service systemd-journald restart
+    sudo sysctl -w kernel.nmi_watchdog=0
 
 unlimit_stack () {
     echo "$INFRA_IMAGE_USER soft stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
