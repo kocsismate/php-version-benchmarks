@@ -377,7 +377,7 @@ wilcoxon_p_value () {
 }
 
 print_environment () {
-    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tCPU frequency\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -412,11 +412,10 @@ EOF
         ram_gb=$(expr $ram_b / 1024 / 1024 / 1024)
         gcc_version="$(gcc -v 2>&1 | grep "Apple clang version")"
     else
-        cpu=""
-        #cpu_info="$(lscpu)"
-        #cpu="$(echo "$cpu_info" | grep '^Model name:')"
-        #cpu="${cpu/Model name:/}"
-        #cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
+        cpu="$(lscpu | grep '^Model name:')"
+        cpu="${cpu/Model name:/}"
+        cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
+
         cpu_count="$(nproc)"
 
         ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
@@ -451,21 +450,32 @@ EOF
         hyper_threading="1"
     fi
 
+    if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "1" ]]; then
+        cpu_frequency_khz="$(cat /sys/devices/system/cpu/cpu0/cpufreq/base_frequency)"
+        cpu_frequency_mhz="$(( cpu_frequency_khz / 1000 ))"
+    else
+        cpu_frequency_mhz=""
+    fi
+
     if [ ! -z "$cpu_settings" ]; then
         cpu_settings="${cpu_settings:2}"
     fi
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d GB\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$cpu_count" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
+        "$cpu" "$cpu_count" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
     if [[ ! -z "$cpu" ]]; then
-        cpu=", "
+        cpu="${cpu}, "
     fi
-    cpu="${cpu_count} core"
+    cpu="${cpu}${cpu_count} core"
     if [ "$cpu_count" -gt "1" ]; then
         cpu="${cpu}s"
+    fi
+
+    if [[ ! -z "$cpu_frequency_mhz" ]]; then
+        cpu="${cpu} @ $cpu_frequency_mhz MHz"
     fi
 
     if [[ ! -z "$cpu_settings" ]]; then
@@ -912,9 +922,6 @@ run_benchmark () {
     first_median=""
     first_var=""
 
-    cpu_count="$(nproc)"
-    last_cpu="$((cpu_count-1))"
-
     case "$TEST_ID" in
         laravel_*)
             run_real_benchmark "app/laravel/public/index.php" "" "production"
@@ -964,6 +971,9 @@ run_benchmark () {
     echo "" >> "$final_result_file.md"
     cat "$result_file.md" >> "$final_result_file.md"
 }
+
+cpu_count="$(nproc)"
+last_cpu="$((cpu_count-1))"
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
 

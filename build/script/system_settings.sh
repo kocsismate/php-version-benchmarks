@@ -30,6 +30,20 @@ disable_hyper_threading () {
     fi
 }
 
+lock_cpu_frequency () {
+    if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "1" ]]; then
+        cpu_base_frequency_khz="$(cat /sys/devices/system/cpu/cpu0/cpufreq/base_frequency)"
+        cpu_base_frequency_mhz="$(( cpu_base_frequency_khz / 1000 ))"
+
+        echo "Locking CPU frequency to $cpu_base_frequency_mhz MHz"
+        sudo cpupower frequency-set --min "${cpu_base_frequency_mhz}MHz" --max "${cpu_base_frequency_mhz}MHz" -g performance
+
+        echo "performance" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference > /dev/null || true
+    else
+        echo "Skipped locking CPU frequency"
+    fi
+}
+
 disable_turbo_boost () {
     if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
         echo "Disabling turbo boost"
@@ -144,6 +158,35 @@ verify_boot_parameters () {
 verify () {
     verify_boot_parameters
 
+    # Verify if CPU frequency is locked
+    cpupower frequency-info
+    if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "1" ]]; then
+        local info="$(cpupower frequency-info)"
+
+        if echo "$info" | grep -q "The governor \"performance\""; then
+            echo "OK: CPU governor is performance"
+        else
+            echo "Error: CPU governor isn't performance!"
+            exit 1
+        fi
+
+        local policy_line="$(echo "$info" | grep "current policy:")"
+        if [ -z "$policy_line" ]; then
+            echo "Error: No CPU governor policy is available"
+            exit 1
+        fi
+
+        local cpu_min_frequency="$(echo "$policy_line" | sed -E 's/.*within (.*) and .*/\1/' | xargs)"
+        local cpu_max_frequency="$(echo "$policy_line" | sed -E 's/.*and (.*)\./\1/' | xargs)"
+
+        if [ "$cpu_min_frequency" == "$cpu_max_frequency" ]; then
+            echo "OK: Minimum and maximum frequency are correct ($cpu_max_frequency)"
+        else
+            echo "Error: Minimum and maximum CPU frequency differ ($cpu_min_frequency and $cpu_max_frequency)"
+            exit 1
+        fi
+    fi
+
     # Verify if turbo boost is disabled
     if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
         # Path to the Turbo Boost control file
@@ -221,6 +264,7 @@ if [[ "$1" == "boot" ]]; then
 
     verify_boot_parameters
 elif [[ "$1" == "before_benchmark" ]]; then
+    lock_cpu_frequency
     disable_turbo_boost
     dedicate_irq
     assign_cpu_core_to_cgroup

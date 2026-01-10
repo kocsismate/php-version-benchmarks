@@ -16,6 +16,11 @@ if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
     disable_hyper_threading="true"
 fi
 
+lock_cpu_frequency="false"
+if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "1" ]]; then
+    lock_cpu_frequency="true"
+fi
+
 disable_deeper_c_states="false"
 if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
     disable_deeper_c_states="true"
@@ -47,6 +52,7 @@ image_architecture = "$INFRA_ARCHITECTURE"
 use_dedicated_instance = $use_dedicated_instance
 disable_deeper_c_states = $disable_deeper_c_states
 disable_hyper_threading = $disable_hyper_threading
+lock_cpu_frequency = $lock_cpu_frequency
 disable_turbo_boost = $disable_turbo_boost
 
 infra_id = "$INFRA_ID"

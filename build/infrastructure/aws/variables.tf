@@ -99,6 +99,10 @@ variable "disable_turbo_boost" {
   type = bool
 }
 
+variable "lock_cpu_frequency" {
+  type = bool
+}
+
 variable "infra_id" {
   type = string
 }

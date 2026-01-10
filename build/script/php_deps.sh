@@ -3,6 +3,7 @@ set -e
 
 sudo dnf install --allowerasing -y \
     util-linux \
+    kernel-tools \
     autoconf \
     file \
     htop \
