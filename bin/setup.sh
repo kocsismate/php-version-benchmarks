@@ -46,6 +46,13 @@ install_symfony () {
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi
 
+    sed -i".original" "/trigger_deprecation('symfony\/var-exporter', '7.3', 'Using ProxyHelper::generateLazyGhost() is deprecated, use native lazy objects instead.');/d" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/ProxyHelper.php"
+    sed -i".original" "/trigger_deprecation('symfony\/var-exporter', '7.3', 'The \"%s\" trait is deprecated, use native lazy objects instead.', LazyProxyTrait::class);/d" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/LazyProxyTrait.php"
+    sed -i".original" "/trigger_deprecation('symfony\/var-exporter', '7.3', 'The \"%s\" trait is deprecated, use native lazy objects instead.', LazyGhostTrait::class);/d" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/LazyGhostTrait.php"
+
+    sed -i".original" "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Proxy/Autoloader.php"
+    sed -i".original" "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Proxy/DefaultProxyClassNameResolver.php"
+
     sudo chmod -R 777 "$PROJECT_ROOT/app/symfony/var"
 }
 
