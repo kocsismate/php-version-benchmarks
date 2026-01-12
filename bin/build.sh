@@ -30,20 +30,8 @@ done
 wait
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
-    echo "Setting up custom linker file..."
     echo "Default linker file:"
     ld --verbose
-
-    new_ld="$(ld --verbose | sed '1,/using internal linker script:/d' | sed -n '/^==================================================/,/^==================================================/p' | sed '1d;$d')"
-    new_ld="$(printf "%s" "$new_ld" | sed 's|\*(\.text \.stub \.text\.\* \.gnu\.linkonce\.t\.\*)|*(SORT(.text.*))\
-        *(.text .stub .gnu.linkonce.t.*)|')"
-
-    cat > /tmp/my.ld <<EOF
-$new_ld
-EOF
-
-    echo "Custom linker file:"
-    cat /tmp/my.ld
 
     cpu_count="$(nproc)"
     php_ini_count="$( set -- $PROJECT_ROOT/config/php/*.ini; [ -e "$1" ] && echo $# || echo 0)"
