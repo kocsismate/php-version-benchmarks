@@ -99,11 +99,7 @@ elif [[ "$1" == "ssh" ]]; then
 
     host_dns="$(cat "$host_dns_file")"
 
-    cd "$PROJECT_ROOT/build/infrastructure/$2/"
-
-    ssh -o IdentitiesOnly=yes -i "$private_key_file" "ec2-user@$host_dns"
-
-    cd "$PROJECT_ROOT"
+    ssh -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$private_key_file" "ec2-user@$host_dns" "$2"
 elif [[ "$1" == "help" ]]; then
 
     echo "Usage: ./benchmark.sh run [environment] [runs] [dry-run]"

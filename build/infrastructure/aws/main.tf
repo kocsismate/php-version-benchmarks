@@ -132,9 +132,30 @@ EOF
     inline = [
       "set -e",
 
-      "sudo reboot&"
+      "echo 'Reloading kernel...'",
+      "sudo kexec -e"
     ]
     on_failure = continue
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      echo "Waiting for instance to become available..."
+
+      max_reconnections=6
+      for ((i=1; i<=max_reconnections; i++)); do
+        ${var.local_project_root}/benchmark.sh ssh "echo 'Successfully reconnected'" 2>/dev/null
+        if [ $? -eq 0 ]; then
+          exit 0
+        fi
+
+        echo "Still reloading, attempting to reconnect ($i/$max_reconnections)..."
+        sleep 10
+      done
+
+      echo "Reconnection timed out"
+      exit 1
+    EOF
   }
 
   provisioner "remote-exec" {

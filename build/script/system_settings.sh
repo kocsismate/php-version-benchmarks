@@ -78,21 +78,21 @@ dedicate_irq () {
     sudo systemctl stop irqbalance # Disable automatic distribution of hardware interrupt handling across CPU cores
 
     # CPU core to dedicate (1 = CPU1)
-    core=0
+    local core=0
 
     # Calculate affinity mask for the core (2^core in hex)
-    mask=$((1 << core))
-    hex_mask=$(printf '%x\n' $mask)
+    local mask="$((1 << core))"
+    local hex_mask="$(printf '%x\n' $mask)"
 
     echo "Setting all IRQ affinities to CPU core $core (mask 0x$hex_mask)"
 
     # Get all IRQ numbers from /proc/interrupts (skip lines without IRQ numbers)
-    irq_numbers=$(grep '[0-9]\+:' /proc/interrupts | cut -d':' -f1)
+    local irq_numbers="$(grep '[0-9]\+:' /proc/interrupts | cut -d':' -f1)"
 
     set +e
 
     for irq in $irq_numbers; do
-        affinity_file="/proc/irq/$irq/smp_affinity"
+        local affinity_file="/proc/irq/$irq/smp_affinity"
         if [ -f "$affinity_file" ]; then
             if echo "$hex_mask" | sudo tee "$affinity_file" > /dev/null; then
                 echo "Successfully set IRQ $irq affinity to CPU core $core"
@@ -111,7 +111,7 @@ assign_cpu_core_to_cgroup () {
     echo "NUMA settings:"
     lscpu | grep NUMA
 
-    numa_file="/sys/devices/system/cpu/cpu${last_cpu}/numa_node"
+    local numa_file="/sys/devices/system/cpu/cpu${last_cpu}/numa_node"
 
     if [[ -f "$numa_file" ]]; then
         numa_node=$(cat "$numa_file")
@@ -130,7 +130,7 @@ assign_cpu_core_to_cgroup () {
     # Create dedicated cgroup for the benchmark
     echo "+cpuset" | sudo tee /sys/fs/cgroup/cgroup.subtree_control > /dev/null
 
-    cgroup_path="/sys/fs/cgroup/bench"
+    local cgroup_path="/sys/fs/cgroup/bench"
     sudo mkdir -p "$cgroup_path"
 
     # Assign isolated cores to the cgroup
@@ -171,6 +171,22 @@ unlimit_memory () {
     echo "$INFRA_IMAGE_USER hard memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
 }
 
+reload_kernel () {
+    echo "Isolating CPU core $last_cpu"
+    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu resctrl rdt_force"
+
+    if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
+        echo "Disabling deeper sleep states"
+        replacement="${replacement} intel_idle.max_cstate=1 processor.max_cstate=1"
+    else
+        echo "Skipped disabling deeper sleep states"
+    fi
+
+    sudo kexec -l /boot/vmlinuz-$(uname -r) \
+        --initrd=/boot/initramfs-$(uname -r).img \
+        --append="$(cat /proc/cmdline) $replacement"
+}
+
 set_unlimited_stack () {
     sudo ulimit -s unlimited
 }
@@ -192,6 +208,13 @@ config_perf_stat () {
 }
 
 verify () {
+    local isolcpus_present="$(grep "isolcpus" /proc/cmdline)"
+    if [[ -z "$isolcpus_present" ]]; then
+        echo "Error: CPU isolation error"
+        exit 1
+    fi
+
+    echo "OK: CPU isolation is correct"
 
     # Verify if CPU frequency is locked
     cpupower frequency-info
@@ -225,14 +248,14 @@ verify () {
     # Verify if turbo boost is disabled
     if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
         # Path to the Turbo Boost control file
-        turbo_file="/sys/devices/system/cpu/intel_pstate/no_turbo"
+        local turbo_file="/sys/devices/system/cpu/intel_pstate/no_turbo"
 
         if [[ ! -f "$turbo_file" ]]; then
           echo "Error: Turbo boost is enabled"
           exit 1
         fi
 
-        turbo_status=$(cat "$turbo_file")
+        local turbo_status="$(cat "$turbo_file")"
 
         if [[ "$turbo_status" != "1" ]]; then
           echo "Error: Turbo boost is enabled"
@@ -245,10 +268,10 @@ verify () {
     # Verify if hyperthreading is disabled
     if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
         # Count logical CPUs
-        logical_cpus=$(grep -c ^processor /proc/cpuinfo)
+        local logical_cpus="$(grep -c ^processor /proc/cpuinfo)"
 
         # Count physical cores (unique physical_id + core_id pairs)
-        physical_cores=$(awk '/physical id/ {phy=$4} /core id/ {print phy"."$4}' /proc/cpuinfo | sort -u | wc -l)
+        local physical_cores="$(awk '/physical id/ {phy=$4} /core id/ {print phy"."$4}' /proc/cpuinfo | sort -u | wc -l)"
 
         if (( logical_cpus > physical_cores )); then
           echo "Error: Hyperthreading is enabled: there are $logical_cpus logical CPUs, and $physical_cores physical ones)"
@@ -257,6 +280,15 @@ verify () {
 
        echo "OK: Hyperthreading is disabled."
     fi
+
+    # Verify if C-state is correctly set
+    local max_c_state="$(cat /sys/module/intel_idle/parameters/max_cstate)"
+    if [[ "$max_c_state" != "1" ]]; then
+      echo "Error: CPU C-state is incorrect ($max_c_state)"
+      exit 1
+    fi
+
+    echo "OK: CPU C-state is correctly set"
 
     echo "Online CPUs:"
     cat /sys/devices/system/cpu/online
@@ -300,6 +332,7 @@ if [[ "$1" == "boot" ]]; then
     set_boot_parameters
     unlimit_stack
     unlimit_memory
+    reload_kernel
 elif [[ "$1" == "before_benchmark" ]]; then
     lock_cpu_frequency
     isolate_cpu_l3_cache
