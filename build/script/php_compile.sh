@@ -50,7 +50,8 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-openssl \
     --with-zlib \
     --enable-cgi \
-    --with-valgrind
+    --with-valgrind \
+    --enable-static
 
 OPCACHE_FILE_PATH="$PHP_SOURCE_PATH/opcache_files"
 mkdir -p "$OPCACHE_FILE_PATH"
