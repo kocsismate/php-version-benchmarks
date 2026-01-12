@@ -3,18 +3,19 @@ set -e
 
 set_boot_parameters () {
     echo "Isolating CPU core $last_cpu"
-    replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu"
+    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu rdt=cmt,l3cat,l3mon,mba"
 
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         echo "Disabling deeper sleep states"
-        replacement="$replacement intel_idle.max_cstate=1 processor.max_cstate=1"
+        replacement="${replacement} intel_idle.max_cstate=1 processor.max_cstate=1"
     else
         echo "Skipped disabling deeper sleep states"
     fi
 
-    sudo sed -i "s/quiet\"/quiet $replacement\"/" /etc/default/grub
+    sudo grubby --update-kernel=ALL --args="$replacement"
 
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    echo "Boot settings to update:"
+    sudo grubby --info=DEFAULT
 }
 
 disable_hyper_threading () {
@@ -42,6 +43,26 @@ lock_cpu_frequency () {
     else
         echo "Skipped locking CPU frequency"
     fi
+}
+
+isolate_cpu_l3_cache () {
+    local resctrl_supported="$(grep resctrl /proc/filesystems)"
+    if [[ -z "$resctrl_supported" ]]; then
+        echo "Isolating L3 cache is not supported, skipping"
+        return
+    fi
+
+    echo "Isolating L3 cache for CPU $last_cpu"
+
+    pqos -s
+
+    sudo mkdir -p /sys/fs/resctrl || true
+    sudo mount -t resctrl resctrl /sys/fs/resctrl || true
+
+    # 1st class (COS1) gets 4 cache lanes
+    sudo pqos -I -e "llc:1=0xf" || true
+    # The CPU core running PHP is assigned to these lanes
+    sudo pqos -I -a "llc:1=$last_cpu" || true
 }
 
 disable_turbo_boost () {
@@ -165,16 +186,12 @@ set_huge_pages () {
     echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/defrag > /dev/null
 }
 
-verify_boot_parameters () {
-    echo "Boot settings:"
-    sudo cat /etc/default/grub
 config_perf_stat () {
     sudo sysctl -w kernel.perf_event_paranoid=-1
     sudo sysctl -w kernel.kptr_restrict=0
 }
 
 verify () {
-    verify_boot_parameters
 
     # Verify if CPU frequency is locked
     cpupower frequency-info
@@ -285,6 +302,7 @@ if [[ "$1" == "boot" ]]; then
     unlimit_memory
 elif [[ "$1" == "before_benchmark" ]]; then
     lock_cpu_frequency
+    isolate_cpu_l3_cache
     disable_turbo_boost
     dedicate_irq
     assign_cpu_core_to_cgroup

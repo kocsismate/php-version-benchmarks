@@ -3,6 +3,7 @@ set -e
 
 sudo dnf install --allowerasing -y \
     util-linux \
+    grubby \
     kernel-tools \
     autoconf \
     file \
@@ -38,3 +39,15 @@ sudo dnf install --allowerasing -y \
 # Add the following lines to install jemalloc:
 # jemalloc \
 # jemalloc-devel \
+
+GCC14_PATH="$(which gcc14-gcc)"
+echo "Creating symlink for $GCC14_PATH"
+sudo ln -s "$GCC14_PATH" /usr/local/bin/gcc
+ls -la /usr/local/bin/gcc || true
+
+git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
+git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
+(cd /tmp/intel-cmt-cat && make CC=gcc14-gcc && sudo make install)
+
+echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
+sudo ldconfig
