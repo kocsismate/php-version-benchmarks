@@ -24,6 +24,12 @@ install_laravel () {
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
     #sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
 
+    sed -i".original" "s/if (\\\\PHP_VERSION_ID >= 80300) {/if (\\\\PHP_VERSION_ID > 80300 || (\\\\PHP_VERSION_ID === 80300 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$PROJECT_ROOT/app/laravel/vendor/symfony/polyfill-php83/bootstrap.php"
+    sed -i".original" "s/if (\\\\PHP_VERSION_ID >= 80300) {/if (\\\\PHP_VERSION_ID > 80300 || (\\\\PHP_VERSION_ID === 80300 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$PROJECT_ROOT/app/laravel/vendor/symfony/polyfill-php83/bootstrap81.php"
+    sed -i".original" "s/if (\\\\PHP_VERSION_ID >= 80400) {/if (\\\\PHP_VERSION_ID > 80400 || (\\\\PHP_VERSION_ID === 80400 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$PROJECT_ROOT/app/laravel/vendor/symfony/polyfill-php84/bootstrap.php"
+    sed -i".original" "s/if (\\\\PHP_VERSION_ID >= 80400) {/if (\\\\PHP_VERSION_ID > 80400 || (\\\\PHP_VERSION_ID === 80400 \&\& \\\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$PROJECT_ROOT/app/laravel/vendor/symfony/polyfill-php84/bootstrap82.php"
+    sed -i".original" "s/if (\\\\PHP_VERSION_ID >= 80500) {/if (\\\\PHP_VERSION_ID > 80500 || (\\\\PHP_VERSION_ID === 80500 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$PROJECT_ROOT/app/laravel/vendor/symfony/polyfill-php85/bootstrap.php"
+
     sudo chmod -R 777 "$PROJECT_ROOT/app/laravel/storage"
 }
 
