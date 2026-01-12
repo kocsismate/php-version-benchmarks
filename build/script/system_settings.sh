@@ -168,6 +168,9 @@ set_huge_pages () {
 verify_boot_parameters () {
     echo "Boot settings:"
     sudo cat /etc/default/grub
+config_perf_stat () {
+    sudo sysctl -w kernel.perf_event_paranoid=-1
+    sudo sysctl -w kernel.kptr_restrict=0
 }
 
 verify () {
@@ -280,8 +283,6 @@ if [[ "$1" == "boot" ]]; then
     set_boot_parameters
     unlimit_stack
     unlimit_memory
-
-    verify_boot_parameters
 elif [[ "$1" == "before_benchmark" ]]; then
     lock_cpu_frequency
     disable_turbo_boost
@@ -292,6 +293,7 @@ elif [[ "$1" == "before_benchmark" ]]; then
     disable_selinux_checks
     set_unlimited_stack
     set_huge_pages
+    config_perf_stat
 
     verify
 else

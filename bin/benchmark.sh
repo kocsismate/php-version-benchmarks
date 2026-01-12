@@ -532,8 +532,9 @@ print_result_value () {
     local log_file="$1"
     local instruction_count_log_file="$2"
     local memory_log_file="$3"
-    local result_file="$4"
-    local md_format="$5"
+    local perf_log_file="$4"
+    local result_file="$5"
+    local md_format="$6"
 
     local var="PHP_COMMITS_$PHP_ID"
     local commit_hash="${!var}"
@@ -686,6 +687,22 @@ run_cgi () {
     elif [ "$mode" = "memory" ]; then
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+    elif [ "$mode" = "perf" ]; then
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e instructions,cycles,branches,branch-misses,page-faults \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e LLC-loads,LLC-load-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e LLC-stores,LLC-store-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e iTLB-load-misses,dTLB-load-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     else
         echo "Invalid php-cgi run mode"
         exit 1
@@ -724,6 +741,22 @@ run_cli () {
     elif [ "$mode" = "memory" ]; then
         /usr/bin/time -v sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+    elif [ "$mode" = "perf" ]; then
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e instructions,cycles,branches,branch-misses,page-faults \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e LLC-loads,LLC-load-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e LLC-stores,LLC-store-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+            perf stat -e iTLB-load-misses,dTLB-load-misses \
+            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     else
         echo "Invalid php-cli run mode"
         exit 1
@@ -751,6 +784,13 @@ format_memory_log_file() {
     rm "$1.original"
 }
 
+format_perf_log_file() {
+    local stats_pattern="instructions|cycles|branches|branch-misses|page-faults|LLC-loads|LLC-load-misses|LLC-stores|LLC-store-misses|iTLB-load-misses|dTLB-load-misses|stalled-cycles-frontend|stalled-cycles-backend"
+    local result="$(grep -E "$stats_pattern" "$1")"
+
+    echo "$result" > "$1"
+}
+
 load_php_config () {
     source $PHP_CONFIG_FILE
     export PHP_CONFIG_FILE
@@ -761,6 +801,7 @@ load_php_config () {
     output_file="$log_dir/${PHP_ID}_output.txt"
     instruction_count_log_file="$log_dir/${PHP_ID}.instruction_count.log"
     memory_log_file="$log_dir/${PHP_ID}.memory.log"
+    perf_log_file="$log_dir/${PHP_ID}.perf.log"
     mkdir -p "$log_dir"
 }
 
@@ -818,6 +859,9 @@ run_real_benchmark () {
         # Measuring memory usage
         run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
 
+        # Gathering perf metrics
+        run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
+
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
             run_cgi "instruction_count" "$TEST_WARMUP" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
@@ -868,6 +912,9 @@ run_micro_benchmark () {
 
         # Measuring memory usage
         run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
+
+        # Gathering perf metrics
+        run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
 
         # Measuring instruction count
         if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
@@ -965,8 +1012,11 @@ run_benchmark () {
         # Format memory log
         format_memory_log_file "$memory_log_file"
 
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$result_file" "1"
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$final_result_file" "0"
+        # Format perf log
+        format_perf_log_file "$perf_log_file"
+
+        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "1"
+        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$final_result_file" "0"
     done
 
     echo "" >> "$final_result_file.md"

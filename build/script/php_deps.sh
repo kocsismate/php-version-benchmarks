@@ -31,6 +31,7 @@ sudo dnf install --allowerasing -y \
     rsync \
     zlib-devel \
     time \
+    perf \
     wget \
     bc
 
