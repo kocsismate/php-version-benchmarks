@@ -18,8 +18,7 @@ install_laravel () {
             cp /code/app/laravel.composer.lock /code/app/laravel/composer.lock && \
             composer config platform-check false --working-dir=/code/app/laravel && \
             composer config platform.php 8.2 --working-dir=/code/app/laravel && \
-            composer install --classmap-authoritative --no-interaction --working-dir=/code/app/laravel && \
-            composer dump-autoload --classmap-authoritative --working-dir=/code/app/laravel"
+            composer install --classmap-authoritative --no-interaction --working-dir=/code/app/laravel"
 
     sed -i".original" "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $PROJECT_ROOT/app/laravel/config/session.php
     #sed -i".original" "s#error_reporting(-1);#//error_reporting(-1);#g" $PROJECT_ROOT/app/laravel/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php

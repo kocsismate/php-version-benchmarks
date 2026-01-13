@@ -14,7 +14,6 @@ if [ "$1" == "local" ]; then
         fi
     else
         (cd $PHP_SOURCE_PATH && git checkout "$PHP_BRANCH")
-        #(cd "$PHP_SOURCE_PATH" && git pull origin "$PHP_BRANCH" --rebase)
     fi
 
     if [ ! -z "$PHP_COMMIT" ]; then
