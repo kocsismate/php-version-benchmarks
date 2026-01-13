@@ -9,10 +9,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-terraform plan \
+terraform destroy \
+    -auto-approve \
     -input=false \
-    -out="$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan" \
-    -refresh=true \
     -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
     -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
 if [ $? -ne 0 ]; then
@@ -22,12 +21,14 @@ fi
 terraform apply \
     -auto-approve \
     -input=false \
-    "$PROJECT_ROOT/build/infrastructure/aws/aws.tfplan"
+    -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
+    -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
 
 status_code="$?"
 
 terraform destroy \
     -auto-approve \
+    -input=false \
     -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
     -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
 
