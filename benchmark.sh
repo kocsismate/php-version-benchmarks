@@ -16,21 +16,21 @@ if [[ "$1" == "run" ]]; then
     infra_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini | wc -l)"
     infra_count="$(echo "$infra_count" | awk '{$1=$1;print}')"
     if [ "$infra_count" -eq "0" ]; then
-        echo "The ./config/infra/$INFRA_ENVIRONMENT directory should contain at least one .ini file in order to be able to run the benchmark"
+        echo "The $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT directory should contain at least one .ini file in order to be able to run the benchmark"
         exit 1
     fi
 
     php_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/php/*.ini | wc -l)"
     php_count="$(echo "$php_count" | awk '{$1=$1;print}')"
     if [ "$php_count" -eq "0" ]; then
-        echo "The ./config/php directory should contain at least one .ini file in order to be able to run the benchmark"
+        echo "The $PROJECT_ROOT/config/php directory should contain at least one .ini file in order to be able to run the benchmark"
         exit 1
     fi
 
     test_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/test/*.ini | wc -l)"
     test_count="$(echo "$test_count" | awk '{$1=$1;print}')"
     if [ "$test_count" -eq "0" ]; then
-        echo "The ./config/test directory should contain at least one .ini file in order to be able to run the benchmark"
+        echo "The $PROJECT_ROOT/config/test directory should contain at least one .ini file in order to be able to run the benchmark"
         exit 1
     fi
 
@@ -100,6 +100,76 @@ elif [[ "$1" == "ssh" ]]; then
     host_dns="$(cat "$host_dns_file")"
 
     ssh -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$private_key_file" "ec2-user@$host_dns" "$2"
+
+elif [[ "$1" == "bisect" ]]; then
+
+    if [[ $# -ne 2 ]]; then
+        echo "Usage: ./benchmark.sh bisect <php_bisect_template_name>"
+        exit 1
+    fi
+
+    php_bisect_template_name="$2"
+    php_bisect_template_file="$PROJECT_ROOT/config/php/$php_bisect_template_name.bisect"
+    if [ ! -f "$php_bisect_template_file" ]; then
+        echo "The $php_bisect_template_file bisect template file doesn't exist"
+        exit 1;
+    fi
+
+    source "$php_bisect_template_file"
+    export $(cut -d= -f1 $php_bisect_template_file)
+    export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+
+    if [ ! -z "$PHP_COMMIT" ]; then
+        echo "The PHP_COMMIT config option is not supported"
+        exit 1;
+    fi
+
+    if ! [[ "$PHP_BISECT_PARTS" =~ ^[0-9]+$ ]] || [[ "$PHP_BISECT_PARTS" -lt 2 ]]; then
+        echo "PHP_BISECT_PARTS must be an integer >= 2"
+        exit 1
+    fi
+
+    $PROJECT_ROOT/build/script/php_source.sh "local"
+
+    # Collect commits (oldest -> newest)
+    php_bisect_commits=()
+    php_bisect_commits+=("$PHP_BISECT_COMMIT_FROM")
+    while IFS= read -r commit; do
+        php_bisect_commits+=("$commit")
+    done < <(git --git-dir=$PHP_SOURCE_PATH/.git --work-tree=$PHP_SOURCE_PATH rev-list --reverse "$PHP_BISECT_COMMIT_FROM..$PHP_BISECT_COMMIT_TO")
+
+    php_bisect_commits_total="${#php_bisect_commits[@]}"
+    if [[ "$php_bisect_commits_total" -lt "$PHP_BISECT_PARTS" ]]; then
+        echo "Not enough php_bisect_commits ($php_bisect_commits_total) for PHP_BISECT_PARTS=$PHP_BISECT_PARTS"
+        exit 1
+    fi
+
+    echo "Total php_bisect_commits: $php_bisect_commits_total"
+    echo "Generating $PHP_BISECT_PARTS checkpoints"
+
+    # Evenly distributed index
+    for ((i=0; i<$PHP_BISECT_PARTS; i++)); do
+        i_1="$((i + 1))"
+        index="$(( (i * (php_bisect_commits_total - 1) + ($PHP_BISECT_PARTS - 1) / 2) / ($PHP_BISECT_PARTS - 1) ))"
+        php_bisect_commit="${php_bisect_commits[$index]}"
+        php_bisect_ini_file="${php_bisect_template_file}_${i_1}.ini"
+
+        cat <<EOF > "$php_bisect_ini_file"
+PHP_NAME="$PHP_NAME ${i_1}"
+PHP_ID=$PHP_ID_${i_1}
+PHP_BASE_ID=$PHP_BASE_ID
+
+PHP_REPO=$PHP_REPO
+PHP_BRANCH=$PHP_BRANCH
+PHP_COMMIT=$php_bisect_commit
+
+PHP_OPCACHE=$PHP_OPCACHE
+PHP_JIT=$PHP_JIT
+EOF
+
+        echo "Created bisect config"
+    done
+
 elif [[ "$1" == "help" ]]; then
 
     echo "Usage: ./benchmark.sh run [environment] [runs] [dry-run]"
@@ -108,7 +178,7 @@ elif [[ "$1" == "help" ]]; then
 
 else
 
-    echo 'Available options: "run", "help"!'
+    echo 'Available subcommands: "run", "ssh", "bisect", "help"!'
     exit 1
 
 fi

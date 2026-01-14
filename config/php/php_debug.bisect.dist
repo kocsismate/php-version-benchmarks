@@ -1,0 +1,12 @@
+PHP_NAME="PHP - debug"
+PHP_ID=php_debug
+PHP_BASE_ID=
+
+PHP_REPO=https://github.com/php/php-src.git
+PHP_BRANCH=master
+PHP_BISECT_COMMIT_FROM=
+PHP_BISECT_COMMIT_TO=
+PHP_BISECT_PARTS=
+
+PHP_OPCACHE=1
+PHP_JIT=0
