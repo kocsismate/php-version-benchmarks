@@ -318,6 +318,9 @@ verify () {
 
     echo "TOP 25 processes:"
     ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu | head -n 26
+
+    echo "CPU temperature:"
+    echo "$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
 }
 
 disable_hyper_threading

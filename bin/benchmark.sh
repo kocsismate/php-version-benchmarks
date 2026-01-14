@@ -847,7 +847,7 @@ run_real_benchmark () {
         reset_apps
 
         echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
 
         # Verifying output
@@ -877,8 +877,9 @@ run_real_benchmark () {
 
             reset_apps
 
+            cpu_temp="$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
@@ -929,8 +930,9 @@ run_micro_benchmark () {
         for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
             load_php_config
 
+            cpu_temp="$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
