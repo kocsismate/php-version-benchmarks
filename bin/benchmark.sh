@@ -642,10 +642,10 @@ run_cgi () {
     local uri="$5"
     local env="$6"
 
-    if [ "$PHP_OPCACHE" = "2" ]; then
-        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
-    else
+    if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
         opcache=""
+    else
+        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     fi
 
     export CONTENT_TYPE="text/html; charset=utf-8"
@@ -715,10 +715,10 @@ run_cli () {
     local requests="$3"
     local script="$4"
 
-    if [ "$PHP_OPCACHE" = "2" ]; then
-        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
-    else
+    if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
         opcache=""
+    else
+        opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     fi
 
     export USE_ZEND_ALLOC_HUGE_PAGES=1
@@ -901,7 +901,7 @@ run_micro_benchmark () {
         load_php_config
 
         echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
 
         # Verifying output
@@ -930,7 +930,7 @@ run_micro_benchmark () {
             load_php_config
 
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (opcache: $PHP_OPCACHE, JIT: $PHP_JIT)"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
             echo "---------------------------------------------------------------------------------------"
 
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"

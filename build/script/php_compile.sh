@@ -25,10 +25,10 @@ cd "$PHP_SOURCE_PATH"
 
 ./buildconf
 
-if [ "$PHP_OPCACHE" = "2" ]; then
-    opcache_option="--enable-opcache"
-else
+if git merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
     opcache_option=""
+else
+    opcache_option="--enable-opcache"
 fi
 
 # --enable-werror \ commenting out due to dynasm errors
@@ -61,7 +61,6 @@ make -j "$1"
 mkdir -p "$PHP_SOURCE_PATH/conf.d/"
 cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
-sed -i "s/OPCACHE_ENABLED/$PHP_OPCACHE/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 sed -i "s|OPCACHE_FILE_PATH|$OPCACHE_FILE_PATH|g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
 
 if [[ "$PHP_JIT" = "1" ]]; then

@@ -72,10 +72,10 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
             exit 1;
         fi
 
-        if [ "$PHP_OPCACHE" = "2" ]; then
-            opcache="-d zend_extension=$PHP_SOURCE_PATH/modules/opcache.so"
-        else
+        if git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
             opcache=""
+        else
+            opcache="-d zend_extension=$PHP_SOURCE_PATH/modules/opcache.so"
         fi
 
         php_cli_executable="$PHP_SOURCE_PATH/sapi/cli/php $opcache"
@@ -96,11 +96,8 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
             fi
         fi
 
-        if [[ -n "$PHP_OPCACHE" && "$opcache_enabled" = "0" ]]; then
+        if [[ "$opcache_enabled" = "0" ]]; then
             echo "OPCache should be enabled"
-            exit 1
-        elif [[ -z "$PHP_OPCACHE" && "$opcache_enabled" = "1" ]]; then
-            echo "OPCache should not be enabled"
             exit 1
         fi
 
