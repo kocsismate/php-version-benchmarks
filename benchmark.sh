@@ -129,14 +129,18 @@ elif [[ "$1" == "bisect" ]]; then
         exit 1
     fi
 
-    $PROJECT_ROOT/build/script/php_source.sh "local"
+    if [ ! -d "$PHP_SOURCE_PATH" ]; then
+        $PROJECT_ROOT/build/script/php_source.sh "local"
+    else
+        git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" fetch
+    fi
 
     # Collect commits (oldest -> newest)
     php_bisect_commits=()
     php_bisect_commits+=("$PHP_BISECT_COMMIT_FROM")
     while IFS= read -r commit; do
         php_bisect_commits+=("$commit")
-    done < <(git --git-dir=$PHP_SOURCE_PATH/.git --work-tree=$PHP_SOURCE_PATH rev-list --reverse "$PHP_BISECT_COMMIT_FROM..$PHP_BISECT_COMMIT_TO")
+    done < <(git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" rev-list --ancestry-path --reverse "$PHP_BISECT_COMMIT_FROM..$PHP_BISECT_COMMIT_TO")
 
     php_bisect_commits_total="${#php_bisect_commits[@]}"
     if [[ "$php_bisect_commits_total" -lt "$PHP_BISECT_PARTS" ]]; then
@@ -147,16 +151,19 @@ elif [[ "$1" == "bisect" ]]; then
     echo "Total php_bisect_commits: $php_bisect_commits_total"
     echo "Generating $PHP_BISECT_PARTS checkpoints"
 
+    php_bisect_source_path="$PHP_SOURCE_PATH"
+
     # Evenly distributed index
     for ((i=0; i<$PHP_BISECT_PARTS; i++)); do
         i_1="$((i + 1))"
         index="$(( (i * (php_bisect_commits_total - 1) + ($PHP_BISECT_PARTS - 1) / 2) / ($PHP_BISECT_PARTS - 1) ))"
         php_bisect_commit="${php_bisect_commits[$index]}"
         php_bisect_ini_file="${php_bisect_template_file}_${i_1}.ini"
+        PHP_SOURCE_PATH="${php_bisect_source_path}_${i_1}"
 
         cat <<EOF > "$php_bisect_ini_file"
 PHP_NAME="$PHP_NAME ${i_1}"
-PHP_ID=$PHP_ID_${i_1}
+PHP_ID=${PHP_ID}_${i_1}
 PHP_BASE_ID=$PHP_BASE_ID
 
 PHP_REPO=$PHP_REPO
@@ -167,7 +174,11 @@ PHP_OPCACHE=$PHP_OPCACHE
 PHP_JIT=$PHP_JIT
 EOF
 
-        echo "Created bisect config"
+        echo "Created bisect config \"$PHP_NAME ${i_1}\" for commit $php_bisect_commit"
+        echo "Checking out source..."
+        rm -rf "$PHP_SOURCE_PATH"
+        cp -r "$php_bisect_source_path" "$PHP_SOURCE_PATH"
+        git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" checkout --detach "$php_bisect_commit"
     done
 
 elif [[ "$1" == "help" ]]; then
