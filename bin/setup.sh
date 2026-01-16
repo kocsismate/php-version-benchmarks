@@ -104,9 +104,10 @@ install_wordpress () {
 laravel_test="$(grep "TEST_ID=laravel" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
 symfony_main_test="$(grep "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
 symfony_blog_test="$(grep "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
+wordpress_test="$(grep "TEST_ID=wordpress" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
 
 # Build docker image for setup
-if [[ "$laravel_test" -gt "0" || "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
+if [[ "$laravel_test" -gt "0" || "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" || "$wordpress_test" -gt "0" ]]; then
     sudo docker build -t setup $PROJECT_ROOT/app
 fi
 
@@ -121,7 +122,6 @@ if [[ "$symfony_main_test" -gt "0" || "$symfony_blog_test" -gt "0" ]]; then
 fi
 
 # Install Wordpress
-wordpress_test="$(grep "TEST_ID=wordpress" $PROJECT_ROOT/config/test/*.ini | wc -l | sed -e 's/^ *//')"
 if [ "$wordpress_test" -gt "0" ]; then
     install_wordpress &
 fi
