@@ -4,5 +4,7 @@ COPY --from=composer:2.9.3 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && apt-get install -y unzip
 
+RUN docker-php-ext-install mysqli
+
 RUN mkdir -p /.composer && \
     chmod -R 777 /.composer

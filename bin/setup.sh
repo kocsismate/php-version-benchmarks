@@ -67,14 +67,12 @@ install_wordpress () {
     if [ -z "$(ls -A $PROJECT_ROOT/app/wordpress)" ]; then
         git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress" &
 
-        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-            source $PHP_CONFIG_FILE
-            php_executable="$PROJECT_ROOT/tmp/$PHP_ID/sapi/cli/php"
-        done
+        docker network create wordpress
 
         sudo docker run \
             --name wordpress_db \
             --user $(id -u):$(id -g) \
+            --net wordpress \
             -p "3306:3306" \
             -e MYSQL_ROOT_PASSWORD=root \
             -e MYSQL_DATABASE=wordpress \
@@ -84,10 +82,19 @@ install_wordpress () {
 
         sleep 10
 
-        $php_executable -d error_reporting=0 $PROJECT_ROOT/app/wordpress/wp-cli.phar core install \
-            --path=$PROJECT_ROOT/app/wordpress/ \
-            --allow-root --url=localhost --title=Wordpress \
-            --admin_user=wordpress --admin_password=wordpress --admin_email=benchmark@php.net
+        sudo docker run --rm \
+            --name wordpress_cli \
+            --volume $PROJECT_ROOT:/code \
+            --user $(id -u):$(id -g) \
+            --net wordpress \
+            -e WORDPRESS_DB_HOST=wordpress_db \
+            setup bash -c "\
+            set -e
+            php /code/app/wordpress/wp-cli.phar core install \
+                --path=/code/app/wordpress/ \
+                --allow-root --url=localhost --title=Wordpress \
+                --admin_user=wordpress --admin_password=wordpress --admin_email=benchmark@php.net
+            "
 
         sed -i".original" "s/\t\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\t\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-includes/load.php"
         sed -i".original" "s/\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-load.php"
