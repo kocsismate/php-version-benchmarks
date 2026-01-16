@@ -1,11 +1,15 @@
 #!/bin/sh
 set -e
 
+sudo dnf update -y
+
 sudo dnf install --allowerasing -y \
     util-linux \
     kernel-tools \
     kexec-tools \
     autoconf \
+    git \
+    docker \
     file \
     htop \
     gcc14 \
@@ -35,6 +39,8 @@ sudo dnf install --allowerasing -y \
     perf \
     wget \
     bc
+
+sudo usermod -a -G docker "$USER"
 
 # Add the following lines to install jemalloc:
 # jemalloc \

@@ -3,7 +3,6 @@ set -e
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" ]]; then
     sudo service docker start &
-    $PROJECT_ROOT/build/script/php_deps.sh &
 fi
 
 for php_config in $PROJECT_ROOT/config/php/*.ini; do
@@ -27,9 +26,15 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
     fi
 done
 
+if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
+    echo "Checking out apps..."
+    $PROJECT_ROOT/bin/setup.sh
+fi
+
 wait
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
+
     echo "Default linker file:"
     ld --verbose
 

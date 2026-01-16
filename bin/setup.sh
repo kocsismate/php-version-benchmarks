@@ -65,7 +65,7 @@ install_wordpress () {
     mkdir -p "$PROJECT_ROOT/app/wordpress"
 
     if [ -z "$(ls -A $PROJECT_ROOT/app/wordpress)" ]; then
-        git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress" &
+        git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress"
 
         docker network create wordpress
 

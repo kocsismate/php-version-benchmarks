@@ -82,29 +82,10 @@ EOF
     inline = [
       "set -e",
 
-      "# Setup environment",
-      "export PROJECT_ROOT=\"${var.remote_project_root}\"",
-      "export N=\"${var.runs}\"",
-      "export RUN=\"${var.run}\"",
-      "export NOW=\"${var.now}\"",
-      "export RESULT_ROOT_DIR=\"${var.result_root_dir}\"",
-      "${var.php_commits}",
-      "export INFRA_ID=\"${var.infra_id}\"",
-      "export INFRA_NAME=\"${var.infra_name}\"",
-      "export INFRA_INSTANCE_TYPE=\"${var.instance_type}\"",
+      "# Setup environment variables",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
-      "export INFRA_IMAGE_USER=\"${var.image_user}\"",
-      "export INFRA_DEDICATED_INSTANCE=\"${var.use_dedicated_instance ? 1 : 0}\"",
       "export INFRA_DISABLE_DEEPER_C_STATES=\"${var.disable_deeper_c_states ? 1 : 0}\"",
-      "export INFRA_DISABLE_TURBO_BOOST=\"${var.disable_turbo_boost ? 1 : 0}\"",
       "export INFRA_DISABLE_HYPER_THREADING=\"${var.disable_hyper_threading ? 1 : 0}\"",
-      "export INFRA_LOCK_CPU_FREQUENCY=\"${var.lock_cpu_frequency ? 1 : 0}\"",
-      "export INFRA_ENVIRONMENT=\"${var.environment}\"",
-      "export INFRA_RUNNER=\"${var.runner}\"",
-      "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count}\"",
-      "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
-      "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
-      "export GITHUB_TOKEN=\"${var.github_token}\"",
 
       "# Update permissions",
       "sudo mkdir -p ${var.remote_project_root}",
@@ -112,19 +93,11 @@ EOF
       "sudo chown -R root:${var.image_user} ${var.remote_project_root}",
       "cd ${var.remote_project_root}",
 
-      "# Install system dependencies",
-      "sudo dnf update -y && sudo dnf install --allowerasing -y git docker && sudo usermod -a -G docker ${var.image_user} &",
+      "# Unzip the source code archive",
+      "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
-      "# Unzip the archive",
-      "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root} &",
-
-      "#Synchronize",
-      "wait",
-
-      "# Setup the benchmark",
-      "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
-      "${var.remote_project_root}/bin/setup.sh",
-      "${var.remote_project_root}/build/script/system_settings.sh boot",
+      "${var.remote_project_root}/build/script/php_deps.sh",
+      "${var.remote_project_root}/build/script/system_settings.sh boot"
     ]
   }
 
@@ -166,7 +139,11 @@ EOF
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
 
+      "# Setup the benchmark code and system",
+      "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/build/script/system_settings.sh before_benchmark",
+
+      "#Run the benchmark",
       "${var.remote_project_root}/bin/benchmark.sh",
     ]
   }
