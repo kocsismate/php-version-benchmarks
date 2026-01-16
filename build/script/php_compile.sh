@@ -10,7 +10,7 @@ set -e
 # -fno-stack-protector: no canaries (consistent stack layout).
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
+cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1 -fprofile-reproducible=serial -Wno-error=missing-profile"
 cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
@@ -52,7 +52,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
 OPCACHE_FILE_PATH="$PHP_SOURCE_PATH/opcache_files"
 mkdir -p "$OPCACHE_FILE_PATH"
 
-make -j "$1"
+make -j "$1" prof-gen
 
 mkdir -p "$PHP_SOURCE_PATH/conf.d/"
 cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
