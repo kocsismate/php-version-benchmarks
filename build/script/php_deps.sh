@@ -3,7 +3,6 @@ set -e
 
 sudo dnf install --allowerasing -y \
     util-linux \
-    grubby \
     kernel-tools \
     kexec-tools \
     autoconf \

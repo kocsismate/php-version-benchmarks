@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-set_boot_parameters () {
-    echo "Isolating CPU core $last_cpu"
-    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu rdt=cmt,l3cat,l3mon,mba"
-
-    if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
-        echo "Disabling deeper sleep states"
-        replacement="${replacement} intel_idle.max_cstate=1 processor.max_cstate=1"
-    else
-        echo "Skipped disabling deeper sleep states"
-    fi
-
-    sudo grubby --update-kernel=ALL --args="$replacement"
-
-    echo "Boot settings to update:"
-    sudo grubby --info=DEFAULT
-}
-
 disable_hyper_threading () {
     if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
         echo "Disabling hyperthreading"
@@ -173,7 +156,7 @@ unlimit_memory () {
 
 reload_kernel () {
     echo "Isolating CPU core $last_cpu"
-    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu resctrl rdt_force"
+    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu resctrl rdt=cmt,l3cat,l3mon,mba"
 
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         echo "Disabling deeper sleep states"
@@ -332,7 +315,6 @@ echo "CPU core count: $cpu_count"
 echo "Benchmark is assigned to CPU core $last_cpu"
 
 if [[ "$1" == "boot" ]]; then
-    set_boot_parameters
     unlimit_stack
     unlimit_memory
     reload_kernel
