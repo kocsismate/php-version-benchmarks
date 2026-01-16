@@ -54,9 +54,13 @@ G_PLUS_PLUS_PATH="$(which gcc14-c++)"
 echo "Creating symlink for $G_PLUS_PLUS_PATH"
 sudo ln -s "$G_PLUS_PLUS_PATH" /usr/local/bin/g++
 
-git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
-git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
-(cd /tmp/intel-cmt-cat && make CC=gcc14-gcc && sudo make install)
+cpu_rdt_support="$(cat "/proc/cpuinfo" | grep -E "rdt|cat_l3|cat_l2|mba|cmt|mbm")"
+if [[ -n "$cpu_rdt_support" ]]; then
+    echo "Installing intel-cmt-cat..."
+    git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
+    git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
+    (cd /tmp/intel-cmt-cat && make && sudo make install)
 
-echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
-sudo ldconfig
+    echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
+    sudo ldconfig
+fi
