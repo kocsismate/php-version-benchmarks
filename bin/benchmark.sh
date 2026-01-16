@@ -466,7 +466,7 @@ EOF
         "$cpu" "$cpu_count" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
-    if [[ ! -z "$cpu" ]]; then
+    if [[ -n "$cpu" ]]; then
         cpu="${cpu}, "
     fi
     cpu="${cpu}${cpu_count} core"
@@ -474,11 +474,11 @@ EOF
         cpu="${cpu}s"
     fi
 
-    if [[ ! -z "$cpu_frequency_mhz" ]]; then
+    if [[ -n "$cpu_frequency_mhz" ]]; then
         cpu="${cpu} @ $cpu_frequency_mhz MHz"
     fi
 
-    if [[ ! -z "$cpu_settings" ]]; then
+    if [[ -n "$cpu_settings" ]]; then
         cpu_settings="| CPU settings  |$cpu_settings|\n"
     fi
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
 sudo dnf update -y

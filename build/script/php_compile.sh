@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
 # -fno-pic: does not generate position-independent code (for shared libraries).
