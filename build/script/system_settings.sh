@@ -29,6 +29,12 @@ lock_cpu_frequency () {
 }
 
 isolate_cpu_l3_cache () {
+    local cpu_rdt_support="$(cat "/proc/cpuinfo" | grep -E "rdt|cat_l3|cat_l2|mba|cmt|mbm")"
+    if [[ -z "$cpu_rdt_support" ]]; then
+        echo "Isolating L3 cache is not supported, skipping"
+        return
+    fi
+
     local resctrl_supported="$(grep resctrl /proc/filesystems)"
     if [[ -z "$resctrl_supported" ]]; then
         echo "Isolating L3 cache is not supported, skipping"
