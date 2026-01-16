@@ -721,6 +721,25 @@ run_cli () {
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     fi
 
+    unset CONTENT_TYPE
+    unset SCRIPT_FILENAME
+    unset REQUEST_URI
+    unset HTTP_HOST
+    unset SERVER_NAME
+    unset REQUEST_METHOD
+    unset REDIRECT_STATUS
+    unset APP_ENV
+    unset APP_DEBUG
+    unset APP_SECRET
+    unset SESSION_DRIVER
+    unset SESSION_DOMAIN
+    unset CACHE_STORE
+    unset LOG_LEVEL
+    unset DB_CONNECTION
+    unset LOG_CHANNEL
+    unset LOG_DEPRECATIONS_CHANNEL
+    unset LOG_DEPRECATIONS_TRACE
+    unset BROADCAST_DRIVER
     export USE_ZEND_ALLOC_HUGE_PAGES=1
 
     # TODO for jemalloc
@@ -808,7 +827,7 @@ load_php_config () {
 reset_symfony () {
     # Update config based on PHP version
     sed -i".original" "/        enable_native_lazy_objects: true/d" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
-    if git --git-dir=$php_source_path/.git --work-tree=$php_source_path merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
+    if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
         sed -i".original" "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
     fi
 
