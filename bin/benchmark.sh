@@ -1062,26 +1062,29 @@ environment_file="$infra_dir/environment"
 print_environment "$environment_file"
 cat "$environment_file.md" >> "$final_result_file.md"
 
-TEST_NUMBER=0
+function run_benchmarks () {
+    TEST_NUMBER=0
+    for test_config in $PROJECT_ROOT/config/test/*.ini; do
+        source $test_config
+        ((TEST_NUMBER=TEST_NUMBER+1))
 
-for test_config in $PROJECT_ROOT/config/test/*.ini; do
-    source $test_config
-    ((TEST_NUMBER=TEST_NUMBER+1))
+        if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
+            sudo systemctl start containerd.service
+            sudo service docker start
 
-    if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
-        sudo systemctl start containerd.service
-        sudo service docker start
+            db_container_id="$(docker ps -aqf "name=wordpress_db")"
+            docker start "$db_container_id"
 
-        db_container_id="$($run_as docker ps -aqf "name=wordpress_db")"
-        $run_as docker start "$db_container_id"
+            sleep 9
+        fi
 
-        sleep 9
-    fi
+        run_benchmark
 
-    run_benchmark
+        if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
+            sudo service docker stop
+            sudo systemctl stop containerd.service
+        fi
+    done
+}
 
-    if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
-        sudo service docker stop
-        sudo systemctl stop containerd.service
-    fi
-done
+run_benchmarks
