@@ -1151,6 +1151,11 @@ reset_apps () {
 }
 
 run_real_benchmark () {
+    profiling="$4"
+    if [[ "$profiling" = "1" ]]; then
+        TEST_ITERATIONS=5
+    fi
+
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         load_php_config
 
@@ -1165,16 +1170,21 @@ run_real_benchmark () {
         if [ -n "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
+        if [[ "$profiling" = "1" ]]; then
+            rm -f "$output_file"
+        fi
 
-        # Measuring memory usage
-        run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
+        if [[ "$profiling" = "0" ]]; then
+            # Measuring memory usage
+            run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
 
-        # Gathering perf metrics
-        run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
+            # Gathering perf metrics
+            run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
 
-        # Measuring instruction count
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cgi "instruction_count" "$TEST_WARMUP" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+            # Measuring instruction count
+            if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+                run_cgi "instruction_count" "$TEST_WARMUP" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
+            fi
         fi
     done
 
@@ -1198,50 +1208,58 @@ run_real_benchmark () {
 
             reset_apps
 
+            title="$([ "$profiling" = "0" ] && echo "BENCHMARK" || echo "PROFILE")"
             cpu_temp="$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
+            echo "$TEST_NAME $title $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
-            run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+            if [[ "$profiling" = "1" ]]; then
+                run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1
+            else
+                run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
 
-            # Debugging environment
-            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                # Debugging environment
+                if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                    debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                fi
             fi
         done
     done
 
-    local plot_args=""
-    local -a plot_colors=("#1f77b4" "#ff7f0e" "#2ca02c" "#d62728" "#9467bd" "#8c564b" "#e377c2" "#7f7f00" "#17becf" "#00008b" "#b8860b" "#000000")
-    local plot_size="${#plot_colors[@]}"
+    if [[ "$profiling" = "0" ]]; then
+        local i=0
+        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+            load_php_config
 
-    local i=0
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
+            # Format benchmark log
+            sed -i "/^[[:space:]]*$/d" "$log_file"
+            sed -i "s/Elapsed time\: //g" "$log_file"
+            sed -i "s/ sec//g" "$log_file"
 
-        # Format benchmark log
-        sed -i "/^[[:space:]]*$/d" "$log_file"
-        sed -i "s/Elapsed time\: //g" "$log_file"
-        sed -i "s/ sec//g" "$log_file"
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
+            fi
 
-        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
-        fi
+            if [[ -n "$plot_args" ]]; then
+                plot_args="${plot_args}, "
+            fi
 
-        if [[ -n "$plot_args" ]]; then
-            plot_args="${plot_args}, "
-        fi
+            plot_color_num="$(( i % plot_size ))"
+            plot_args="${plot_args}  \"$log_file\" using 1 with points lc rgb \"${plot_colors[plot_color_num]}\" pointtype 7 pointsize 1.5 title \"$PHP_NAME results\""
+            i="$(( i + 1 ))"
+        done
 
-        plot_color_num="$(( i % plot_size ))"
-        plot_args="${plot_args}  \"$log_file\" using 1 with points lc rgb \"${plot_colors[plot_color_num]}\" pointtype 7 pointsize 1.5 title \"$PHP_NAME results\""
-        i="$(( i + 1 ))"
-    done
-
-    draw_diagram "$result_dir" "$TEST_NAME" "$plot_args"
+        draw_diagram "$result_dir" "$TEST_NAME" "$plot_args"
+    fi
 }
 
 run_micro_benchmark () {
+    profiling="$2"
+    if [[ "$profiling" = "1" ]]; then
+        TEST_ITERATIONS=5
+    fi
+
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         load_php_config
 
@@ -1254,16 +1272,21 @@ run_micro_benchmark () {
         if [ ! -z "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
+        if [[ "$profiling" = "1" ]]; then
+            rm -f "$output_file"
+        fi
 
-        # Measuring memory usage
-        run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
+        if [[ "$profiling" = "0" ]]; then
+            # Measuring memory usage
+            run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
 
-        # Gathering perf metrics
-        run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
+            # Gathering perf metrics
+            run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
 
-        # Measuring instruction count
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cli "instruction_count" "$TEST_WARMUP" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
+            # Measuring instruction count
+            if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+                run_cli "instruction_count" "$TEST_WARMUP" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
+            fi
         fi
     done
 
@@ -1285,35 +1308,44 @@ run_micro_benchmark () {
         for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
             load_php_config
 
+            title="$([ "$profiling" = "0" ] && echo "BENCHMARK" || echo "PROFILE")"
             cpu_temp="$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
+            echo "$TEST_NAME $title $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
-            run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
+            if [[ "$profiling" = "1" ]]; then
+                run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1
+            else
+                run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
 
-            # Debugging environment
-            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                # Debugging environment
+                if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                    debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                fi
             fi
         done
     done
 
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
+    if [[ "$profiling" = "0" ]]; then
+        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+            load_php_config
 
-        # Format benchmark log
-        sed -i "/^[[:space:]]*$/d" "$log_file"
-        sed -i "s/Elapsed time\: //g" "$log_file"
-        sed -i "s/ sec//g" "$log_file"
+            # Format benchmark log
+            sed -i "/^[[:space:]]*$/d" "$log_file"
+            sed -i "s/Elapsed time\: //g" "$log_file"
+            sed -i "s/ sec//g" "$log_file"
 
-        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
-        fi
-    done
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
+            fi
+        done
+    fi
 }
 
 run_benchmark () {
+    profiling="$1"
+
     test_expectation_file="${test_config//.ini/.expectation}"
     if [ ! -f "$test_expectation_file" ]; then
         test_expectation_file=""
@@ -1321,12 +1353,13 @@ run_benchmark () {
     result_dir="$infra_dir/${TEST_NUMBER}_${TEST_ID}"
     result_file="$result_dir/result"
 
-    mkdir -p "$result_dir"
-    touch "$result_file.tsv"
-    touch "$result_file.md"
-
-    print_result_tsv_header "$result_file"
-    print_result_md_header "$result_file"
+    if [[ "$profiling" = "0" ]]; then
+        mkdir -p "$result_dir"
+        touch "$result_file.tsv"
+        touch "$result_file.md"
+        print_result_tsv_header "$result_file"
+        print_result_md_header "$result_file"
+    fi
 
     first_log_file=""
     first_results=""
@@ -1337,27 +1370,27 @@ run_benchmark () {
 
     case "$TEST_ID" in
         laravel_*)
-            run_real_benchmark "app/laravel/public/index.php" "" "production"
+            run_real_benchmark "app/laravel/public/index.php" "" "production" "$profiling"
             ;;
 
         symfony_main_*)
-            run_real_benchmark "app/symfony/public/index.php" "/" "prod"
+            run_real_benchmark "app/symfony/public/index.php" "/" "prod" "$profiling"
             ;;
 
         symfony_blog_*)
-            run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
+            run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod" "$profiling"
             ;;
 
         wordpress_*)
-            run_real_benchmark "app/wordpress/index.php" "/" "prod"
+            run_real_benchmark "app/wordpress/index.php" "/" "prod" "$profiling"
             ;;
 
         bench)
-            run_micro_benchmark "app/zend/bench.php"
+            run_micro_benchmark "app/zend/bench.php" "$profiling"
             ;;
 
         micro_bench)
-            run_micro_benchmark "app/zend/micro_bench.php"
+            run_micro_benchmark "app/zend/micro_bench.php" "$profiling"
             ;;
 
         *)
@@ -1366,25 +1399,27 @@ run_benchmark () {
             ;;
     esac
 
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
+    if [[ "$profiling" = "0" ]]; then
+        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+            load_php_config
 
-        # Format instruction count log
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            format_instruction_count_log_file "$instruction_count_log_file"
-        fi
+            # Format instruction count log
+            if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
+                format_instruction_count_log_file "$instruction_count_log_file"
+            fi
 
-        # Format memory log
-        format_memory_log_file "$memory_log_file"
+            # Format memory log
+            format_memory_log_file "$memory_log_file"
 
-        # Format perf log
-        format_perf_log_file "$perf_log_file"
+            # Format perf log
+            format_perf_log_file "$perf_log_file"
 
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "$final_result_file" "$stat_file"
-    done
+            print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "$final_result_file" "$stat_file"
+        done
 
-    echo "" >> "$final_result_file.md"
-    cat "$result_file.md" >> "$final_result_file.md"
+        echo "" >> "$final_result_file.md"
+        cat "$result_file.md" >> "$final_result_file.md"
+    fi
 }
 
 cpu_count="$(nproc)"
@@ -1406,6 +1441,8 @@ print_environment "$environment_file"
 cat "$environment_file.md" >> "$final_result_file.md"
 
 function run_benchmarks () {
+    profiling="$1"
+
     TEST_NUMBER=0
     for test_config in $PROJECT_ROOT/config/test/*.ini; do
         source $test_config
@@ -1421,7 +1458,7 @@ function run_benchmarks () {
             $PROJECT_ROOT/build/script/mysql_readiness.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
         fi
 
-        run_benchmark
+        run_benchmark "$profiling"
 
         if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
             sudo service docker stop
@@ -1430,4 +1467,12 @@ function run_benchmarks () {
     done
 }
 
-run_benchmarks
+run_benchmarks "1"
+
+for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+    load_php_config
+
+    (cd $php_source_path && make prof-clean && make -j "$cpu_count" prof-use)
+done
+
+run_benchmarks "0"

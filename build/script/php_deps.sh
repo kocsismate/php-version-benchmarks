@@ -10,8 +10,8 @@ sudo dnf install --allowerasing -y \
     docker \
     file \
     htop \
-    gcc14 \
-    gcc14-c++ \
+    gcc \
+    gcc-c++ \
     glibc-devel \
     make \
     pkg-config \
@@ -46,14 +46,6 @@ sudo usermod -a -G docker "$USER"
 # jemalloc \
 # jemalloc-devel \
 
-GCC_PATH="$(which gcc14-gcc)"
-echo "Creating symlink for $GCC_PATH"
-sudo ln -s "$GCC_PATH" /usr/local/bin/gcc
-
-G_PLUS_PLUS_PATH="$(which gcc14-c++)"
-echo "Creating symlink for $G_PLUS_PLUS_PATH"
-sudo ln -s "$G_PLUS_PLUS_PATH" /usr/local/bin/g++
-
 cpu_rdt_support="$(grep -E "rdt_a|cat_l3|cat_l2|mba|cmt|mbm" "/proc/cpuinfo" || true)"
 uname="$(uname -r)"
 kernel_support="$(grep "CONFIG_X86_CPU_RESCTRL=y" "/boot/config-$uname" || true)"
@@ -61,7 +53,7 @@ if [[ -n "$cpu_rdt_support" && -n "$kernel_support" ]]; then
     echo "Installing intel-cmt-cat..."
     git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
     git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
-    (cd /tmp/intel-cmt-cat && make CC=gcc14-gcc && sudo make install)
+    (cd /tmp/intel-cmt-cat && make CC=gcc && sudo make install)
 
     echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
     sudo ldconfig
