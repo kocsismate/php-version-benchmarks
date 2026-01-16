@@ -12,8 +12,8 @@ sudo dnf install --allowerasing -y \
     docker \
     file \
     htop \
-    gcc14 \
-    gcc14-c++ \
+    gcc \
+    gcc-c++ \
     glibc-devel \
     make \
     pkg-config \
@@ -45,14 +45,6 @@ sudo usermod -a -G docker "$USER"
 # Add the following lines to install jemalloc:
 # jemalloc \
 # jemalloc-devel \
-
-GCC_PATH="$(which gcc14-gcc)"
-echo "Creating symlink for $GCC_PATH"
-sudo ln -s "$GCC_PATH" /usr/local/bin/gcc
-
-G_PLUS_PLUS_PATH="$(which gcc14-c++)"
-echo "Creating symlink for $G_PLUS_PLUS_PATH"
-sudo ln -s "$G_PLUS_PLUS_PATH" /usr/local/bin/g++
 
 cpu_rdt_support="$(cat "/proc/cpuinfo" | grep -E "rdt|cat_l3|cat_l2|mba|cmt|mbm")"
 if [[ -n "$cpu_rdt_support" ]]; then
