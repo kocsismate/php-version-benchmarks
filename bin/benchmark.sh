@@ -425,7 +425,7 @@ EOF
         os="${os/PRETTY_NAME=/}"
         os="${os//\"/}"
         os="$(echo "$os" | awk '{$1=$1;print}')"
-        gcc_version="$(gcc14-gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
+        gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
     fi
 
     cpu_settings=""

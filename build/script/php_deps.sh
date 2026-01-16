@@ -46,10 +46,13 @@ sudo usermod -a -G docker "$USER"
 # jemalloc \
 # jemalloc-devel \
 
-GCC14_PATH="$(which gcc14-gcc)"
-echo "Creating symlink for $GCC14_PATH"
-sudo ln -s "$GCC14_PATH" /usr/local/bin/gcc
-ls -la /usr/local/bin/gcc || true
+GCC_PATH="$(which gcc14-gcc)"
+echo "Creating symlink for $GCC_PATH"
+sudo ln -s "$GCC_PATH" /usr/local/bin/gcc
+
+G_PLUS_PLUS_PATH="$(which gcc14-c++)"
+echo "Creating symlink for $G_PLUS_PLUS_PATH"
+sudo ln -s "$G_PLUS_PLUS_PATH" /usr/local/bin/g++
 
 git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
 git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04

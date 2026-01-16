@@ -17,8 +17,6 @@ cppflags="$cflags"
 # -no-pie: reinforces non-PIE binary.
 # --build-id=none: removes build ID hash (avoids layout differences).
 ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
-export CC=gcc14-gcc
-export CXX=gcc14-g++
 export SOURCE_DATE_EPOCH=0
 
 cd "$PHP_SOURCE_PATH"
