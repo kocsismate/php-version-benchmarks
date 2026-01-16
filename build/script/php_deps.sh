@@ -59,7 +59,7 @@ if [[ -n "$cpu_rdt_support" ]]; then
     echo "Installing intel-cmt-cat..."
     git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
     git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
-    (cd /tmp/intel-cmt-cat && make && sudo make install)
+    (cd /tmp/intel-cmt-cat && make CC=gcc14-gcc && sudo make install)
 
     echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
     sudo ldconfig
