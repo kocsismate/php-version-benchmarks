@@ -8,12 +8,22 @@ variable "secret_key" {
   sensitive = true
 }
 
+variable "workspace" {
+  type = string
+  sensitive = false
+}
+
 variable "region" {
   type = string
 }
 
 variable "availability_zone_index" {
   type = number
+}
+
+variable "state_bucket" {
+  type = string
+  sensitive = false
 }
 
 variable "run" {
@@ -34,15 +44,6 @@ variable "now" {
 
 variable "result_root_dir" {
   type = string
-}
-
-variable "tags" {
-  description = "Custom tags on AWS resources"
-  type        = map(string)
-
-  default = {
-    "Name" = "php-version-benchmark"
-  }
 }
 
 variable "scheduler_tag" {

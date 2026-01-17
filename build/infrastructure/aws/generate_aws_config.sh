@@ -58,8 +58,21 @@ disable_turbo_boost = $disable_turbo_boost
 infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
+workspace = "$INFRA_WORKSPACE"
 runner = "$INFRA_RUNNER"
 measure_instruction_count = "$INFRA_MEASURE_INSTRUCTION_COUNT"
 docker_registry = "$INFRA_DOCKER_REGISTRY"
 docker_repository = "$INFRA_DOCKER_REPOSITORY"
 EOF
+
+STATE_CONFIG_FILE="$PROJECT_ROOT/build/infrastructure/config/state.config"
+rm -f "$STATE_CONFIG_FILE"
+
+TF_VARS_FILE="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars"
+
+grep "access_key =" "$TF_VARS_FILE" >> "$STATE_CONFIG_FILE"
+grep "secret_key =" "$TF_VARS_FILE" >> "$STATE_CONFIG_FILE"
+grep "region =" "$TF_VARS_FILE" >> "$STATE_CONFIG_FILE"
+bucket="$(grep "state_bucket =" "$TF_VARS_FILE")"
+echo "${bucket/state_bucket/bucket}" >> "$STATE_CONFIG_FILE"
+echo "key = \"$INFRA_WORKSPACE.tfstate\"" >> "$STATE_CONFIG_FILE"

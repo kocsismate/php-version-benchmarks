@@ -1,8 +1,10 @@
 terraform {
   required_version = "~>1.5"
-  backend "local" {
-    path = "./terraform.tfstate"
+
+  backend "s3" {
+    use_lockfile = true
   }
+
   required_providers {
     aws = {
       version = "5.65.0"
@@ -27,6 +29,7 @@ resource "tls_private_key" "ssh_key" {
 
 resource "aws_key_pair" "key_pair" {
   public_key = tls_private_key.ssh_key.public_key_openssh
+  key_name_prefix = "php-version-benchmark-${var.workspace}"
 }
 
 resource "aws_instance" "host" {
@@ -44,9 +47,17 @@ resource "aws_instance" "host" {
     volume_type = "io2"
     volume_size = "32"
     iops = 4000
+    tags = {
+      Name: "php-version-benchmark-${var.workspace}"
+    }
   }
 
-  tags = merge(var.tags, {(var.scheduler_tag["key"]) = var.scheduler_tag["value"]})
+  tags = merge(
+    {
+      Name: "php-version-benchmark-${var.workspace}"
+    },
+    {(var.scheduler_tag["key"]) = var.scheduler_tag["value"]}
+  )
 
   connection {
     type = "ssh"
@@ -211,7 +222,7 @@ data "aws_ami" "host" {
 }
 
 resource "aws_security_group" "security_group" {
-  name = "php-version-benchmark"
+  name = "php-version-benchmark-${var.workspace}"
 
   egress {
     from_port = 0
@@ -229,6 +240,10 @@ resource "aws_security_group" "security_group" {
     cidr_blocks = [
       "0.0.0.0/0"]
   }
+
+  tags = {
+    Name: "php-version-benchmark-${var.workspace}"
+  }
 }
 
 ################################################
@@ -238,10 +253,9 @@ resource "aws_security_group" "security_group" {
 ################################################
 
 resource "aws_iam_role" "this" {
-  name               = "php-version-benchmark-termination-scheduler-lambda"
+  name               = "php-version-benchmark-${var.workspace}-termination-scheduler-lambda"
   description        = "Allows Lambda functions to stop and start ec2 and rds resources"
   assume_role_policy = data.aws_iam_policy_document.this.json
-  tags               = var.tags
 }
 
 data "aws_iam_policy_document" "this" {
@@ -256,7 +270,7 @@ data "aws_iam_policy_document" "this" {
 }
 
 resource "aws_iam_role_policy" "termination_lambda" {
-  name   = "php-version-benchmark-termination-lambda-policy"
+  name   = "php-version-benchmark-${var.workspace}-termination-lambda-policy"
   role   = aws_iam_role.this.id
   policy = data.aws_iam_policy_document.termination_lambda.json
 }
@@ -277,7 +291,7 @@ data "aws_iam_policy_document" "termination_lambda" {
 }
 
 resource "aws_iam_role_policy" "termination_lambda_cloudwatch_alarm" {
-  name   = "php-version-benchmark-termination-cloudwatch-custom-policy-scheduler"
+  name   = "php-version-benchmark-${var.workspace}-termination-cloudwatch-custom-policy-scheduler"
   role   = aws_iam_role.this.id
   policy = data.aws_iam_policy_document.termination_lambda_cloudwatch_alarm.json
 }
@@ -296,7 +310,7 @@ data "aws_iam_policy_document" "termination_lambda_cloudwatch_alarm" {
 }
 
 resource "aws_iam_role_policy" "lambda_logging" {
-  name   = "php-version-benchmark-termination-lambda-logging"
+  name   = "php-version-benchmark-${var.workspace}-termination-lambda-logging"
   role   = aws_iam_role.this.id
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -324,7 +338,7 @@ data "archive_file" "package" {
 resource "aws_lambda_function" "this" {
   filename         = data.archive_file.package.output_path
   source_code_hash = data.archive_file.package.output_base64sha256
-  function_name    = "php-version-benchmark-termination-lambda-function"
+  function_name    = "php-version-benchmark-${var.workspace}-termination-lambda-function"
   role             = aws_iam_role.this.arn
   handler          = "scheduler.main.lambda_handler"
   runtime          = "python3.10"
@@ -340,8 +354,6 @@ resource "aws_lambda_function" "this" {
       EC2_SCHEDULE                    = "true"
     }
   }
-
-  tags = var.tags
 }
 
 locals {
@@ -356,10 +368,9 @@ locals {
 }
 
 resource "aws_cloudwatch_event_rule" "this" {
-  name                = "php-version-benchmark-termination-lambda-scheduler"
+  name                = "php-version-benchmark-${var.workspace}-termination-lambda-scheduler"
   description         = "Trigger lambda scheduler"
   schedule_expression = local.cloudwatch_schedule_expression
-  tags                = var.tags
 }
 
 resource "aws_cloudwatch_event_target" "this" {
@@ -376,7 +387,6 @@ resource "aws_lambda_permission" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "/aws/lambda/php-version-benchmark-termination"
+  name              = "/aws/lambda/php-version-benchmark-${var.workspace}-php-version-benchmarktermination"
   retention_in_days = 7
-  tags              = var.tags
 }

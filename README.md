@@ -59,6 +59,7 @@ Then, you need to override some values in it:
 - `access_key`: the access key of your AWS account
 - `secret_key`: the secret access key of your AWS account
 - `region`: it is "eu-central-1" by default, but you should choose the closest one to your area
+- `state_bucket`: The S3 bucket name where the state file is stored
 
 Now, you are ready to go:
 

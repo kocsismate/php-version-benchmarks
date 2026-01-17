@@ -4,7 +4,12 @@ $PROJECT_ROOT/build/infrastructure/aws/generate_aws_config.sh
 
 cd $PROJECT_ROOT/build/infrastructure/aws/
 
-terraform init -backend=true -get=true -upgrade
+terraform init \
+    -backend=true \
+    -get=true \
+    -upgrade \
+    -input=false \
+    -backend-config="$PROJECT_ROOT/build/infrastructure/config/state.config"
 if [ $? -ne 0 ]; then
   exit 1
 fi
