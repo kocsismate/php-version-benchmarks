@@ -138,6 +138,10 @@ EOF
       "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
       "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
+      "export BENCHMARK_LOG_URL=\"${var.log_url}\"",
+      "export BENCHMARK_ARTIFACT_URL=\"${var.artifact_url}\"",
+      "export BENCHMARK_EXTRA_TITLE=\"${var.extra_title}\"",
+      "export BENCHMARK_EXTRA_TEXT=\"${var.extra_text}\"",
 
       "# Setup the benchmark code and system",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",

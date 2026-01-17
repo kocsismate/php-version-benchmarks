@@ -386,7 +386,6 @@ cat << EOF > "$1.md"
 |---------------|----------------|
 EOF
 
-    instance_type=""
     instance_type="$INFRA_INSTANCE_TYPE"
     if [[ "$INFRA_DEDICATED_INSTANCE" == "1" ]]; then
         instance_type="${instance_type} (dedicated)"
@@ -482,8 +481,20 @@ EOF
         cpu_settings="| CPU settings  |$cpu_settings|\n"
     fi
 
-    printf "| Environment   |%s|\n| Runner        |%s|\n$instance_type| Architecture  |%s\n| CPU           |%s|\n$cpu_settings| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n" \
-        "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$architecture" \
+    if [[ -n "$BENCHMARK_LOG_URL" || -n "$BENCHMARK_ARTIFACT_URL" ]]; then
+        job_details_value="$BENCHMARK_LOG_URL"
+        if [[ -n "$BENCHMARK_ARTIFACT_URL" ]]; then
+            job_details_value="$job_details_value ([Artifacts]($BENCHMARK_ARTIFACT_URL))"
+        fi
+        job_details="| Job details  |$job_details_value|\n"
+    fi
+
+    if [[ -n "$BENCHMARK_EXTRA_TITLE" && -n "$BENCHMARK_EXTRA_TEXT" ]]; then
+        extra="| $BENCHMARK_EXTRA_TITLE  |$BENCHMARK_EXTRA_TEXT|\n"
+    fi
+
+    printf "| Environment   |%s|\n${instance_type}| Architecture  |%s\n| CPU           |%s|\n${cpu_settings}| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n${job_details}${extra}" \
+        "$INFRA_ENVIRONMENT" "$architecture" \
         "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW UTC" >> "$1.md"
 }
 

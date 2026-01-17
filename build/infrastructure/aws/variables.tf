@@ -136,3 +136,23 @@ variable "github_token" {
   type = string
   sensitive = false
 }
+
+variable "log_url" {
+  type = string
+  sensitive = false
+}
+
+variable "artifact_url" {
+  type = string
+  sensitive = false
+}
+
+variable "extra_title" {
+  type = string
+  sensitive = false
+}
+
+variable "extra_text" {
+  type = string
+  sensitive = false
+}
