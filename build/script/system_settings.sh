@@ -197,9 +197,15 @@ config_perf_stat () {
 }
 
 verify () {
-    local isolcpus_present="$(grep "isolcpus" /proc/cmdline)"
-    if [[ -z "$isolcpus_present" ]]; then
-        echo "Error: CPU isolation error"
+    local isolated_cpu_core="$(cat /sys/devices/system/cpu/isolated)"
+    if [[ "$isolated_cpu_core" != "$last_cpu" ]]; then
+        echo "Error: CPU isolation error ($isolated_cpu_core)"
+        exit 1
+    fi
+
+    local no_hz_cpu_core="$(cat /sys/devices/system/cpu/nohz_full)"
+    if [[ "$no_hz_cpu_core" != "$last_cpu" ]]; then
+        echo "Error: CPU NO HZ isolation error ($no_hz_cpu_core)"
         exit 1
     fi
 
