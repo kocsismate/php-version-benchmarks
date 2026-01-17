@@ -10,4 +10,5 @@ github_token = ""
 
 log_url = ""
 artifact_url = ""
-description = ""
+extra_title = ""
+extra_text = ""
