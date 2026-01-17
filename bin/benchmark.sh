@@ -700,18 +700,18 @@ run_cgi () {
             /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "perf" ]; then
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
-            perf stat -e instructions,cycles,branches,branch-misses,page-faults \
+            perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" --repeat=5 \
             perf stat -e LLC-loads,LLC-load-misses \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" --repeat=5 \
             perf stat -e LLC-stores,LLC-store-misses \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" --repeat=5 \
             perf stat -e iTLB-load-misses,dTLB-load-misses \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     else
@@ -773,19 +773,19 @@ run_cli () {
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "perf" ]; then
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
-            perf stat -e instructions,cycles,branches,branch-misses,page-faults \
+            perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
-            perf stat -e LLC-loads,LLC-load-misses \
+            perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
-            perf stat -e LLC-stores,LLC-store-misses \
+            perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
         sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
-            perf stat -e iTLB-load-misses,dTLB-load-misses \
+            perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     else
         echo "Invalid php-cli run mode"
