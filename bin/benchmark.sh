@@ -545,7 +545,7 @@ print_result_value () {
     local memory_log_file="$3"
     local perf_log_file="$4"
     local result_file="$5"
-    local md_format="$6"
+    local final_result_file="$6"
 
     local var="PHP_COMMITS_$PHP_ID"
     local commit_hash="${!var}"
@@ -607,42 +607,38 @@ print_result_value () {
     local wilcoxon_p_value="$(wilcoxon_p_value "$wilcoxon_z_stat")"
     local rrb="$(effect_size "$n" "$wilcoxon_u_value")"
 
-    if [ "$md_format" -eq "0" ]; then
-        echo "-----------------------------------------------------------------"
-        echo "$PHP_ID"
-        echo "-----------------------------------------------------------------"
-        echo "Descriptive statistics"
-        echo "- N                 : $n"
-        echo "- Min               : $min"
-        echo "- Max               : $max"
-        printf -- "- Mean              : %.5f (%.5f %%)\n" "$mean" "$mean_diff"
-        printf -- "- Median            : %.5f (%.5f %%)\n" "$median" "$median_diff"
-        printf -- "- Variance          : %.5f\n" "$var"
-        printf -- "- Std dev           : %.5f (%.5f %%)\n" "$std_dev" "$relative_std_dev"
-        printf -- "- Skewness          : %.5f\n" "$skew"
-        printf -- "- Distribution      : ~ %s\n" "$apparent_distribution"
-        echo "Welch's T test"
-        printf -- "- Degrees of freedom: %.5f\n" "$df"
-        printf -- "- Test statistic T  : %.5f\n" "$welch_t_stat"
-        printf -- "- Two tailed P-value: %.5f\n" "$welch_p_value"
-        echo "Wilcoxon U test"
-        printf -- "- U                 : %.5f\n" "$wilcoxon_u_value"
-        printf -- "- Test statistic Z  : %.5f\n" "$wilcoxon_z_stat"
-        printf -- "- Two tailed P-value: %.5f\n" "$wilcoxon_p_value"
-        printf -- "- Effect size       : %.5f (rank-biserial correlation)\n" "$rrb"
-    fi
+    echo "-----------------------------------------------------------------"
+    echo "$PHP_ID"
+    echo "-----------------------------------------------------------------"
+    echo "Descriptive statistics"
+    echo "- N                 : $n"
+    echo "- Min               : $min"
+    echo "- Max               : $max"
+    printf -- "- Mean              : %.5f (%.5f %%)\n" "$mean" "$mean_diff"
+    printf -- "- Median            : %.5f (%.5f %%)\n" "$median" "$median_diff"
+    printf -- "- Variance          : %.5f\n" "$var"
+    printf -- "- Std dev           : %.5f (%.5f %%)\n" "$std_dev" "$relative_std_dev"
+    printf -- "- Skewness          : %.5f\n" "$skew"
+    printf -- "- Distribution      : ~ %s\n" "$apparent_distribution"
+    echo "Welch's T test"
+    printf -- "- Degrees of freedom: %.5f\n" "$df"
+    printf -- "- Test statistic T  : %.5f\n" "$welch_t_stat"
+    printf -- "- Two tailed P-value: %.5f\n" "$welch_p_value"
+    echo "Wilcoxon U test"
+    printf -- "- U                 : %.5f\n" "$wilcoxon_u_value"
+    printf -- "- Test statistic Z  : %.5f\n" "$wilcoxon_z_stat"
+    printf -- "- Two tailed P-value: %.5f\n" "$wilcoxon_p_value"
+    printf -- "- Effect size       : %.5f (rank-biserial correlation)\n" "$rrb"
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
     printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" >> "$result_file.tsv"
+        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
 
-    if [ "$md_format" -eq "1" ]; then
-        printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
-            "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
-    fi
+    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
+        "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skew" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
 }
 
 run_cgi () {
@@ -694,7 +690,9 @@ run_cgi () {
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
 
     if [ "$mode" = "quiet" ]; then
-        sleep 0.25
+        if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "0" || "$INFRA_DISABLE_DEEPER_C_STATES" == "0" ]]; then
+            sleep 0.25
+        fi
         sudo -E taskset -c "$last_cpu" \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
@@ -781,7 +779,9 @@ run_cli () {
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
 
     if [ "$mode" = "quiet" ]; then
-        sleep 0.9
+        if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "0" || "$INFRA_DISABLE_DEEPER_C_STATES" == "0" ]]; then
+            sleep 0.5
+        fi
 
         sudo -E taskset -c "$last_cpu" \
             nice -n -20 ionice -c 1 -n 0 \
@@ -942,7 +942,7 @@ run_real_benchmark () {
         fi
     done
 
-    sleep 3
+    sleep 1
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -996,7 +996,7 @@ run_micro_benchmark () {
         fi
     done
 
-    sleep 3
+    sleep 1
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -1089,8 +1089,7 @@ run_benchmark () {
         # Format perf log
         format_perf_log_file "$perf_log_file"
 
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "1"
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$final_result_file" "0"
+        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "$final_result_file"
     done
 
     echo "" >> "$final_result_file.md"
@@ -1128,7 +1127,7 @@ function run_benchmarks () {
             db_container_id="$(docker ps -aqf "name=wordpress_db")"
             docker start "$db_container_id"
 
-            sleep 9
+            $PROJECT_ROOT/build/script/mysql_readiness.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
         fi
 
         run_benchmark

@@ -69,18 +69,24 @@ install_wordpress () {
 
         docker network create wordpress
 
+        local mysql_container="wordpress_db"
+        local mysql_db="wordpress"
+        local mysql_user="wordpress"
+        local mysql_password="wordpress"
+        local mysql_timeout=60
+
         sudo docker run \
-            --name wordpress_db \
-            --user $(id -u):$(id -g) \
-            --net wordpress \
+            --name "$mysql_container" \
+            --user "$(id -u):$(id -g)" \
+            --net "wordpress" \
             -p "3306:3306" \
-            -e MYSQL_ROOT_PASSWORD=root \
-            -e MYSQL_DATABASE=wordpress \
-            -e MYSQL_USER=wordpress \
-            -e MYSQL_PASSWORD=wordpress \
+            -e "MYSQL_ROOT_PASSWORD=root" \
+            -e "MYSQL_DATABASE=$mysql_db" \
+            -e "MYSQL_USER=$mysql_user" \
+            -e "MYSQL_PASSWORD=$mysql_password" \
             -d mysql:8.0
 
-        sleep 10
+        $PROJECT_ROOT/build/script/mysql_readiness.sh "$mysql_container" "$mysql_db" "$mysql_user" "$mysql_password" "$mysql_timeout"
 
         sudo docker run --rm \
             --name "wordpress_cli" \

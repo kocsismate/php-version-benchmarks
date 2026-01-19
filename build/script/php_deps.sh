@@ -53,8 +53,10 @@ G_PLUS_PLUS_PATH="$(which gcc14-c++)"
 echo "Creating symlink for $G_PLUS_PLUS_PATH"
 sudo ln -s "$G_PLUS_PLUS_PATH" /usr/local/bin/g++
 
-cpu_rdt_support="$(cat "/proc/cpuinfo" | grep -E "rdt|cat_l3|cat_l2|mba|cmt|mbm")"
-if [[ -n "$cpu_rdt_support" ]]; then
+cpu_rdt_support="$(grep -E "rdt_a|cat_l3|cat_l2|mba|cmt|mbm" "/proc/cpuinfo" || true)"
+uname="$(uname -r)"
+kernel_support="$(grep "CONFIG_X86_CPU_RESCTRL=y" "/boot/config-$uname" || true)"
+if [[ -n "$cpu_rdt_support" && -n "$kernel_support" ]]; then
     echo "Installing intel-cmt-cat..."
     git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
     git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04

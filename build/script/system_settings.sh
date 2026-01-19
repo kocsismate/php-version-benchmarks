@@ -29,13 +29,13 @@ lock_cpu_frequency () {
 }
 
 isolate_cpu_l3_cache () {
-    local cpu_rdt_support="$(cat "/proc/cpuinfo" | grep -E "rdt|cat_l3|cat_l2|mba|cmt|mbm")"
+    local cpu_rdt_support="$(grep -E "rdt_a|cat_l3|cat_l2|mba|cmt|mbm" "/proc/cpuinfo" || true)"
     if [[ -z "$cpu_rdt_support" ]]; then
         echo "Isolating L3 cache is not supported, skipping"
         return
     fi
 
-    local resctrl_supported="$(grep resctrl /proc/filesystems)"
+    local resctrl_supported="$(grep resctrl /proc/filesystems || true)"
     if [[ -z "$resctrl_supported" ]]; then
         echo "Isolating L3 cache is not supported, skipping"
         return
@@ -229,7 +229,7 @@ verify () {
             exit 1
         fi
 
-        local policy_line="$(echo "$info" | grep "current policy:")"
+        local policy_line="$(echo "$info" | grep "current policy:" || true)"
         if [ -z "$policy_line" ]; then
             echo "Error: No CPU governor policy is available"
             exit 1
