@@ -46,7 +46,7 @@ install_symfony () {
             export APP_SECRET=random
             [[ -n '$GITHUB_TOKEN' ]] && composer config --global github-oauth.github.com '$GITHUB_TOKEN'; \
             composer create-project symfony/symfony-demo symfony $symfony_version --no-interaction --working-dir=/code/app && \
-            composer update symfony/config:7.3.6 symfony/dependency-injection:7.3.9 doctrine/persistence:3.4.3 doctrine/orm:3.6.0 doctrine/doctrine-bundle:2.18.2 --working-dir=/code/app/symfony && \
+            composer update symfony/config:7.3.6 symfony/dependency-injection:7.3.9 symfony/event-dispatcher:7.3.3 doctrine/persistence:3.4.3 doctrine/orm:3.6.0 doctrine/doctrine-bundle:2.18.2 --working-dir=/code/app/symfony && \
             composer config platform-check false --working-dir=/code/app/symfony && \
             composer dump-autoload --classmap-authoritative --working-dir=/code/app/symfony"
     fi

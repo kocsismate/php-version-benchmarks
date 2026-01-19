@@ -673,7 +673,7 @@ run_cgi () {
         [SESSION_DRIVER]=cookie \
         [SESSION_DOMAIN]="" \
         [CACHE_STORE]=null \
-        [LOG_LEVEL]=DEBUG \
+        [LOG_LEVEL]=INFO \
         [LOG_CHANNEL]=stderr \
         [DB_CONNECTION]=sqlite \
         [LOG_DEPRECATIONS_CHANNEL]=stderr \
