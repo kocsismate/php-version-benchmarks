@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-sudo dnf update -y
-
 sudo dnf install --allowerasing -y \
     util-linux \
     kernel-tools \
@@ -38,7 +36,8 @@ sudo dnf install --allowerasing -y \
     time \
     perf \
     wget \
-    bc
+    bc \
+    nano
 
 sudo usermod -a -G docker "$USER"
 

@@ -418,7 +418,7 @@ EOF
         cpu_count="$(nproc)"
 
         ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
-        ram_gb=$(expr $ram_kb / 1024 / 1024)
+        ram_gb=$(expr "$ram_kb" / 1024 / 1024)
 
         os="$(grep '^PRETTY_NAME=' /etc/os-release)"
         os="${os/PRETTY_NAME=/}"
@@ -549,7 +549,7 @@ print_result_value () {
 
     local var="PHP_COMMITS_$PHP_ID"
     local commit_hash="${!var}"
-    commit_hash="$(echo "$commit_hash" | cut -c1-10)"
+    commit_hash="$(echo "$commit_hash" | cut -c 1-10)"
     local url="${PHP_REPO//.git/}/commit/$commit_hash"
 
     local results="$(cat "$log_file")"
@@ -659,26 +659,35 @@ run_cgi () {
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     fi
 
-    export CONTENT_TYPE="text/html; charset=utf-8"
-    export SCRIPT_FILENAME="$PROJECT_ROOT/$4"
-    export REQUEST_URI="$uri"
-    export HTTP_HOST="localhost"
-    export SERVER_NAME="localhost"
-    export REQUEST_METHOD="GET"
-    export REDIRECT_STATUS="200"
-    export APP_ENV="$env"
-    export APP_DEBUG=false
-    export APP_SECRET=random
-    export SESSION_DRIVER=cookie
-    export SESSION_DOMAIN=""
-    export CACHE_STORE=null
-    export LOG_LEVEL=warning
-    export DB_CONNECTION=sqlite
-    export LOG_CHANNEL=stderr
-    export LOG_DEPRECATIONS_CHANNEL=stderr
-    export LOG_DEPRECATIONS_TRACE=true
-    export BROADCAST_DRIVER=null
-    export USE_ZEND_ALLOC_HUGE_PAGES=1
+    declare -A php_env_vars=( \
+        [CONTENT_TYPE]="'text/html; charset=utf-8'" \
+        [REQUEST_URI]="$uri" \
+        [HTTP_HOST]="localhost" \
+        [SERVER_NAME]="localhost" \
+        [SCRIPT_FILENAME]="$PROJECT_ROOT/$4" \
+        [REQUEST_METHOD]="GET" \
+        [REDIRECT_STATUS]="200" \
+        [APP_ENV]="$env" \
+        [APP_DEBUG]=false \
+        [APP_SECRET]=random \
+        [SESSION_DRIVER]=cookie \
+        [SESSION_DOMAIN]="" \
+        [CACHE_STORE]=null \
+        [LOG_LEVEL]=DEBUG \
+        [LOG_CHANNEL]=stderr \
+        [DB_CONNECTION]=sqlite \
+        [LOG_DEPRECATIONS_CHANNEL]=stderr \
+        [LOG_DEPRECATIONS_TRACE]=true \
+        [BROADCAST_DRIVER]=null \
+        [USE_ZEND_ALLOC_HUGE_PAGES]=1 \
+        [MALLOC_ARENA_MAX]=1 \
+        [MALLOC_MMAP_THRESHOLD_]=131072 \
+    )
+
+    local php_env_var_list=()
+    for key in "${!php_env_vars[@]}"; do
+      php_env_var_list+=("$key=${php_env_vars[$key]}")
+    done
 
     # TODO for jemalloc
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
@@ -686,32 +695,56 @@ run_cgi () {
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.25
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
     elif [ "$mode" = "instruction_count" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "memory" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "perf" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     else
@@ -732,26 +765,16 @@ run_cli () {
         opcache="-d zend_extension=$php_source_path/modules/opcache.so"
     fi
 
-    unset CONTENT_TYPE
-    unset SCRIPT_FILENAME
-    unset REQUEST_URI
-    unset HTTP_HOST
-    unset SERVER_NAME
-    unset REQUEST_METHOD
-    unset REDIRECT_STATUS
-    unset APP_ENV
-    unset APP_DEBUG
-    unset APP_SECRET
-    unset SESSION_DRIVER
-    unset SESSION_DOMAIN
-    unset CACHE_STORE
-    unset LOG_LEVEL
-    unset DB_CONNECTION
-    unset LOG_CHANNEL
-    unset LOG_DEPRECATIONS_CHANNEL
-    unset LOG_DEPRECATIONS_TRACE
-    unset BROADCAST_DRIVER
-    export USE_ZEND_ALLOC_HUGE_PAGES=1
+    declare -A php_env_vars=( \
+        [USE_ZEND_ALLOC_HUGE_PAGES]=1 \
+        [MALLOC_ARENA_MAX]=1 \
+        [MALLOC_MMAP_THRESHOLD_]=131072 \
+    )
+
+    local php_env_var_list=()
+    for key in "${!php_env_vars[@]}"; do
+      php_env_var_list+=("$key=${php_env_vars[$key]}")
+    done
 
     # TODO for jemalloc
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
@@ -759,32 +782,58 @@ run_cli () {
 
     if [ "$mode" = "quiet" ]; then
         sleep 0.9
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
     elif [ "$mode" = "instruction_count" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             valgrind --tool=callgrind --dump-instr=no -- \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "memory" ]; then
-        /usr/bin/time -v sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
+            /usr/bin/time -v \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "perf" ]; then
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" nice -n -20 ionice -c 1 -n 0 sudo -E -u "$INFRA_IMAGE_USER" \
+        sudo -E taskset -c "$last_cpu" \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
             perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     else
@@ -803,15 +852,13 @@ assert_test_output() {
 format_instruction_count_log_file() {
     local result="$(grep "== Collected : " "$1")"
     echo "$result" > "$1"
-    sed -i".original" -E "s/==[0-9]+== Collected : //g" "$1"
-    rm "$1.original"
+    sed -i -E "s/==[0-9]+== Collected : //g" "$1"
 }
 
 format_memory_log_file() {
     local result="$(grep "Maximum resident set size" "$1")"
     echo "$result" > "$1"
-    sed -i".original" "s/	Maximum resident set size (kbytes): //g" "$1"
-    rm "$1.original"
+    sed -i "s/	Maximum resident set size (kbytes): //g" "$1"
 }
 
 format_perf_log_file() {
@@ -837,9 +884,9 @@ load_php_config () {
 
 reset_symfony () {
     # Update config based on PHP version
-    sed -i".original" "/        enable_native_lazy_objects: true/d" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    sed -i "/        enable_native_lazy_objects: true/d" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
     if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
-        sed -i".original" "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+        sed -i "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
     fi
 
     # Regenerate cache
@@ -848,10 +895,7 @@ reset_symfony () {
     if [[ -d "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" ]]; then
         cp -r "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" "$PROJECT_ROOT/app/symfony/var/cache"
     else
-        export APP_ENV=prod
-        export APP_DEBUG=false
-        export APP_SECRET=random
-        $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
+        APP_ENV=prod APP_DEBUG=true APP_SECRET=random $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
 
         mkdir -p "$PROJECT_ROOT/tmp/app/symfony"
         cp -r "$PROJECT_ROOT/app/symfony/var/cache" "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID"
@@ -882,7 +926,7 @@ run_real_benchmark () {
 
         # Verifying output
         run_cgi "verbose" "0" "1" "$1" "$2" "$3" 2>&1 | tee -a "$output_file"
-        if [ ! -z "$test_expectation_file" ]; then
+        if [ -n "$test_expectation_file" ]; then
             assert_test_output "$test_expectation_file" "$output_file"
         fi
 
@@ -920,10 +964,9 @@ run_real_benchmark () {
         load_php_config
 
         # Format benchmark log
-        sed -i".original" "/^[[:space:]]*$/d" "$log_file"
-        sed -i".original" "s/Elapsed time\: //g" "$log_file"
-        sed -i".original" "s/ sec//g" "$log_file"
-        rm "$log_file.original"
+        sed -i "/^[[:space:]]*$/d" "$log_file"
+        sed -i "s/Elapsed time\: //g" "$log_file"
+        sed -i "s/ sec//g" "$log_file"
     done
 }
 
@@ -973,10 +1016,9 @@ run_micro_benchmark () {
         load_php_config
 
         # Format benchmark log
-        sed -i".original" "/^[[:space:]]*$/d" "$log_file"
-        sed -i".original" "s/Elapsed time\: //g" "$log_file"
-        sed -i".original" "s/ sec//g" "$log_file"
-        rm "$log_file.original"
+        sed -i "/^[[:space:]]*$/d" "$log_file"
+        sed -i "s/Elapsed time\: //g" "$log_file"
+        sed -i "s/ sec//g" "$log_file"
     done
 }
 

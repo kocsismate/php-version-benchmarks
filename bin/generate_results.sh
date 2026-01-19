@@ -22,7 +22,7 @@ do
     cp "$1/$dirname/result.tsv" "${2}_$dirname/result.tsv"
 done
 
-year="$(echo "$NOW" | cut -c1-4)"
+year="$(echo "$NOW" | cut -c 1-4)"
 database_dir="$PROJECT_ROOT/docs/results/$year"
 database_file="$database_dir/database.tsv"
 

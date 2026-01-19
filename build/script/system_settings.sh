@@ -128,6 +128,11 @@ assign_cpu_core_to_cgroup () {
     echo "$numa_node" | sudo tee $cgroup_path/cpuset.mems > /dev/null
 }
 
+disable_swapping () {
+    echo "Disabling swapping"
+    sudo swapoff -a
+}
+
 disable_aslr () {
     # Based on https://github.com/php/php-src/pull/13769
     echo "Disabling ASLR"
@@ -144,6 +149,7 @@ stop_unnecessary_services () {
     sudo cp -f $PROJECT_ROOT/build/journald.conf /etc/systemd/journald.conf # optimize journald config
     sudo service systemd-journald restart
     sudo sysctl -w kernel.nmi_watchdog=0
+    echo "0" | sudo tee /sys/kernel/mm/ksm/run > /dev/null || true
 }
 
 disable_selinux_checks () {
@@ -151,13 +157,13 @@ disable_selinux_checks () {
 }
 
 unlimit_stack () {
-    echo "$INFRA_IMAGE_USER soft stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
-    echo "$INFRA_IMAGE_USER hard stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$USER soft stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$USER hard stack unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
 }
 
 unlimit_memory () {
-    echo "$INFRA_IMAGE_USER soft memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
-    echo "$INFRA_IMAGE_USER hard memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$USER soft memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
+    echo "$USER hard memlock unlimited" | sudo tee -a /etc/security/limits.conf > /dev/null
 }
 
 reload_kernel () {
@@ -184,7 +190,7 @@ set_huge_pages () {
     echo "1024" | sudo tee -a /proc/sys/vm/nr_hugepages > /dev/null
 
     local user_group
-    user_group="$(id -g "$INFRA_IMAGE_USER")"
+    user_group="$(id -g "$USER")"
     sudo sysctl -w "vm.hugetlb_shm_group=$user_group"
 
     echo "never" | sudo tee /sys/kernel/mm/transparent_hugepage/enabled > /dev/null
@@ -336,6 +342,7 @@ elif [[ "$1" == "before_benchmark" ]]; then
     disable_turbo_boost
     dedicate_irq
     assign_cpu_core_to_cgroup
+    disable_swapping
     disable_aslr
     stop_unnecessary_services
     disable_selinux_checks
