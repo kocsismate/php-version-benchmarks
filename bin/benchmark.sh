@@ -563,7 +563,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tZ-stat\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -598,8 +598,8 @@ print_result_md_header () {
 cat << EOF >> "$result_file.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | Skewness | P-value $instruction_count_header_name|     Memory    |
-|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|----------|---------$instruction_count_header_separator|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | Skewness |  Z-stat  | P-value $instruction_count_header_name|     Memory    |
+|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|----------|----------|---------$instruction_count_header_separator|---------------|
 EOF
 }
 
@@ -701,13 +701,13 @@ print_result_value () {
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
+        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
 
-    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
-        "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
+    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
+        "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
 }
 
 run_cgi () {
