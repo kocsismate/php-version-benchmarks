@@ -8,6 +8,27 @@ abs () {
 }
 
 diff () {
+    local x="$1"
+    local y="$2"
+
+    printf "%.50f" "$(echo "scale=50; x=$x; y=$y; x - y" | bc -l)"
+}
+
+int_diff () {
+    local x="$1"
+    local y="$2"
+
+    echo "x=$x; y=$y; x - y" | bc -l
+}
+
+abs_diff () {
+    local x="$1"
+    local y="$2"
+
+    printf "%.50f" "$(echo "scale=50; x=$x; y=$y; if (x >= y) x - y else y - x" | bc -l)"
+}
+
+percent_diff () {
   awk -v t1="$1" -v t2="$2" 'BEGIN{print (t1/t2-1) * 100}'
 }
 
@@ -56,7 +77,7 @@ median_abs_dev() {
 
     local abs_devs=()
     for x in "${nums[@]}"; do
-        abs_devs+=("$(printf "%.50f" "$(echo "scale=50; x=$x; median=$median; if (x >= median) x = x - median else x = median - x; x" | bc -l)")")
+        abs_devs+=("$(abs_diff "$x" "$median")")
     done
 
     median "${abs_devs[*]}" "$n"
@@ -129,11 +150,12 @@ outliers() {
 
     local outliers=()
     for k in "${!nums[@]}"; do
-        local abs_diff="$(echo "scale=50; v=${nums[${k}]}; median=$median; if (v >= median) v - median else median - v" | bc)"
+        local iteration="$(( k + 1 ))"
+        local abs_diff="$(abs_diff "${nums[${k}]}" "$median")"
         local score="$(echo "scale=50; $abs_diff / $mad" | bc)"
 
         if [[ "$(echo "$score > 3.5" | bc)" -eq 1 ]]; then
-            outliers["$k"]=${nums[${k}]}
+            outliers["$iteration"]=${nums[${k}]}
         fi
     done
 
@@ -628,12 +650,12 @@ print_result_value () {
     if [ -z "$first_mean" ]; then
         first_mean="$mean"
     fi
-    local mean_diff="$(diff "$mean" "$first_mean")"
+    local mean_diff="$(percent_diff "$mean" "$first_mean")"
     local median="$(median "$results" "$n")"
     if [ -z "$first_median" ]; then
         first_median="$median"
     fi
-    local median_diff="$(diff "$median" "$first_median")"
+    local median_diff="$(percent_diff "$median" "$first_median")"
     local variance="$(variance "$results" "$mean" "$n")"
     if [ -z "$first_var" ]; then
         first_var="$variance"
@@ -923,11 +945,127 @@ load_php_config () {
     log_dir="$result_dir"
     log_file="$log_dir/${PHP_ID}.log"
     output_file="$log_dir/${PHP_ID}_output.txt"
-    instruction_count_log_file="$log_dir/${PHP_ID}.instruction_count.log"
-    memory_log_file="$log_dir/${PHP_ID}.memory.log"
-    perf_log_file="$log_dir/${PHP_ID}.perf.log"
-    stat_file="$log_dir/${PHP_ID}.stat"
+    instruction_count_log_file="$log_dir/${PHP_ID}_instruction_count.log"
+    memory_log_file="$log_dir/${PHP_ID}_memory.log"
+    perf_log_file="$log_dir/${PHP_ID}_perf.log"
+    stat_file="$log_dir/${PHP_ID}_stat.log"
+    environment_debug_log_file="$log_dir/${PHP_ID}_env_debug.log"
     mkdir -p "$log_dir"
+}
+
+debug_environment() {
+    local iteration="$1"
+    local cpu="$2"
+
+    local v_context_switches n_context_switches minor_page_fault major_page_fault cpu_frequency irq soft_irq run_queue_length
+    local v_context_switches_diff n_context_switches_diff minor_page_fault_diff major_page_fault_diff cpu_frequency_diff irq_diff soft_irq_diff run_queue_length_diff
+
+    # Context switches
+    v_context_switches="$(sed -n 's/^voluntary_ctxt_switches:[[:space:]]*//p' /proc/self/status)"
+    if [[ "$v_context_switches_prev" == "-1" ]]; then
+        v_context_switches_prev="$v_context_switches"
+    fi
+    v_context_switches_diff="$(int_diff "$v_context_switches" "$v_context_switches_prev")"
+    v_context_switches_prev="$v_context_switches"
+
+    n_context_switches="$(sed -n 's/^nonvoluntary_ctxt_switches:[[:space:]]*//p' /proc/self/status)"
+    if [[ "$n_context_switches_prev" == "-1" ]]; then
+        n_context_switches_prev="${n_context_switches}"
+    fi
+    n_context_switches_diff="$(int_diff "$n_context_switches" "$n_context_switches_prev")"
+    n_context_switches_prev="$n_context_switches"
+
+    # Page faults (minflt = column 10, majflt = column 12)
+    read -r _ _ _ _ _ _ _ _ _ _ minor_page_fault _ major_page_fault _ < /proc/self/stat
+    if [[ "$minor_page_fault_prev" == "-1" ]]; then
+        minor_page_fault_prev="$minor_page_fault"
+    fi
+    minor_page_fault_diff="$(int_diff "$minor_page_fault" "$minor_page_fault_prev")"
+    minor_page_fault_prev="$minor_page_fault"
+
+    if [[ "$major_page_fault_prev" == "-1" ]]; then
+        major_page_fault_prev="${major_page_fault}"
+    fi
+    major_page_fault_diff="$(int_diff "$major_page_fault" "$major_page_fault_prev")"
+    major_page_fault_prev="$major_page_fault"
+
+    # CPU frequency
+    cpu_frequency="$(cat /sys/devices/system/cpu/cpu${cpu}/cpufreq/scaling_cur_freq 2>/dev/null || echo 0)"
+    if [[ "$cpu_frequency_prev" == "-1" ]]; then
+        cpu_frequency_prev="$cpu_frequency"
+    fi
+    cpu_frequency_diff="$(int_diff "$cpu_frequency" "$cpu_frequency_prev")"
+    cpu_frequency_prev="$cpu_frequency"
+
+    # IRQ for the given CPU
+    irq=0
+    while read -r line; do
+        set -- "$line"
+        # first column is the IRQ name, then CPU0 CPU1 CPU2...
+        # CPU colum index: cpu+2 (mert $1 = IRQ név)
+        col="$((cpu + 2))"
+        val="$(eval "echo \${$col}")"
+        irq="$((irq + val))"
+    done < <(tail -n +2 /proc/interrupts)
+
+    if [[ "$irq_prev" == "-1" ]]; then
+        irq_prev="$irq"
+    fi
+    irq_diff="$(int_diff "$irq" "${irq_prev}")"
+    irq_prev="$irq"
+
+    # soft_irq
+    soft_irq=0
+    while read -r line; do
+        set -- $line
+        local col=$((cpu + 2))
+        local val=$(eval "echo \${$col}")
+        soft_irq=$((soft_irq + val))
+    done < <(tail -n +2 /proc/softirqs)
+
+    if [[ "$soft_irq_prev" == "-1" ]]; then
+        soft_irq_prev="$soft_irq"
+    fi
+    soft_irq_diff="$(int_diff "$soft_irq" "$soft_irq_prev")"
+    soft_irq_prev="$soft_irq"
+
+    # run_queue length
+    run_queue_length="$(cut -d ' ' -f1 /proc/loadavg)"
+    if [[ "$run_queue_length_prev" == "-1" ]]; then
+        run_queue_length_prev="${run_queue_length}"
+    fi
+    run_queue_length_diff="$(diff "$run_queue_length" "$run_queue_length_prev")"
+    run_queue_length_prev="$run_queue_length"
+
+    echo "-----------------------------------------------------------------"
+    printf "Iteration: %-4d\tResult: #RESULT$iteration#\tDiff: #DIFF$iteration#\n" "$iteration"
+    echo "-----------------------------------------------------------------"
+    printf "Voluntary context switch    : %-8d (%+d)\n" "$v_context_switches" "$v_context_switches_diff"
+    printf "Non-voluntary context switch: %-8d (%+d)\n" "$n_context_switches" "$n_context_switches_diff"
+    printf "Minor page fault            : %-8d (%+d)\n" "$minor_page_fault" "$minor_page_fault_diff"
+    printf "Major page fault            : %-8d (%+d)\n" "$major_page_fault" "$major_page_fault_diff"
+    printf "CPU frequency               : %-8d (%+d)\n" "$cpu_frequency" "$cpu_frequency_diff"
+    printf "IRQ                         : %-8d (%+d)\n" "$irq" "$irq_diff"
+    printf "Soft IRQ                    : %-8d (%+d)\n" "$soft_irq" "$soft_irq_diff"
+    printf "Run queue length            : %.4f (%+.4f)\n" "$run_queue_length" "$run_queue_length_diff"
+}
+
+postprocess_environment_debug_Log_file () {
+    local environment_debug_log_file="$1"
+    local log_file="$2"
+
+    local results="$(cat "$log_file")"
+    local results_arr=($results)
+    local n="${#results_arr[@]}"
+    local median="$(median "$results" "$n")"
+
+    for k in "${!results_arr[@]}"; do
+        local iteration="$(( k + 1 ))"
+        local diff="$(printf "%+.6f" "$(diff "${results_arr[${k}]}" "$median")")"
+
+        sed -i "s/#RESULT$iteration#/${results_arr[${k}]}/g" "$environment_debug_log_file"
+        sed -i "s/#DIFF$iteration#/$diff/g" "$environment_debug_log_file"
+   done
 }
 
 reset_symfony () {
@@ -990,6 +1128,17 @@ run_real_benchmark () {
         fi
     done
 
+    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+        v_context_switches_prev="-1"
+        n_context_switches_prev="-1"
+        minor_page_fault_prev="-1"
+        major_page_fault_prev="-1"
+        cpu_frequency_prev="-1"
+        irq_prev="-1"
+        soft_irq_prev="-1"
+        run_queue_length_prev="-1"
+    fi
+
     sleep 1
 
     # Benchmark
@@ -1005,6 +1154,11 @@ run_real_benchmark () {
             echo "---------------------------------------------------------------------------------------"
 
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+
+            # Debugging environment
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+            fi
         done
     done
 
@@ -1015,6 +1169,10 @@ run_real_benchmark () {
         sed -i "/^[[:space:]]*$/d" "$log_file"
         sed -i "s/Elapsed time\: //g" "$log_file"
         sed -i "s/ sec//g" "$log_file"
+
+        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
+        fi
     done
 }
 
@@ -1044,6 +1202,17 @@ run_micro_benchmark () {
         fi
     done
 
+    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+        v_context_switches_prev="-1"
+        n_context_switches_prev="-1"
+        minor_page_fault_prev="-1"
+        major_page_fault_prev="-1"
+        cpu_frequency_prev="-1"
+        irq_prev="-1"
+        soft_irq_prev="-1"
+        run_queue_length_prev="-1"
+    fi
+
     sleep 1
 
     # Benchmark
@@ -1057,6 +1226,11 @@ run_micro_benchmark () {
             echo "---------------------------------------------------------------------------------------"
 
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
+
+            # Debugging environment
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+            fi
         done
     done
 
@@ -1067,6 +1241,10 @@ run_micro_benchmark () {
         sed -i "/^[[:space:]]*$/d" "$log_file"
         sed -i "s/Elapsed time\: //g" "$log_file"
         sed -i "s/ sec//g" "$log_file"
+
+        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
+        fi
     done
 }
 

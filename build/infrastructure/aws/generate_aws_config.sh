@@ -31,6 +31,16 @@ if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
     disable_turbo_boost="true"
 fi
 
+measure_instruction_count="false"
+if [[ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]]; then
+    measure_instruction_count="true"
+fi
+
+debug_environment="false"
+if [[ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]]; then
+    debug_environment="true"
+fi
+
 php_commits=""
 for php_config in $PROJECT_ROOT/config/php/*.ini; do
     source $php_config
@@ -60,7 +70,8 @@ infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
 workspace = "$INFRA_WORKSPACE"
 runner = "$INFRA_RUNNER"
-measure_instruction_count = "$INFRA_MEASURE_INSTRUCTION_COUNT"
+measure_instruction_count = "$measure_instruction_count"
+debug_environment = "$debug_environment"
 docker_registry = "$INFRA_DOCKER_REGISTRY"
 docker_repository = "$INFRA_DOCKER_REPOSITORY"
 EOF

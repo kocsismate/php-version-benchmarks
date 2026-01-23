@@ -121,7 +121,11 @@ variable "runner" {
 }
 
 variable "measure_instruction_count" {
-  type = string
+  type = bool
+}
+
+variable "debug_environment" {
+  type = bool
 }
 
 variable "docker_registry" {
