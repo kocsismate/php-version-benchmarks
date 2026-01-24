@@ -354,12 +354,18 @@ BCL
     printf "%.50f" "$phi"
 }
 
-# rank-biserial effect size
-effect_size () {
+effect_size_standardized () {
+    local n="$1"
+    local z="$2"
+
+    printf "%.50f" "$(echo "scale=50; n=$n; z=$z; sqrt((z * z) / (n + n))" | bc -l)"
+}
+
+effect_size_common () {
     local n="$1"
     local u="$2"
 
-    printf "%.50f" "$(echo "scale=50; (2*$u/($n*$n)) - 1" | bc -l)"
+    printf "%.50f" "$(echo "scale=50; n=$n; u=$u; u/(n*n)" | bc -l)"
 }
 
 # Wilcoxon rank-sum using normal approximation and continuity correction
@@ -672,7 +678,8 @@ print_result_value () {
     local wilcoxon_u_value="$(wilcoxon_u_test "$first_log_file" "$log_file" "$n")"
     local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u_value")"
     local wilcoxon_p_value="$(wilcoxon_p_value "$wilcoxon_z_stat")"
-    local rrb="$(effect_size "$n" "$wilcoxon_u_value")"
+    local effect_size_standardized="$(effect_size_standardized "$n" "$wilcoxon_z_stat")"
+    local effect_size_common="$(effect_size_common "$n" "$wilcoxon_u_value")"
 
     echo "-----------------------------------------------------------------"
     echo "$PHP_ID"
@@ -697,7 +704,8 @@ print_result_value () {
     printf -- "- U                 : %.6f\n" "$wilcoxon_u_value" | tee -a "$stat_file"
     printf -- "- Test statistic Z  : %.6f\n" "$wilcoxon_z_stat" | tee -a "$stat_file"
     printf -- "- Two tailed P-value: %.6f\n" "$wilcoxon_p_value" | tee -a "$stat_file"
-    printf -- "- Effect size       : %.6f (rank-biserial correlation)\n" "$rrb" | tee -a "$stat_file"
+    printf -- "- Std effect size   : %.6f\n" "$effect_size_standardized" | tee -a "$stat_file"
+    printf -- "- Common effect size: %.6f\n" "$effect_size_common" | tee -a "$stat_file"
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
