@@ -20,6 +20,7 @@ sudo dnf install --allowerasing -y \
     valgrind-devel \
     ca-certificates \
     xz \
+    gnuplot \
     dirmngr \
     libcgroup-tools \
     libargon2-devel \
