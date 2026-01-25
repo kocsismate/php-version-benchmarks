@@ -283,13 +283,15 @@ verify () {
     fi
 
     # Verify if C-state is correctly set
-    local max_c_state="$(cat /sys/module/intel_idle/parameters/max_cstate)"
-    if [[ "$max_c_state" != "1" ]]; then
-      echo "Error: CPU C-state is incorrect ($max_c_state)"
-      exit 1
-    fi
+    if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
+        local max_c_state="$(cat /sys/module/intel_idle/parameters/max_cstate)"
+        if [[ "$max_c_state" != "1" ]]; then
+          echo "Error: CPU C-state is incorrect ($max_c_state)"
+          exit 1
+        fi
 
-    echo "OK: CPU C-state is correctly set"
+        echo "OK: CPU C-state is correctly set"
+    fi
 
     echo "Online CPUs:"
     cat /sys/devices/system/cpu/online
