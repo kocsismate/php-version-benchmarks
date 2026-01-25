@@ -411,8 +411,7 @@ wilcoxon_u_test () {
     local u1="$(printf "%.50f" "$(echo "scale=50; $ranks1 - ($n*($n+1)/2)" | bc -l)")"
     local u2="$(printf "%.50f" "$(echo "scale=50; $ranks2 - ($n*($n+1)/2)" | bc -l)")"
 
-    # Symmetric definition: U = min(Ux, Uy)
-    printf "%.50f" "$(echo "if ($u1 < $u2) $u1 else $u2" | bc -l)"
+    printf "%.50f %.50f" "$u1" "$u2"
 }
 
 # Wilcoxon rank-sum using normal approximation and continuity correction
@@ -675,11 +674,11 @@ print_result_value () {
     local df="$(degrees_of_freedom "$first_var" "$first_n" "$variance" "$n")"
     local welch_t_stat="$(welch_t_stat "$first_mean" "$first_var" "$first_n" "$mean" "$variance" "$n")"
     local welch_p_value="$(welch_p_value "$df" "$welch_t_stat")"
-    local wilcoxon_u_value="$(wilcoxon_u_test "$first_log_file" "$log_file" "$n")"
-    local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u_value")"
+    read wilcoxon_u1_value wilcoxon_u2_value <<< "$(wilcoxon_u_test "$first_log_file" "$log_file" "$n")"
+    local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u1_value")"
     local wilcoxon_p_value="$(wilcoxon_p_value "$wilcoxon_z_stat")"
     local effect_size_standardized="$(effect_size_standardized "$n" "$wilcoxon_z_stat")"
-    local effect_size_common="$(effect_size_common "$n" "$wilcoxon_u_value")"
+    local effect_size_common="$(effect_size_common "$n" "$wilcoxon_u1_value")"
 
     echo "-----------------------------------------------------------------"
     echo "$PHP_ID"
@@ -701,7 +700,8 @@ print_result_value () {
     printf -- "- Test statistic T  : %.6f\n" "$welch_t_stat" | tee -a "$stat_file"
     printf -- "- Two tailed P-value: %.6f\n" "$welch_p_value" | tee -a "$stat_file"
     echo "Wilcoxon U test" | tee -a "$stat_file"
-    printf -- "- U                 : %.6f\n" "$wilcoxon_u_value" | tee -a "$stat_file"
+    printf -- "- U1                : %.6f\n" "$wilcoxon_u1_value" | tee -a "$stat_file"
+    printf -- "- U2                : %.6f\n" "$wilcoxon_u2_value" | tee -a "$stat_file"
     printf -- "- Test statistic Z  : %.6f\n" "$wilcoxon_z_stat" | tee -a "$stat_file"
     printf -- "- Two tailed P-value: %.6f\n" "$wilcoxon_p_value" | tee -a "$stat_file"
     printf -- "- Std effect size   : %.6f\n" "$effect_size_standardized" | tee -a "$stat_file"
@@ -1055,7 +1055,7 @@ debug_environment() {
     printf "CPU frequency               : %-8d (%+d)\n" "$cpu_frequency" "$cpu_frequency_diff"
     printf "IRQ                         : %-8d (%+d)\n" "$irq" "$irq_diff"
     printf "Soft IRQ                    : %-8d (%+d)\n" "$soft_irq" "$soft_irq_diff"
-    printf "Run queue length            : %.4f (%+.4f)\n" "$run_queue_length" "$run_queue_length_diff"
+    printf "Run queue length            : %.6f (%+.4f)\n" "$run_queue_length" "$run_queue_length_diff"
 }
 
 postprocess_environment_debug_Log_file () {
