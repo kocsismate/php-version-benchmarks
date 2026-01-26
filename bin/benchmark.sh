@@ -418,6 +418,13 @@ wilcoxon_u_test () {
 wilcoxon_z_test () {
     local n="$1"
     local u="$2"
+    local file1="$3"
+    local file2="$4"
+
+    if [[ "$file1" == "$file2" ]]; then
+        printf "%.50f" "0"
+        return
+    fi
 
     # Mean and sigma
     local mu="$(echo "scale=50; $n*$n/2" | bc -l)"
@@ -675,7 +682,7 @@ print_result_value () {
     local welch_t_stat="$(welch_t_stat "$first_mean" "$first_var" "$first_n" "$mean" "$variance" "$n")"
     local welch_p_value="$(welch_p_value "$df" "$welch_t_stat")"
     read wilcoxon_u1_value wilcoxon_u2_value <<< "$(wilcoxon_u_test "$first_log_file" "$log_file" "$n")"
-    local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u1_value")"
+    local wilcoxon_z_stat="$(wilcoxon_z_test "$n" "$wilcoxon_u1_value" "$first_log_file" "$log_file")"
     local wilcoxon_p_value="$(wilcoxon_p_value "$wilcoxon_z_stat")"
     local effect_size_standardized="$(effect_size_standardized "$n" "$wilcoxon_z_stat")"
     local effect_size_common="$(effect_size_common "$n" "$wilcoxon_u1_value")"
