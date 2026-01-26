@@ -487,7 +487,7 @@ EOF
         ram_gb=$(expr $ram_b / 1024 / 1024 / 1024)
         gcc_version="$(gcc -v 2>&1 | grep "Apple clang version")"
     else
-        cpu="$(lscpu | grep '^Model name:')"
+        cpu="$(lscpu | grep '^Model name:' || true)"
         cpu="${cpu/Model name:/}"
         cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
 

@@ -297,7 +297,7 @@ verify () {
     cat /sys/devices/system/cpu/online
 
     echo "CPU affinities:"
-    irq_numbers=$(grep '[0-9]\+:' /proc/interrupts | cut -d':' -f1)
+    irq_numbers=$(grep -E '^[[:space:]]*[0-9]+:' /proc/interrupts | cut -d':' -f1)
     for irq in $irq_numbers; do
       affinity_file="/proc/irq/$irq/smp_affinity"
       echo "CPU affinity file $affinity_file:"
