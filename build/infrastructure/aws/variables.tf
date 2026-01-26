@@ -128,15 +128,6 @@ variable "debug_environment" {
   type = bool
 }
 
-variable "docker_registry" {
-  type = string
-  sensitive = false
-}
-
-variable "docker_repository" {
-  type = string
-}
-
 variable "github_token" {
   type = string
   sensitive = false

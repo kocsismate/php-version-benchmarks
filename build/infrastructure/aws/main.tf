@@ -146,8 +146,6 @@ EOF
       "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count ? 1 : 0}\"",
       "export INFRA_DEBUG_ENVIRONMENT=\"${var.debug_environment ? 1 : 0}\"",
-      "export INFRA_DOCKER_REGISTRY=\"${var.docker_registry}\"",
-      "export INFRA_DOCKER_REPOSITORY=\"${var.docker_repository}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
       "export BENCHMARK_LOG_URL=\"${var.log_url}\"",
       "export BENCHMARK_ARTIFACT_URL=\"${var.artifact_url}\"",

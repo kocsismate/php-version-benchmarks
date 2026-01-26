@@ -72,8 +72,6 @@ workspace = "$INFRA_WORKSPACE"
 runner = "$INFRA_RUNNER"
 measure_instruction_count = "$measure_instruction_count"
 debug_environment = "$debug_environment"
-docker_registry = "$INFRA_DOCKER_REGISTRY"
-docker_repository = "$INFRA_DOCKER_REPOSITORY"
 EOF
 
 STATE_CONFIG_FILE="$PROJECT_ROOT/build/infrastructure/config/state.config"
