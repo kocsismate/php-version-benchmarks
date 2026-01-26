@@ -113,22 +113,22 @@ symfony_blog_test="$(grep -c "TEST_ID=symfony_blog" $PROJECT_ROOT/config/test/*.
 wordpress_test="$(grep -c "TEST_ID=wordpress" $PROJECT_ROOT/config/test/*.ini || true)"
 
 # Build docker image for setup
-if [[ -n "$laravel_test" || -n "$symfony_main_test" || -n "$symfony_blog_test" || -n "$wordpress_test" ]]; then
+if [[ "$laravel_test" != "0" || "$symfony_main_test" != "0" || "$symfony_blog_test" != "0" || "$wordpress_test" != "0" ]]; then
     sudo docker build -t setup "$PROJECT_ROOT/app"
 fi
 
 # Install Laravel demo app
-if [ -n "$laravel_test" ]; then
+if [ "$laravel_test" != "0" ]; then
     install_laravel &
 fi
 
 # Install Symfony demo app
-if [[ -n "$symfony_main_test" || -n "$symfony_blog_test" ]]; then
+if [[ "$symfony_main_test" != "0" ]]; then
     install_symfony &
 fi
 
 # Install Wordpress
-if [ -n "$wordpress_test" ]; then
+if [ "$wordpress_test" != "0" ]; then
     install_wordpress &
 fi
 
