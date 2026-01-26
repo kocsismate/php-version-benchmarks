@@ -1095,11 +1095,25 @@ draw_diagram () {
 EOF
 }
 
+reset_original_file () {
+    file="$1"
+
+    if [[ -f "${file}.original" ]]; then
+        mv -f "${file}.original" "$file"
+    fi
+}
+
 reset_symfony () {
     # Update config based on PHP version
-    sed -i "/        enable_native_lazy_objects: true/d" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    reset_original_file "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    reset_original_file "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/ProxyHelper.php"
+    reset_original_file "$PROJECT_ROOT/app/symfony/vendor/symfony/dependency-injection/LazyProxy/PhpDumper/LazyServiceDumper.php"
+
     if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
-        sed -i "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+        sed -i.original "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
+    else
+        sed -i.original "s/if (\\\\PHP_VERSION_ID < 80400) {/if (\\\\PHP_VERSION_ID <= 80400) {/g" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/ProxyHelper.php"
+        sed -i.original "s/if (\\\\PHP_VERSION_ID < 80400) {/if (\\\\PHP_VERSION_ID <= 80400) {/g" "$PROJECT_ROOT/app/symfony/vendor/symfony/dependency-injection/LazyProxy/PhpDumper/LazyServiceDumper.php"
     fi
 
     # Regenerate cache
