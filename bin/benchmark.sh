@@ -702,10 +702,12 @@ print_result_value () {
     printf -- "- MAD (median)      : %.6f\n" "$mad" | tee -a "$stat_file"
     printf -- "- Outliers          : %s\n" "$outliers" | tee -a "$stat_file"
     printf -- "- Distribution      : ~ %s\n" "$apparent_distribution" | tee -a "$stat_file"
+    # Based on https://www.statskingdom.com/150MeanT2uneq.html
     echo "Welch's T test" | tee -a "$stat_file"
     printf -- "- Degrees of freedom: %.6f\n" "$df" | tee -a "$stat_file"
     printf -- "- Test statistic T  : %.6f\n" "$welch_t_stat" | tee -a "$stat_file"
     printf -- "- Two tailed P-value: %.6f\n" "$welch_p_value" | tee -a "$stat_file"
+    # Based on https://www.statskingdom.com/170median_mann_whitney.html
     echo "Wilcoxon U test" | tee -a "$stat_file"
     printf -- "- U1                : %.6f\n" "$wilcoxon_u1_value" | tee -a "$stat_file"
     printf -- "- U2                : %.6f\n" "$wilcoxon_u2_value" | tee -a "$stat_file"
