@@ -1150,6 +1150,36 @@ reset_apps () {
     esac
 }
 
+postprocess_results () {
+    local plot_args=""
+    local -a plot_colors=("#1f77b4" "#ff7f0e" "#2ca02c" "#d62728" "#9467bd" "#8c564b" "#e377c2" "#7f7f00" "#17becf" "#00008b" "#b8860b" "#000000")
+    local plot_size="${#plot_colors[@]}"
+
+    local i=0
+    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+        load_php_config
+
+        # Format benchmark log
+        sed -i "/^[[:space:]]*$/d" "$log_file"
+        sed -i "s/Elapsed time\: //g" "$log_file"
+        sed -i "s/ sec//g" "$log_file"
+
+        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
+        fi
+
+        if [[ -n "$plot_args" ]]; then
+            plot_args="${plot_args}, "
+        fi
+
+        plot_color_num="$(( i % plot_size ))"
+        plot_args="${plot_args}  \"$log_file\" using 1 with points lc rgb \"${plot_colors[plot_color_num]}\" pointtype 7 pointsize 1.5 title \"$PHP_NAME results\""
+        i="$(( i + 1 ))"
+    done
+
+    draw_diagram "$result_dir" "$TEST_NAME" "$plot_args"
+}
+
 run_real_benchmark () {
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         load_php_config
@@ -1212,33 +1242,7 @@ run_real_benchmark () {
         done
     done
 
-    local plot_args=""
-    local -a plot_colors=("#1f77b4" "#ff7f0e" "#2ca02c" "#d62728" "#9467bd" "#8c564b" "#e377c2" "#7f7f00" "#17becf" "#00008b" "#b8860b" "#000000")
-    local plot_size="${#plot_colors[@]}"
-
-    local i=0
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
-
-        # Format benchmark log
-        sed -i "/^[[:space:]]*$/d" "$log_file"
-        sed -i "s/Elapsed time\: //g" "$log_file"
-        sed -i "s/ sec//g" "$log_file"
-
-        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
-        fi
-
-        if [[ -n "$plot_args" ]]; then
-            plot_args="${plot_args}, "
-        fi
-
-        plot_color_num="$(( i % plot_size ))"
-        plot_args="${plot_args}  \"$log_file\" using 1 with points lc rgb \"${plot_colors[plot_color_num]}\" pointtype 7 pointsize 1.5 title \"$PHP_NAME results\""
-        i="$(( i + 1 ))"
-    done
-
-    draw_diagram "$result_dir" "$TEST_NAME" "$plot_args"
+    postprocess_results
 }
 
 run_micro_benchmark () {
@@ -1299,18 +1303,7 @@ run_micro_benchmark () {
         done
     done
 
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
-
-        # Format benchmark log
-        sed -i "/^[[:space:]]*$/d" "$log_file"
-        sed -i "s/Elapsed time\: //g" "$log_file"
-        sed -i "s/ sec//g" "$log_file"
-
-        if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-            postprocess_environment_debug_Log_file "$environment_debug_log_file" "$log_file"
-        fi
-    done
+    postprocess_results
 }
 
 run_benchmark () {
