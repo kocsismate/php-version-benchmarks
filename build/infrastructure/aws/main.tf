@@ -171,9 +171,7 @@ EOF
 
       scp -o "IdentitiesOnly=yes" -o ControlPath=none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "${var.local_project_root}/tmp/ssh-key.pem" -r "${var.image_user}@${aws_instance.host.public_dns}:${var.remote_project_root}/tmp/results/${var.result_root_dir}/*" "${var.local_project_root}/tmp/results/${var.result_root_dir}/"
 
-      if [[ "${var.dry_run}" == "false" ]]; then
-        ${var.local_project_root}/bin/generate_results.sh "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}" "${var.now}"
-      fi
+      ${var.local_project_root}/bin/generate_results.sh "${var.dry_run}" "${var.local_project_root}/tmp/results/${var.result_root_dir}" "${var.local_project_root}/docs/results/${var.result_root_dir}" "${var.now}"
     EOP
   }
 }
