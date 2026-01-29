@@ -1348,7 +1348,7 @@ function run_benchmarks () {
         source $test_config
         ((TEST_NUMBER=TEST_NUMBER+1))
 
-        if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
+        if [[ "$TEST_ID" =~ ^wordpress_.*$ ]]; then
             sudo systemctl start containerd.service
             sudo service docker start
 
@@ -1360,7 +1360,7 @@ function run_benchmarks () {
 
         run_benchmark
 
-        if [[ "$TEST_ID" == "wordpress_6_9" ]]; then
+        if [[ "$TEST_ID" =~ ^wordpress_.*$ ]]; then
             sudo service docker stop
             sudo systemctl stop containerd.service
         fi
