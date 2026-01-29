@@ -120,7 +120,7 @@ variable "runner" {
   type = string
 }
 
-variable "measure_instruction_count" {
+variable "collect_extended_perf_stats" {
   type = bool
 }
 

@@ -47,8 +47,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     $opcache_option \
     --with-openssl \
     --with-zlib \
-    --enable-cgi \
-    --with-valgrind
+    --enable-cgi
 
 OPCACHE_FILE_PATH="$PHP_SOURCE_PATH/opcache_files"
 mkdir -p "$OPCACHE_FILE_PATH"

@@ -575,7 +575,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tZ-stat\tP-value\tInstruction count\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tZ-stat\tP-value\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -598,31 +598,21 @@ print_result_md_header () {
 
     local description="$(printf "%d consecutive run%s, %d warmup%s, %d request%s" "$TEST_ITERATIONS" "$run_suffix" "$TEST_WARMUP" "$warmup_suffix" "$TEST_REQUESTS" "$request_suffix")"
 
-    local instruction_count_header_name instruction_count_header_separator
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        instruction_count_header_name="|  Instr count  "
-        instruction_count_header_separator="|---------------";
-    else
-        instruction_count_header_name=""
-        instruction_count_header_separator="";
-    fi
-
 cat << EOF >> "$result_file.md"
 ### $TEST_NAME - $description (sec)
 
-|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | Skewness |  Z-stat  | P-value $instruction_count_header_name|     Memory    |
-|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|----------|----------|---------$instruction_count_header_separator|---------------|
+|     PHP     |     Min     |     Max     |    Std dev   | Rel std dev % |  Mean  | Mean diff % |   Median   | Median diff % | Skewness |  Z-stat  | P-value |     Memory    |
+|-------------|-------------|-------------|--------------|---------------|--------|-------------|------------|---------------|----------|----------|---------|---------------|
 EOF
 }
 
 print_result_value () {
     local log_file="$1"
-    local instruction_count_log_file="$2"
-    local memory_log_file="$3"
-    local perf_log_file="$4"
-    local result_file="$5"
-    local final_result_file="$6"
-    local stat_file="$7"
+    local memory_log_file="$2"
+    local perf_log_file="$3"
+    local result_file="$4"
+    local final_result_file="$5"
+    local stat_file="$6"
 
     local var="PHP_COMMITS_$PHP_ID"
     local commit_hash="${!var}"
@@ -637,18 +627,6 @@ print_result_value () {
         first_log_file="$log_file"
     fi
 
-    local instruction_count_tsv_format instruction_count_tsv_value instruction_count_md_format instruction_count_md_value
-    if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-        instruction_count_tsv_format="\t%d"
-        instruction_count_tsv_value="$(cat "$instruction_count_log_file")"
-        instruction_count_md_format="|%d"
-        instruction_count_md_value="$(cat "$instruction_count_log_file")"
-    else
-        instruction_count_tsv_format="\t%d"
-        instruction_count_tsv_value="0"
-        instruction_count_md_format="%s"
-        instruction_count_md_value=""
-    fi
     local memory_result="$(cat "$memory_log_file")"
 
     local n_arr=($results)
@@ -718,13 +696,13 @@ print_result_value () {
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f$instruction_count_tsv_format\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
         "$PHP_NAME" "$commit_hash" "$url" \
-        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$instruction_count_tsv_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
+        "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
 
-    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f|%.3f$instruction_count_md_format|%.2f MB|\n" \
-        "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$instruction_count_md_value" "$memory_usage" >> "$result_file.md"
+    printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f|%.3f|%.2f MB|\n" \
+        "$PHP_NAME" "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$memory_usage" >> "$result_file.md"
 }
 
 run_cgi () {
@@ -790,13 +768,6 @@ run_cgi () {
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
-    elif [ "$mode" = "instruction_count" ]; then
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            valgrind --tool=callgrind --dump-instr=no -- \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "memory" ]; then
         sudo -E taskset -c "$last_cpu" \
             nice -n -20 ionice -c 1 -n 0 \
@@ -811,26 +782,28 @@ run_cgi () {
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+        if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+        fi
     else
         echo "Invalid php-cgi run mode"
         exit 1
@@ -880,13 +853,6 @@ run_cli () {
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
-    elif [ "$mode" = "instruction_count" ]; then
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            valgrind --tool=callgrind --dump-instr=no -- \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "memory" ]; then
         sudo -E taskset -c "$last_cpu" \
             nice -n -20 ionice -c 1 -n 0 \
@@ -902,26 +868,28 @@ run_cli () {
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+        if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-        sudo -E taskset -c "$last_cpu" \
-            nice -n -20 ionice -c 1 -n 0 \
-            sudo -u "$USER" \
-            env -i -S "${php_env_var_list[*]}" \
-            perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+            sudo -E taskset -c "$last_cpu" \
+                nice -n -20 ionice -c 1 -n 0 \
+                sudo -u "$USER" \
+                env -i -S "${php_env_var_list[*]}" \
+                perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
+                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+        fi
     else
         echo "Invalid php-cli run mode"
         exit 1
@@ -933,12 +901,6 @@ assert_test_output() {
     local actual_file="$2"
 
     $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/zend/assert_output.php" "$expectation_file" "$actual_file"
-}
-
-format_instruction_count_log_file() {
-    local result="$(grep "== Collected : " "$1")"
-    echo "$result" > "$1"
-    sed -i -E "s/==[0-9]+== Collected : //g" "$1"
 }
 
 format_memory_log_file() {
@@ -962,7 +924,6 @@ load_php_config () {
     log_dir="$result_dir"
     log_file="$log_dir/${PHP_ID}.log"
     output_file="$log_dir/${PHP_ID}_output.txt"
-    instruction_count_log_file="$log_dir/${PHP_ID}_instruction_count.log"
     memory_log_file="$log_dir/${PHP_ID}_memory.log"
     perf_log_file="$log_dir/${PHP_ID}_perf.log"
     stat_file="$log_dir/${PHP_ID}_stat.log"
@@ -1201,11 +1162,6 @@ run_real_benchmark () {
 
         # Gathering perf metrics
         run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
-
-        # Measuring instruction count
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cgi "instruction_count" "$TEST_WARMUP" "10" "$1" "$2" "$3" 2>&1 | tee -a "$instruction_count_log_file"
-        fi
     done
 
     if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
@@ -1264,11 +1220,6 @@ run_micro_benchmark () {
 
         # Gathering perf metrics
         run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
-
-        # Measuring instruction count
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            run_cli "instruction_count" "$TEST_WARMUP" "1" "$1" 2>&1 | tee -a "$instruction_count_log_file"
-        fi
     done
 
     if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
@@ -1362,18 +1313,11 @@ run_benchmark () {
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
         load_php_config
 
-        # Format instruction count log
-        if [ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]; then
-            format_instruction_count_log_file "$instruction_count_log_file"
-        fi
-
-        # Format memory log
-        format_memory_log_file "$memory_log_file"
-
-        # Format perf log
         format_perf_log_file "$perf_log_file"
 
-        print_result_value "$log_file" "$instruction_count_log_file" "$memory_log_file" "$perf_log_file" "$result_file" "$final_result_file" "$stat_file"
+        format_memory_log_file "$memory_log_file"
+
+        print_result_value "$log_file" "$memory_log_file" "$perf_log_file" "$result_file" "$final_result_file" "$stat_file"
     done
 
     echo "" >> "$final_result_file.md"

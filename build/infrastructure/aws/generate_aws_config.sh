@@ -31,9 +31,9 @@ if [[ "$INFRA_DISABLE_TURBO_BOOST" == "1" ]]; then
     disable_turbo_boost="true"
 fi
 
-measure_instruction_count="false"
-if [[ "$INFRA_MEASURE_INSTRUCTION_COUNT" == "1" ]]; then
-    measure_instruction_count="true"
+collect_extended_perf_stats="false"
+if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
+    collect_extended_perf_stats="true"
 fi
 
 debug_environment="false"
@@ -70,7 +70,7 @@ infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
 workspace = "$INFRA_WORKSPACE"
 runner = "$INFRA_RUNNER"
-measure_instruction_count = "$measure_instruction_count"
+collect_extended_perf_stats = "$collect_extended_perf_stats"
 debug_environment = "$debug_environment"
 EOF
 

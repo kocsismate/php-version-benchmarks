@@ -144,7 +144,7 @@ EOF
       "export INFRA_LOCK_CPU_FREQUENCY=\"${var.lock_cpu_frequency ? 1 : 0}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
-      "export INFRA_MEASURE_INSTRUCTION_COUNT=\"${var.measure_instruction_count ? 1 : 0}\"",
+      "export INFRA_COLLECT_EXTENDED_PER_STATS=\"${var.collect_extended_perf_stats ? 1 : 0}\"",
       "export INFRA_DEBUG_ENVIRONMENT=\"${var.debug_environment ? 1 : 0}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
       "export BENCHMARK_LOG_URL=\"${var.log_url}\"",
