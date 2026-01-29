@@ -168,7 +168,7 @@ unlimit_memory () {
 
 reload_kernel () {
     echo "Isolating CPU core $last_cpu"
-    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu resctrl rdt=cmt,l3cat,l3mon,mba"
+    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu nokaslr resctrl rdt=cmt,l3cat,l3mon,mba"
 
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         echo "Disabling deeper sleep states"
