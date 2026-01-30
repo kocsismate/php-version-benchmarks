@@ -41,7 +41,7 @@ isolate_cpu_l3_cache () {
         return
     fi
 
-    echo "Isolating L3 cache for CPU $last_cpu"
+    echo "Isolating L3 cache for CPU $PHP_CPU"
 
     pqos -s
 
@@ -51,7 +51,7 @@ isolate_cpu_l3_cache () {
     # 1st class (COS1) gets 4 cache lanes
     sudo pqos -I -e "llc:1=0xf" || true
     # The CPU core running PHP is assigned to these lanes
-    sudo pqos -I -a "llc:1=$last_cpu" || true
+    sudo pqos -I -a "llc:1=$PHP_CPU" || true
 }
 
 disable_turbo_boost () {
@@ -96,11 +96,12 @@ dedicate_irq () {
     set -e
 }
 
-assign_cpu_core_to_cgroup () {
-    echo "NUMA settings:"
-    lscpu | grep NUMA
+assign_cpu_cores_to_cgroup () {
+    local cpu_list="$1"
+    local cgroup_name="$2"
 
-    local numa_file="/sys/devices/system/cpu/cpu${last_cpu}/numa_node"
+    local first_cpu="$(echo "$cpu_list" | sed 's/-.*//' | sed 's/,.*//')"
+    local numa_file="/sys/devices/system/cpu/cpu${first_cpu}/numa_node"
 
     if [[ -f "$numa_file" ]]; then
         numa_node=$(cat "$numa_file")
@@ -110,22 +111,21 @@ assign_cpu_core_to_cgroup () {
     fi
 
     if [[ "$numa_node" == "-1" ]]; then
-      echo "CPU core $last_cpu is not assigned to any NUMA node (likely single NUMA node system)."
-      numa_node=0
+        echo "CPU core $first_cpu is not assigned to any NUMA node (likely single NUMA node system)."
+        numa_node=0
     else
-      echo "CPU core $last_cpu belongs to NUMA node $numa_node."
+        echo "CPU core(s) $cpu_list belong to NUMA node $numa_node."
     fi
 
-    # Create dedicated cgroup for the benchmark
+    # Enable cpuset controller
     echo "+cpuset" | sudo tee /sys/fs/cgroup/cgroup.subtree_control > /dev/null
 
-    local cgroup_path="/sys/fs/cgroup/bench"
+    local cgroup_path="/sys/fs/cgroup/$cgroup_name"
     sudo mkdir -p "$cgroup_path"
 
-    # Assign isolated cores to the cgroup
-    echo "Assigning isolated core to the bench cgroup"
-    echo "$last_cpu" | sudo tee $cgroup_path/cpuset.cpus > /dev/null
-    echo "$numa_node" | sudo tee $cgroup_path/cpuset.mems > /dev/null
+    echo "Assigning CPU(s) $cpu_list to cgroup $cgroup_name"
+    echo "$cpu_list" | sudo tee "$cgroup_path/cpuset.cpus" > /dev/null
+    echo "$numa_node" | sudo tee "$cgroup_path/cpuset.mems" > /dev/null
 }
 
 disable_swapping () {
@@ -167,8 +167,8 @@ unlimit_memory () {
 }
 
 reload_kernel () {
-    echo "Isolating CPU core $last_cpu"
-    local replacement="isolcpus=$last_cpu nohz_full=$last_cpu rcu_nocbs=$last_cpu nokaslr resctrl rdt=cmt,l3cat,l3mon,mba"
+    echo "Isolating CPU core $MYSQL_CPUS and $PHP_CPU"
+    local replacement="isolcpus=$MYSQL_CPUS,$PHP_CPU nohz_full=$MYSQL_CPUS,$PHP_CPU rcu_nocbs=$MYSQL_CPUS,$PHP_CPU nokaslr resctrl rdt=cmt,l3cat,l3mon,mba"
 
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         echo "Disabling deeper sleep states"
@@ -204,13 +204,13 @@ config_perf_stat () {
 
 verify () {
     local isolated_cpu_core="$(cat /sys/devices/system/cpu/isolated)"
-    if [[ "$isolated_cpu_core" != "$last_cpu" ]]; then
+    if [[ "$isolated_cpu_core" != "$MYSQL_CPUS,$PHP_CPU" ]]; then
         echo "Error: CPU isolation error ($isolated_cpu_core)"
         exit 1
     fi
 
     local no_hz_cpu_core="$(cat /sys/devices/system/cpu/nohz_full)"
-    if [[ "$no_hz_cpu_core" != "$last_cpu" ]]; then
+    if [[ "$no_hz_cpu_core" != "$MYSQL_CPUS,$PHP_CPU" ]]; then
         echo "Error: CPU NO HZ isolation error ($no_hz_cpu_core)"
         exit 1
     fi
@@ -304,7 +304,16 @@ verify () {
       cat "$affinity_file"
     done
 
-    cgroup_path="/sys/fs/cgroup/bench"
+    echo "NUMA settings:"
+    lscpu | grep NUMA
+
+    cgroup_path="/sys/fs/cgroup/mysql"
+    echo "Cgroup CPU setting:"
+    cat $cgroup_path/cpuset.cpus
+    echo "Cgroup memory setting:"
+    cat $cgroup_path/cpuset.mems
+
+    cgroup_path="/sys/fs/cgroup/php"
     echo "Cgroup CPU setting:"
     cat $cgroup_path/cpuset.cpus
     echo "Cgroup memory setting:"
@@ -326,24 +335,38 @@ verify () {
     echo "$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
 }
 
-disable_hyper_threading
+export MYSQL_CPUS="1-2"
 
-cpu_count="$(nproc)"
-last_cpu="$((cpu_count-1))"
+function check_cpu_cores () {
+    disable_hyper_threading
 
-echo "CPU core count: $cpu_count"
-echo "Benchmark is assigned to CPU core $last_cpu"
+    local cpu_count="$(nproc)"
+    if [[ "$cpu_count" -lt "4" ]]; then
+        echo "At least 4 physical CPU cores are required to run the benchmark ($cpu_count is used)"
+        exit 1
+    fi
 
-if [[ "$1" == "boot" ]]; then
+    export PHP_CPU="$(( cpu_count - 1 ))"
+
+    echo "CPU core count: $cpu_count"
+    echo "MySQL is assigned to CPU core $MYSQL_CPUS"
+    echo "PHP is assigned to CPU core $PHP_CPU"
+}
+
+if [[ "$1" == "before_kernel_reload" ]]; then
+    check_cpu_cores
     unlimit_stack
     unlimit_memory
     reload_kernel
+elif [[ "$1" == "after_kernel_reload" ]]; then
+    assign_cpu_cores_to_cgroup "$MYSQL_CPUS" "mysql"
 elif [[ "$1" == "before_benchmark" ]]; then
+    check_cpu_cores
     lock_cpu_frequency
     isolate_cpu_l3_cache
     disable_turbo_boost
     dedicate_irq
-    assign_cpu_core_to_cgroup
+    assign_cpu_cores_to_cgroup "$PHP_CPU" "php"
     disable_swapping
     disable_aslr
     stop_unnecessary_services

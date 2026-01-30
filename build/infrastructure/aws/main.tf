@@ -108,7 +108,7 @@ EOF
       "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
       "${var.remote_project_root}/build/script/php_deps.sh",
-      "${var.remote_project_root}/build/script/system_settings.sh boot"
+      "${var.remote_project_root}/build/script/system_settings.sh before_kernel_reload"
     ]
   }
 
@@ -153,6 +153,7 @@ EOF
       "export BENCHMARK_EXTRA_TEXT=\"${var.extra_text}\"",
 
       "# Setup the benchmark code and system",
+      "${var.remote_project_root}/build/script/system_settings.sh after_kernel_reload",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
       "${var.remote_project_root}/build/script/system_settings.sh before_benchmark",
 

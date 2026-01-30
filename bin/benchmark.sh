@@ -1336,7 +1336,8 @@ function run_benchmarks () {
             sudo service docker start
 
             db_container_id="$(docker ps -aqf "name=wordpress_db")"
-            docker start "$db_container_id"
+            sudo cgexec -g cpuset:mysql \
+                docker start "$db_container_id"
 
             $PROJECT_ROOT/build/script/mysql_readiness.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
         fi
