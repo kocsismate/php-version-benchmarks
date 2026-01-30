@@ -740,25 +740,25 @@ run_cgi () {
         if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "0" || "$INFRA_DISABLE_DEEPER_C_STATES" == "0" ]]; then
             sleep 0.25
         fi
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        sudo -E taskset -c "$last_cpu" \
+       sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
     elif [ "$mode" = "memory" ]; then
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "perf" ]; then
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
@@ -766,21 +766,21 @@ run_cgi () {
             $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
         if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
                 $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
                 $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
@@ -825,26 +825,26 @@ run_cli () {
             sleep 0.5
         fi
 
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "verbose" ]; then
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
     elif [ "$mode" = "memory" ]; then
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             /usr/bin/time -v \
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "perf" ]; then
-        sudo -E taskset -c "$last_cpu" \
+        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
@@ -852,21 +852,21 @@ run_cli () {
             $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
         if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
                 $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
                 $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
-            sudo -E taskset -c "$last_cpu" \
+            sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
@@ -1176,7 +1176,7 @@ run_real_benchmark () {
 
             # Debugging environment
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                debug_environment "$i" "$PHP_CPU" >> "$environment_debug_log_file"
             fi
         done
     done
@@ -1232,7 +1232,7 @@ run_micro_benchmark () {
 
             # Debugging environment
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$last_cpu" >> "$environment_debug_log_file"
+                debug_environment "$i" "$PHP_CPU" >> "$environment_debug_log_file"
             fi
         done
     done
@@ -1308,7 +1308,7 @@ run_benchmark () {
 }
 
 cpu_count="$(nproc)"
-last_cpu="$((cpu_count-1))"
+PHP_CPU="$((cpu_count-1))"
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
 
