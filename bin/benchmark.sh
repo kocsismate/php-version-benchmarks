@@ -471,37 +471,20 @@ EOF
     local architecture="$(uname -m)"
     local kernel="$(uname -r)"
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        cpu="$(sysctl -n machdep.cpu.brand_string)"
-        cpu_count="$(sysctl -n hw.ncpu)"
+    cpu="$(lscpu | grep '^Model name:' || true)"
+    cpu="${cpu/Model name:/}"
+    cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
 
-        os_name="$(sw_vers | grep '^ProductName:')"
-        os_name="${os_name/ProductName:/}"
-        os_name="$(echo "$os_name" | awk '{$1=$1;print}')"
-        os_version="$(sw_vers | grep '^ProductVersion:')"
-        os_version="${os_version/ProductVersion:/}"
-        os_version="$(echo "$os_version" | awk '{$1=$1;print}')"
-        os="$os_name $os_version"
+    cpu_count="$(nproc)"
 
-        ram_b="$(sysctl -n hw.memsize)"
-        ram_gb=$(expr $ram_b / 1024 / 1024 / 1024)
-        gcc_version="$(gcc -v 2>&1 | grep "Apple clang version")"
-    else
-        cpu="$(lscpu | grep '^Model name:' || true)"
-        cpu="${cpu/Model name:/}"
-        cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
+    ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
+    ram_gb=$(expr "$ram_kb" / 1024 / 1024)
 
-        cpu_count="$(nproc)"
-
-        ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
-        ram_gb=$(expr "$ram_kb" / 1024 / 1024)
-
-        os="$(grep '^PRETTY_NAME=' /etc/os-release)"
-        os="${os/PRETTY_NAME=/}"
-        os="${os//\"/}"
-        os="$(echo "$os" | awk '{$1=$1;print}')"
-        gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
-    fi
+    os="$(grep '^PRETTY_NAME=' /etc/os-release)"
+    os="${os/PRETTY_NAME=/}"
+    os="${os//\"/}"
+    os="$(echo "$os" | awk '{$1=$1;print}')"
+    gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
 
     cpu_settings=""
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
