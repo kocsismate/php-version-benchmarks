@@ -912,101 +912,81 @@ load_php_config () {
     mkdir -p "$log_dir"
 }
 
-debug_environment() {
-    local iteration="$1"
-    local cpu="$2"
+collect_environment_metrics() {
+    local cpu="$1"
 
-    local v_context_switches n_context_switches minor_page_fault major_page_fault cpu_frequency irq soft_irq run_queue_length
-    local v_context_switches_diff n_context_switches_diff minor_page_fault_diff major_page_fault_diff cpu_frequency_diff irq_diff soft_irq_diff run_queue_length_diff
+    local v_context_switches n_context_switches \
+        minor_page_faults major_page_faults \
+        irqs soft_irqs run_queue_length \
+        io_reads io_writes io_time
 
     # Context switches
     v_context_switches="$(sed -n 's/^voluntary_ctxt_switches:[[:space:]]*//p' /proc/self/status)"
-    if [[ "$v_context_switches_prev" == "-1" ]]; then
-        v_context_switches_prev="$v_context_switches"
-    fi
-    v_context_switches_diff="$(int_diff "$v_context_switches" "$v_context_switches_prev")"
-    v_context_switches_prev="$v_context_switches"
-
     n_context_switches="$(sed -n 's/^nonvoluntary_ctxt_switches:[[:space:]]*//p' /proc/self/status)"
-    if [[ "$n_context_switches_prev" == "-1" ]]; then
-        n_context_switches_prev="${n_context_switches}"
-    fi
-    n_context_switches_diff="$(int_diff "$n_context_switches" "$n_context_switches_prev")"
-    n_context_switches_prev="$n_context_switches"
 
     # Page faults (minflt = column 10, majflt = column 12)
-    read -r _ _ _ _ _ _ _ _ _ _ minor_page_fault _ major_page_fault _ < /proc/self/stat
-    if [[ "$minor_page_fault_prev" == "-1" ]]; then
-        minor_page_fault_prev="$minor_page_fault"
-    fi
-    minor_page_fault_diff="$(int_diff "$minor_page_fault" "$minor_page_fault_prev")"
-    minor_page_fault_prev="$minor_page_fault"
-
-    if [[ "$major_page_fault_prev" == "-1" ]]; then
-        major_page_fault_prev="${major_page_fault}"
-    fi
-    major_page_fault_diff="$(int_diff "$major_page_fault" "$major_page_fault_prev")"
-    major_page_fault_prev="$major_page_fault"
-
-    # CPU frequency
-    cpu_frequency="$(cat /sys/devices/system/cpu/cpu${cpu}/cpufreq/scaling_cur_freq 2>/dev/null || echo 0)"
-    if [[ "$cpu_frequency_prev" == "-1" ]]; then
-        cpu_frequency_prev="$cpu_frequency"
-    fi
-    cpu_frequency_diff="$(int_diff "$cpu_frequency" "$cpu_frequency_prev")"
-    cpu_frequency_prev="$cpu_frequency"
+    read -r _ _ _ _ _ _ _ _ _ _ minor_page_faults _ major_page_faults _ < /proc/self/stat
 
     # IRQ for the given CPU
-    irq=0
+    irqs=0
     while read -r line; do
         set -- "$line"
         # first column is the IRQ name, then CPU0 CPU1 CPU2...
         # CPU colum index: cpu+2 (mert $1 = IRQ név)
         col="$((cpu + 2))"
         val="$(eval "echo \${$col}")"
-        irq="$((irq + val))"
+        irqs="$((irqs + val))"
     done < <(tail -n +2 /proc/interrupts)
 
-    if [[ "$irq_prev" == "-1" ]]; then
-        irq_prev="$irq"
-    fi
-    irq_diff="$(int_diff "$irq" "${irq_prev}")"
-    irq_prev="$irq"
-
     # soft_irq
-    soft_irq=0
+    soft_irqs=0
     while read -r line; do
         set -- $line
         local col=$((cpu + 2))
         local val=$(eval "echo \${$col}")
-        soft_irq=$((soft_irq + val))
+        soft_irqs="$((soft_irqs + val))"
     done < <(tail -n +2 /proc/softirqs)
-
-    if [[ "$soft_irq_prev" == "-1" ]]; then
-        soft_irq_prev="$soft_irq"
-    fi
-    soft_irq_diff="$(int_diff "$soft_irq" "$soft_irq_prev")"
-    soft_irq_prev="$soft_irq"
 
     # run_queue length
     run_queue_length="$(cut -d ' ' -f1 /proc/loadavg)"
-    if [[ "$run_queue_length_prev" == "-1" ]]; then
-        run_queue_length_prev="${run_queue_length}"
-    fi
-    run_queue_length_diff="$(diff "$run_queue_length" "$run_queue_length_prev")"
-    run_queue_length_prev="$run_queue_length"
+
+    # I/O stats
+    local io_line="$(grep " nvme0n1 " /proc/diskstats)"
+    read -r _ _ _ io_reads _ _ _ io_writes _ _ _ _ io_time _ _ <<< "$io_line"
+
+    echo "$v_context_switches" "$n_context_switches" \
+        "$minor_page_faults" "$major_page_faults" \
+        "$irqs" "$soft_irqs" "$run_queue_length" \
+        "$io_reads" "$io_writes" "$io_time"
+}
+
+print_environment_metrics_diff () {
+    local iteration="$1"
+
+    local v_context_switches_diff="$(int_diff "${v_context_switches[1]}" "${v_context_switches[0]}")"
+    local n_context_switches_diff="$(int_diff "${n_context_switches[1]}" "${n_context_switches[0]}")"
+    local minor_page_faults_diff="$(int_diff "${minor_page_faults[1]}" "${minor_page_faults[0]}")"
+    local major_page_faults_diff="$(int_diff "${major_page_faults[1]}" "${major_page_faults[0]}")"
+    local irqs_diff="$(int_diff "${irqs[1]}" "${irqs[0]}")"
+    local soft_irqs_diff="$(int_diff "${soft_irqs[1]}" "${soft_irqs[0]}")"
+    local run_queue_length_diff="$(diff "${run_queue_length[1]}" "${run_queue_length[0]}")"
+    local io_reads_diff="$(int_diff "${io_reads[1]}" "${io_reads[0]}")"
+    local io_writes_diff="$(int_diff "${io_writes[1]}" "${io_writes[0]}")"
+    local io_time_diff="$(int_diff "${io_time[1]}" "${io_time[0]}")"
 
     echo "-----------------------------------------------------------------"
     printf "Iteration: %-4d\tResult: #RESULT$iteration#\tDiff: #DIFF$iteration#\n" "$iteration"
     echo "-----------------------------------------------------------------"
-    printf "Voluntary context switch    : %-8d (%+d)\n" "$v_context_switches" "$v_context_switches_diff"
-    printf "Non-voluntary context switch: %-8d (%+d)\n" "$n_context_switches" "$n_context_switches_diff"
-    printf "Minor page fault            : %-8d (%+d)\n" "$minor_page_fault" "$minor_page_fault_diff"
-    printf "Major page fault            : %-8d (%+d)\n" "$major_page_fault" "$major_page_fault_diff"
-    printf "CPU frequency               : %-8d (%+d)\n" "$cpu_frequency" "$cpu_frequency_diff"
-    printf "IRQ                         : %-8d (%+d)\n" "$irq" "$irq_diff"
-    printf "Soft IRQ                    : %-8d (%+d)\n" "$soft_irq" "$soft_irq_diff"
-    printf "Run queue length            : %.6f (%+.4f)\n" "$run_queue_length" "$run_queue_length_diff"
+    printf "Voluntary context switches    : %d\n" "$v_context_switches_diff"
+    printf "Non-voluntary context switches: %d\n" "$n_context_switches_diff"
+    printf "Minor page faults             : %d\n" "$minor_page_faults_diff"
+    printf "Major page faults             : %d\n" "$major_page_faults_diff"
+    printf "IRQs                          : %d\n" "$irqs_diff"
+    printf "Soft IRQs                     : %d\n" "$soft_irqs_diff"
+    printf "Run queue length              : %.3f\n" "$run_queue_length_diff"
+    printf "I/O reads                     : %d\n" "$io_reads_diff"
+    printf "I/O writes                    : %d\n" "$io_writes_diff"
+    printf "I/O time (ms)                 : %d\n" "$io_time_diff"
 }
 
 postprocess_environment_debug_Log_file () {
@@ -1147,14 +1127,16 @@ run_real_benchmark () {
     done
 
     if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-        v_context_switches_prev="-1"
-        n_context_switches_prev="-1"
-        minor_page_fault_prev="-1"
-        major_page_fault_prev="-1"
-        cpu_frequency_prev="-1"
-        irq_prev="-1"
-        soft_irq_prev="-1"
-        run_queue_length_prev="-1"
+        declare -a v_context_switches=(0 0)
+        declare -a n_context_switches=(0 0)
+        declare -a minor_page_faults=(0 0)
+        declare -a major_page_faults=(0 0)
+        declare -a irqs=(0 0)
+        declare -a soft_irqs=(0 0)
+        declare -a run_queue_length=(0 0)
+        declare -a io_reads=(0 0)
+        declare -a io_writes=(0 0)
+        declare -a io_time=(0 0)
     fi
 
     $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
@@ -1171,11 +1153,24 @@ run_real_benchmark () {
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
+            # Debugging environment - initial state
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                read -r "v_context_switches[0]" "n_context_switches[0]" \
+                    "minor_page_faults[0]" "major_page_faults[0]" \
+                    "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
+                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$PHP_CPU")
+            fi
+
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
 
-            # Debugging environment
+            # Debugging environment - final state
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$PHP_CPU" >> "$environment_debug_log_file"
+                read -r "v_context_switches[1]" "n_context_switches[1]" \
+                    "minor_page_faults[1]" "major_page_faults[1]" \
+                    "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
+                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$PHP_CPU")
+
+                print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
             fi
         done
     done
@@ -1205,14 +1200,16 @@ run_micro_benchmark () {
     done
 
     if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-        v_context_switches_prev="-1"
-        n_context_switches_prev="-1"
-        minor_page_fault_prev="-1"
-        major_page_fault_prev="-1"
-        cpu_frequency_prev="-1"
-        irq_prev="-1"
-        soft_irq_prev="-1"
-        run_queue_length_prev="-1"
+        declare -a v_context_switches=(0 0)
+        declare -a n_context_switches=(0 0)
+        declare -a minor_page_faults=(0 0)
+        declare -a major_page_faults=(0 0)
+        declare -a irqs=(0 0)
+        declare -a soft_irqs=(0 0)
+        declare -a run_queue_length=(0 0)
+        declare -a io_reads=(0 0)
+        declare -a io_writes=(0 0)
+        declare -a io_time=(0 0)
     fi
 
     $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
@@ -1227,11 +1224,24 @@ run_micro_benchmark () {
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
+            # Debugging environment - initial state
+            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                read -r "v_context_switches[0]" "n_context_switches[0]" \
+                    "minor_page_faults[0]" "major_page_faults[0]" \
+                    "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
+                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$PHP_CPU")
+            fi
+
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
 
-            # Debugging environment
+            # Debugging environment - final state
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                debug_environment "$i" "$PHP_CPU" >> "$environment_debug_log_file"
+                read -r "v_context_switches[1]" "n_context_switches[1]" \
+                    "minor_page_faults[1]" "major_page_faults[1]" \
+                    "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
+                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$PHP_CPU")
+
+                print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
             fi
         done
     done
