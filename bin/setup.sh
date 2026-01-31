@@ -72,19 +72,27 @@ install_wordpress () {
     local mysql_password="wordpress"
     local mysql_timeout=60
 
+    sudo mkdir -p /mnt/mysql-data
+    sudo chown $(id -u):$(id -g) /mnt/mysql-data
+
     sudo cgexec -g cpuset:mysql \
         docker run \
         --name "$mysql_container" \
         --user "$(id -u):$(id -g)" \
+        -v /mnt/mysql-data:/var/lib/mysql \
+        -v $PROJECT_ROOT/build/mysql:/etc/mysql/conf.d \
         --network "host" \
         --cpuset-cpus="$MYSQL_CPUS" \
+        --memory="4G" \
         -e "MYSQL_ROOT_PASSWORD=root" \
         -e "MYSQL_DATABASE=$mysql_db" \
         -e "MYSQL_USER=$mysql_user" \
         -e "MYSQL_PASSWORD=$mysql_password" \
         -d mysql:$wordpress_mysql_version
 
-    $PROJECT_ROOT/build/script/mysql_readiness.sh "$mysql_container" "$mysql_db" "$mysql_user" "$mysql_password" "$mysql_timeout"
+    $PROJECT_ROOT/build/script/wait_for_mysql.sh "$mysql_container" "$mysql_db" "$mysql_user" "$mysql_password" "$mysql_timeout"
+
+    sudo docker logs "$mysql_container"
 
     sudo docker run --rm \
         --name "wordpress_cli" \
