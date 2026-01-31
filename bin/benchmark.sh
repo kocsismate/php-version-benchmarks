@@ -1035,10 +1035,11 @@ draw_diagram () {
     plot_args="$3"
 
     gnuplot -persist <<EOF
-    set terminal svg size 1200,800 fname "Arial"
+    set terminal svg size 1600,850 fname "Arial" background "white"
     set output "$result_dir/result.svg"
 
     set title "Benchmark results for $test_name"
+    set key outside bottom
     set xlabel "Iteration"
     set ylabel "Execution time (s)"
     set grid
