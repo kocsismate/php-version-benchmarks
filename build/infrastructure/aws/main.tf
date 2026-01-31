@@ -142,6 +142,7 @@ EOF
       "export INFRA_DISABLE_TURBO_BOOST=\"${var.disable_turbo_boost ? 1 : 0}\"",
       "export INFRA_DISABLE_HYPER_THREADING=\"${var.disable_hyper_threading ? 1 : 0}\"",
       "export INFRA_LOCK_CPU_FREQUENCY=\"${var.lock_cpu_frequency ? 1 : 0}\"",
+      "export INFRA_MAX_ALLOWED_CPU_TEMP=\"${var.max_allowed_cpu_temp}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_COLLECT_EXTENDED_PER_STATS=\"${var.collect_extended_perf_stats ? 1 : 0}\"",

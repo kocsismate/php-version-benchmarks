@@ -62,8 +62,9 @@ image_architecture = "$INFRA_ARCHITECTURE"
 use_dedicated_instance = $use_dedicated_instance
 disable_deeper_c_states = $disable_deeper_c_states
 disable_hyper_threading = $disable_hyper_threading
-lock_cpu_frequency = $lock_cpu_frequency
 disable_turbo_boost = $disable_turbo_boost
+lock_cpu_frequency = $lock_cpu_frequency
+max_allowed_cpu_temp = $INFRA_MAX_ALLOWED_CPU_TEMP
 
 infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"

@@ -104,6 +104,10 @@ variable "lock_cpu_frequency" {
   type = bool
 }
 
+variable "max_allowed_cpu_temp" {
+  type = number
+}
+
 variable "infra_id" {
   type = string
 }

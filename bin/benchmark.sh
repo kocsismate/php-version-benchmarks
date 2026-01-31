@@ -1158,7 +1158,7 @@ run_real_benchmark () {
         run_queue_length_prev="-1"
     fi
 
-    sleep 1
+    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -1216,7 +1216,7 @@ run_micro_benchmark () {
         run_queue_length_prev="-1"
     fi
 
-    sleep 1
+    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -1309,6 +1309,9 @@ run_benchmark () {
 
 cpu_count="$(nproc)"
 PHP_CPU="$((cpu_count-1))"
+MAX_ALLOWED_CPU_TEMP=35
+CPU_TEMP_TIMEOUT=30
+CPU_TEMP_FALLBACK_SLEEP=5
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
 
@@ -1339,7 +1342,7 @@ function run_benchmarks () {
             sudo cgexec -g cpuset:mysql \
                 docker start "$db_container_id"
 
-            $PROJECT_ROOT/build/script/mysql_readiness.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
+            $PROJECT_ROOT/build/script/wait_for_mysql.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
         fi
 
         run_benchmark
