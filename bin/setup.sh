@@ -75,6 +75,8 @@ install_wordpress () {
     sudo mkdir -p /mnt/mysql-data
     sudo chown $(id -u):$(id -g) /mnt/mysql-data
 
+    MYSQL_CPUS="1-2"
+
     sudo cgexec -g cpuset:mysql \
         docker run \
         --name "$mysql_container" \

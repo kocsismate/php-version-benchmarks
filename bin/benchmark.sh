@@ -475,8 +475,6 @@ EOF
     cpu="${cpu/Model name:/}"
     cpu="$(echo "$cpu" | awk '{$1=$1;print}')"
 
-    cpu_count="$(nproc)"
-
     ram_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
     ram_gb=$(expr "$ram_kb" / 1024 / 1024)
 
@@ -521,14 +519,14 @@ EOF
 
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$cpu_count" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
+        "$cpu" "$CPU_COUNT" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
     if [[ -n "$cpu" ]]; then
         cpu="${cpu}, "
     fi
-    cpu="${cpu}${cpu_count} core"
-    if [ "$cpu_count" -gt "1" ]; then
+    cpu="${cpu}${CPU_COUNT} core"
+    if [ "$CPU_COUNT" -gt "1" ]; then
         cpu="${cpu}s"
     fi
 
@@ -1308,11 +1306,11 @@ run_benchmark () {
     cat "$result_file.md" >> "$final_result_file.md"
 }
 
-cpu_count="$(nproc)"
-PHP_CPU="$((cpu_count-1))"
-MAX_ALLOWED_CPU_TEMP=35
-CPU_TEMP_TIMEOUT=30
-CPU_TEMP_FALLBACK_SLEEP=5
+CPU_COUNT="$(nproc)"
+PHP_CPU="$(( CPU_COUNT - 1 ))"
+
+CPU_TEMP_TIMEOUT=120
+CPU_TEMP_FALLBACK_SLEEP=10
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
 

@@ -335,20 +335,20 @@ verify () {
     echo "$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
 }
 
-export MYSQL_CPUS="1-2"
+MYSQL_CPUS="1-2"
 
 function check_cpu_cores () {
     disable_hyper_threading
 
-    local cpu_count="$(nproc)"
-    if [[ "$cpu_count" -lt "4" ]]; then
-        echo "At least 4 physical CPU cores are required to run the benchmark ($cpu_count is used)"
+    CPU_COUNT="$(nproc)"
+    if [[ "$CPU_COUNT" -lt "4" ]]; then
+        echo "At least 4 physical CPU cores are required to run the benchmark ($CPU_COUNT is used)"
         exit 1
     fi
 
-    export PHP_CPU="$(( cpu_count - 1 ))"
+    PHP_CPU="$(( CPU_COUNT - 1 ))"
 
-    echo "CPU core count: $cpu_count"
+    echo "CPU core count: $CPU_COUNT"
     echo "MySQL is assigned to CPU core $MYSQL_CPUS"
     echo "PHP is assigned to CPU core $PHP_CPU"
 }
