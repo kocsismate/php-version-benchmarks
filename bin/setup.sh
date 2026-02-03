@@ -71,9 +71,11 @@ install_wordpress () {
     local mysql_user="wordpress"
     local mysql_password="wordpress"
     local mysql_timeout=60
+    local mysql_data_path="$PROJECT_ROOT/tmp/app/wordpress/mysql-data"
+    local mysql_config_path="$PROJECT_ROOT/build/mysql"
 
-    sudo mkdir -p /mnt/mysql-data
-    sudo chown $(id -u):$(id -g) /mnt/mysql-data
+    sudo mkdir -p "$mysql_data_path"
+    sudo chown $(id -u):$(id -g) "$mysql_data_path"
 
     MYSQL_CPUS="1-2"
 
@@ -81,8 +83,8 @@ install_wordpress () {
         docker run \
         --name "$mysql_container" \
         --user "$(id -u):$(id -g)" \
-        -v /mnt/mysql-data:/var/lib/mysql \
-        -v $PROJECT_ROOT/build/mysql:/etc/mysql/conf.d \
+        -v $mysql_data_path:/var/lib/mysql \
+        -v $mysql_config_path:/etc/mysql/conf.d \
         --network "host" \
         --cpuset-cpus="$MYSQL_CPUS" \
         --memory="4G" \

@@ -950,6 +950,17 @@ collect_environment_metrics() {
     # run_queue length
     run_queue_length="$(cut -d ' ' -f1 /proc/loadavg)"
 
+#    sudo nvme amzn stats /dev/nvme2n1 | head
+#    Total Ops:
+#      Read: 238
+#      Write: 0
+#    Total Bytes:
+#      Read: 4426752
+#      Write: 0
+#    Total Time (us):
+#      Read: 7958
+#      Write: 0
+
     # I/O stats
     local io_line="$(grep " nvme0n1 " /proc/diskstats)"
     read -r _ _ _ io_reads _ _ _ io_writes _ _ _ _ io_time _ _ <<< "$io_line"
@@ -1319,7 +1330,7 @@ run_benchmark () {
 CPU_COUNT="$(nproc)"
 PHP_CPU="$(( CPU_COUNT - 1 ))"
 
-CPU_TEMP_TIMEOUT=120
+CPU_TEMP_TIMEOUT=180
 CPU_TEMP_FALLBACK_SLEEP=10
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"

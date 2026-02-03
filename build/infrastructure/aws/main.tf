@@ -47,6 +47,7 @@ resource "aws_instance" "host" {
     volume_type = "io2"
     volume_size = "32"
     iops = 4000
+    delete_on_termination = true
     tags = {
       Name: "php-version-benchmark-${var.workspace}"
     }

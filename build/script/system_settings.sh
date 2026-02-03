@@ -359,6 +359,7 @@ if [[ "$1" == "before_kernel_reload" ]]; then
     unlimit_memory
     reload_kernel
 elif [[ "$1" == "after_kernel_reload" ]]; then
+    $PROJECT_ROOT/build/script/mount.sh
     assign_cpu_cores_to_cgroup "$MYSQL_CPUS" "mysql"
 elif [[ "$1" == "before_benchmark" ]]; then
     check_cpu_cores

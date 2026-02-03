@@ -37,7 +37,8 @@ sudo dnf install --allowerasing -y \
     perf \
     wget \
     bc \
-    nano
+    nano \
+    nvme-cli
 
 sudo usermod -a -G docker "$USER"
 
