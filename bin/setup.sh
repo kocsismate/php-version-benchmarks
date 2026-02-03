@@ -55,8 +55,10 @@ install_symfony () {
     sed -i "/trigger_deprecation('symfony\/var-exporter', '7.3', 'The \"%s\" trait is deprecated, use native lazy objects instead.', LazyProxyTrait::class);/d" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/LazyProxyTrait.php"
     sed -i "/trigger_deprecation('symfony\/var-exporter', '7.3', 'The \"%s\" trait is deprecated, use native lazy objects instead.', LazyGhostTrait::class);/d" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/LazyGhostTrait.php"
 
+    sed -i "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Configuration.php"
     sed -i "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Proxy/Autoloader.php"
     sed -i "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Proxy/DefaultProxyClassNameResolver.php"
+    sed -i "s/if (PHP_VERSION_ID >= 80400) {/if (0) {/g" "$PROJECT_ROOT/app/symfony/vendor/doctrine/orm/src/Proxy/ProxyFactory.php"
 
     sudo chmod -R 777 "$PROJECT_ROOT/app/symfony/var"
 }
