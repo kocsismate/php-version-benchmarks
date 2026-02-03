@@ -1065,9 +1065,8 @@ reset_symfony () {
     if [[ -d "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" ]]; then
         cp -r "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" "$PROJECT_ROOT/app/symfony/var/cache"
     else
-        APP_ENV=prod APP_DEBUG=true APP_SECRET=random $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
+        APP_ENV=prod APP_DEBUG=false APP_SECRET=random $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
 
-        mkdir -p "$PROJECT_ROOT/tmp/app/symfony"
         cp -r "$PROJECT_ROOT/app/symfony/var/cache" "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID"
     fi
 }
