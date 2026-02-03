@@ -35,6 +35,7 @@ install_laravel () {
 
 install_symfony () {
     mkdir -p "$PROJECT_ROOT/app/symfony"
+    mkdir -p "$PROJECT_ROOT/tmp/app/symfony"
 
     sudo docker run --rm \
         --volume $PROJECT_ROOT:/code \
@@ -62,6 +63,7 @@ install_symfony () {
 
 install_wordpress () {
     mkdir -p "$PROJECT_ROOT/app/wordpress"
+    mkdir -p "$PROJECT_ROOT/tmp/app/wordpress"
 
     git clone --depth=1 "$wordpress_url" "$PROJECT_ROOT/app/wordpress"
 
@@ -114,6 +116,8 @@ install_wordpress () {
     sed -i "s/\t\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\t\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-includes/load.php"
     sed -i "s/\terror_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );/\terror_reporting( E_ALL );/g" "$PROJECT_ROOT/app/wordpress/wp-load.php"
 }
+
+mkdir -p "$PROJECT_ROOT/tmp/app"
 
 laravel_test="$(grep -c "TEST_ID=laravel" $PROJECT_ROOT/config/test/*.ini || true)"
 symfony_main_test="$(grep -c "TEST_ID=symfony_main" $PROJECT_ROOT/config/test/*.ini || true)"
