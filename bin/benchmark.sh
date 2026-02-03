@@ -577,7 +577,7 @@ print_result_md_header () {
         request_suffix="s"
     fi
 
-    local description="$(printf "%d consecutive run%s, %d warmup%s, %d request%s" "$TEST_ITERATIONS" "$run_suffix" "$TEST_WARMUP" "$warmup_suffix" "$TEST_REQUESTS" "$request_suffix")"
+    local description="$(printf "%d iteration%s, %d warmup%s, %d request%s" "$TEST_ITERATIONS" "$run_suffix" "$TEST_WARMUP" "$warmup_suffix" "$TEST_REQUESTS" "$request_suffix")"
 
 cat << EOF >> "$result_file.md"
 ### $TEST_NAME - $description (sec)
