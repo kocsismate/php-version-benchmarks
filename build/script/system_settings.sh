@@ -63,59 +63,89 @@ disable_turbo_boost () {
     fi
 }
 
+first_cpu_from_list () {
+    local cpu_list="$1"
+
+    echo "$cpu_list" | sed 's/-.*//' | sed 's/,.*//'
+}
+
 dedicate_irq () {
     sudo systemctl stop irqbalance # Disable automatic distribution of hardware interrupt handling across CPU cores
 
-    # CPU core to dedicate (1 = CPU1)
-    local core=0
+    local -a cpus=()
 
-    # Calculate affinity mask for the core (2^core in hex)
-    local mask="$((1 << core))"
-    local hex_mask="$(printf '%x\n' $mask)"
+    if ls /sys/devices/system/node/node* &>/dev/null; then
+         for node in /sys/devices/system/node/node*; do
+            local node_id="${node##*node}"
+            local cpu_list="$(<"$node/cpulist")"
+            local first_cpu="$(first_cpu_from_list "$cpu_list")"
+            if [[ "$first_cpu" == "0" ]]; then
+                first_cpu="$(( first_cpu + 1 ))"
+            fi
 
-    echo "Setting all IRQ affinities to CPU core $core (mask 0x$hex_mask)"
+            cpus+=("$first_cpu")
+        done
+    else
+        cpus+=("1")
+    fi
 
     # Get all IRQ numbers from /proc/interrupts (skip lines without IRQ numbers)
-    local irq_numbers="$(grep '[0-9]\+:' /proc/interrupts | cut -d':' -f1)"
-
-    set +e
+    local irq_numbers="$(grep -E 'nvme|eth|ena|ens|enp' /proc/interrupts | cut -d':' -f1)"
 
     for irq in $irq_numbers; do
-        local affinity_file="/proc/irq/$irq/smp_affinity"
-        if [ -f "$affinity_file" ]; then
-            if echo "$hex_mask" | sudo tee "$affinity_file" > /dev/null; then
-                echo "Successfully set IRQ $irq affinity to CPU core $core"
-            else
-                echo "Warning: Affinity file $affinity_file isn't writable, skipping IRQ $irq"
-            fi
+        local affinity_file="/proc/irq/$irq/smp_affinity_list"
+        if [ ! -f "$affinity_file" ]; then
+            echo "Warning: Affinity list file $affinity_file doesn't exist, skipping IRQ $irq"
+        fi
+
+        if [ ! -w "$affinity_file" ]; then
+            echo "Warning: Affinity list file $affinity_file isn't writable, skipping IRQ $irq"
+        fi
+
+        local cpu_list="$(IFS=,; echo "${cpus[*]}")"
+
+        if echo "$cpu_list" | sudo tee "$affinity_file" > /dev/null; then
+            echo "Successfully set IRQ $irq affinity to CPU core(s) $cpu_list"
         else
-            echo "Warning: Affinity file $affinity_file doesn't exist, skipping IRQ $irq"
+            echo "Error: Affinity file $affinity_file couldn't be written, skipping IRQ $irq"
+        fi
+    done
+}
+
+cpu_to_numa_node () {
+    local cpu_list="$1"
+    local first_cpu="$(first_cpu_from_list "$cpu_list")"
+
+    for node in /sys/devices/system/node/node*; do
+        if awk -v cpu="$first_cpu" '
+            {
+              n=split($0,a,",")
+              for(i=1;i<=n;i++){
+                if(a[i] ~ "-"){
+                  split(a[i],r,"-")
+                  if(cpu>=r[1] && cpu<=r[2]) exit 0
+                } else {
+                  if(cpu==a[i]) exit 0
+                }
+              }
+              exit 1
+            }' "$node/cpulist"
+        then
+            basename "$node" | sed 's/node//'
+            return 0
         fi
     done
 
-    set -e
+    echo "0"
 }
 
 assign_cpu_cores_to_cgroup () {
     local cpu_list="$1"
     local cgroup_name="$2"
 
-    local first_cpu="$(echo "$cpu_list" | sed 's/-.*//' | sed 's/,.*//')"
-    local numa_file="/sys/devices/system/cpu/cpu${first_cpu}/numa_node"
+    local numa_node="$(cpu_to_numa_node "$cpu_list")"
 
-    if [[ -f "$numa_file" ]]; then
-        numa_node=$(cat "$numa_file")
-    else
-        echo "Warning: NUMA information file $numa_file does not exist."
-        numa_node=0
-    fi
-
-    if [[ "$numa_node" == "-1" ]]; then
-        echo "CPU core $first_cpu is not assigned to any NUMA node (likely single NUMA node system)."
-        numa_node=0
-    else
-        echo "CPU core(s) $cpu_list belong to NUMA node $numa_node."
-    fi
+    echo "CPU core(s) $cpu_list belong(s) to NUMA node $numa_node."
 
     # Enable cpuset controller
     echo "+cpuset" | sudo tee /sys/fs/cgroup/cgroup.subtree_control > /dev/null
@@ -146,7 +176,7 @@ stop_unnecessary_services () {
     sudo systemctl stop chronyd # time synchronization daemon
     sudo service docker stop # Docker service
     sudo systemctl stop containerd.service # container service
-    sudo cp -f $PROJECT_ROOT/build/journald.conf /etc/systemd/journald.conf # optimize journald config
+    sudo cp -f "$PROJECT_ROOT/build/journald.conf" "/etc/systemd/journald.conf" # optimize journald config
     sudo service systemd-journald restart
     sudo sysctl -w kernel.nmi_watchdog=0
     echo "0" | sudo tee /sys/kernel/mm/ksm/run > /dev/null || true
@@ -331,11 +361,11 @@ verify () {
     echo "TOP 25 processes:"
     ps -eo pid,ppid,cmd,%cpu,%mem --sort=-%cpu | head -n 26
 
-    echo "CPU temperature:"
+    echo "CPU temperatures:"
     echo "$([ -f /sys/class/thermal/thermal_zone0/temp ] && echo "scale=2; $(cat /sys/class/thermal/thermal_zone0/temp) / 1000" | bc || echo "N/A") °C"
 }
 
-MYSQL_CPUS="1-2"
+MYSQL_CPUS="2"
 
 function check_cpu_cores () {
     disable_hyper_threading
