@@ -1149,7 +1149,7 @@ run_real_benchmark () {
         declare -a io_time=(0 0)
     fi
 
-    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -1222,7 +1222,7 @@ run_micro_benchmark () {
         declare -a io_time=(0 0)
     fi
 
-    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+    $PROJECT_ROOT/build/script/wait_for_cpu_temp.sh "$PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
