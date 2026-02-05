@@ -81,7 +81,9 @@ resource "aws_instance" "host" {
       cd ${var.local_project_root}
       mkdir -p "./tmp/results/${var.result_root_dir}"
 
-      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz ./app/Dockerfile ./app/zend/ ./app/laravel.composer.lock/ ./bin ./build ./config ./tmp/results/${var.result_root_dir}
+      tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz \
+        ./app/Dockerfile ./app/zend/ ./app/laravel.composer.lock/ \
+        ./bin ./build ./config ./tmp/results/${var.result_root_dir}
 EOF
   }
 
@@ -95,6 +97,7 @@ EOF
       "set -e",
 
       "# Setup environment variables",
+      "export PROJECT_ROOT=\"${var.remote_project_root}\"",
       "export INFRA_ARCHITECTURE=\"${var.image_architecture}\"",
       "export INFRA_DISABLE_DEEPER_C_STATES=\"${var.disable_deeper_c_states ? 1 : 0}\"",
       "export INFRA_DISABLE_HYPER_THREADING=\"${var.disable_hyper_threading ? 1 : 0}\"",
