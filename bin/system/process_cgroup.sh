@@ -54,11 +54,9 @@ verify_cgroup () {
 
     local cgroup_path="/sys/fs/cgroup/$cgroup_name"
 
-    echo "Cgroup $cgroup_name CPU setting:"
-    cat $cgroup_path/cpuset.cpus
-
-    echo "Cgroup $cgroup_name memory setting:"
-    cat $cgroup_path/cpuset.mems
+    echo "Cgroup $cgroup_name settings:"
+    printf "CPU cores: %s\n" "$(cat "$cgroup_path/cpuset.cpus")"
+    printf "NUMA node: %s\n" "$(cat "$cgroup_path/cpuset.mems")"
 }
 
 subcommand="$1"

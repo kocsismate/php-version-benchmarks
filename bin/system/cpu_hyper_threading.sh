@@ -3,10 +3,10 @@ set -e
 
 disable_cpu_hyper_threading () {
     if [[ "$INFRA_DISABLE_HYPER_THREADING" == "1" ]]; then
-        echo "Disabling hyperthreading"
+        echo "Disabling hyperthreading..."
 
         for cpu in $(lscpu -p=CPU,CORE,SOCKET | grep -v '^#' | awk -F, '{core[$2]++; if(core[$2]>1) print $1}'); do
-            echo "Disabling CPU core $cpu"
+            echo "Disabling CPU core $cpu..."
             echo 0 | sudo tee /sys/devices/system/cpu/cpu$cpu/online > /dev/null
         done
     else

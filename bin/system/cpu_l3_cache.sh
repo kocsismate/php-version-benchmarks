@@ -6,6 +6,8 @@ enable_l3_cache_isolation () {
 }
 
 isolate_l3_cache () {
+  local cpu="$1"
+
     local cpu_rdt_support="$(grep -E "rdt_a|cat_l3|cat_l2|mba|cmt|mbm" "/proc/cpuinfo" || true)"
     if [[ -z "$cpu_rdt_support" ]]; then
         echo "Isolating L3 cache is not supported, skipping"
@@ -18,7 +20,7 @@ isolate_l3_cache () {
         return 0
     fi
 
-    echo "Isolating L3 cache for CPU $PHP_CPU"
+    echo "Isolating L3 cache for CPU $cpu"
 
     pqos -s
 
@@ -28,7 +30,7 @@ isolate_l3_cache () {
     # 1st class (COS1) gets 4 cache lanes
     sudo pqos -I -e "llc:1=0xf" || true
     # The CPU core running PHP is assigned to these lanes
-    sudo pqos -I -a "llc:1=$PHP_CPU" || true
+    sudo pqos -I -a "llc:1=$cpu" || true
 }
 
 subcommand="$1"
@@ -39,7 +41,8 @@ case "$subcommand" in
         ;;
 
     "isolate")
-        isolate_l3_cache
+        cpu="$2"
+        isolate_l3_cache "$cpu"
         ;;
 
     *)

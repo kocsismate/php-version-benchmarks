@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+source "$PROJECT_ROOT/bin/system/lib.sh"
+
 isolate_cpu () {
     local cpu_list="$1"
 
@@ -9,16 +11,19 @@ isolate_cpu () {
 
 verify_cpu_isolation () {
     local cpu_list="$1"
+    local parsed_cpu_list="$(parse_cpu_list "$cpu_list")"
 
     local isolated_cpu_cores="$(cat /sys/devices/system/cpu/isolated)"
-    if [[ "$isolated_cpu_cores" != "$cpu_list" ]]; then
-        echo "Error: CPU isolation error ($isolated_cpu_cores)"
+    local parsed_isolated_cpu_cores="$(parse_cpu_list "$isolated_cpu_cores")"
+    if [[ "$parsed_cpu_list" != "$parsed_isolated_cpu_cores" ]]; then
+        echo "Error: CPU isolation error (\"$parsed_cpu_list\" doesn't match \"$parsed_isolated_cpu_cores\")"
         exit 1
     fi
 
     local no_hz_cpu_cores="$(cat /sys/devices/system/cpu/nohz_full)"
-    if [[ "$no_hz_cpu_cores" != "$cpu_list" ]]; then
-        echo "Error: CPU NO HZ isolation error ($no_hz_cpu_cores)"
+    local parsed_no_hz_cpu_cores="$(parse_cpu_list "$no_hz_cpu_cores")"
+    if [[ "$parsed_cpu_list" != "$parsed_no_hz_cpu_cores" ]]; then
+        echo "Error: CPU NO HZ isolation error ($parsed_cpu_list doesn't match $parsed_no_hz_cpu_cores)"
         exit 1
     fi
 

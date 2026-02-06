@@ -111,8 +111,12 @@ EOF
       "# Unzip the source code archive",
       "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
+      "# Create env file to store state and variables",
+      "export DOT_ENV_FILE=\"${var.remote_project_root}/.env\"",
+      "touch \"$DOT_ENV_FILE\"",
+
       "${var.remote_project_root}/build/script/php_deps.sh",
-      "${var.remote_project_root}/build/script/system_settings.sh before_kernel_reload"
+      "${var.remote_project_root}/build/script/system_settings.sh step1",
     ]
   }
 
@@ -121,7 +125,7 @@ EOF
       "set -e",
 
       "echo 'Reloading kernel...'",
-      "sudo kexec -e"
+      "sudo kexec -e",
     ]
     on_failure = continue
   }
@@ -157,10 +161,13 @@ EOF
       "export BENCHMARK_EXTRA_TITLE=\"${var.extra_title}\"",
       "export BENCHMARK_EXTRA_TEXT=\"${var.extra_text}\"",
 
+      "export DOT_ENV_FILE=\"${var.remote_project_root}/.env\"",
+      "source \"$DOT_ENV_FILE\"",
+
       "# Setup the benchmark code and system",
-      "${var.remote_project_root}/build/script/system_settings.sh after_kernel_reload",
+      "${var.remote_project_root}/build/script/system_settings.sh step2",
       "${var.remote_project_root}/bin/build.sh $INFRA_ENVIRONMENT",
-      "${var.remote_project_root}/build/script/system_settings.sh before_benchmark",
+      "${var.remote_project_root}/build/script/system_settings.sh step3",
 
       "#Run the benchmark",
       "${var.remote_project_root}/bin/benchmark.sh",

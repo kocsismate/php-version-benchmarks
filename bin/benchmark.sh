@@ -70,14 +70,14 @@ EOF
 
     printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
         "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
-        "$cpu" "$CPU_COUNT" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
+        "$cpu" "$BENCH_CPU_COUNT" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
     if [[ -n "$cpu" ]]; then
         cpu="${cpu}, "
     fi
-    cpu="${cpu}${CPU_COUNT} core"
-    if [ "$CPU_COUNT" -gt "1" ]; then
+    cpu="${cpu}${BENCH_CPU_COUNT} core"
+    if [ "$BENCH_CPU_COUNT" -gt "1" ]; then
         cpu="${cpu}s"
     fi
 
@@ -700,7 +700,7 @@ run_real_benchmark () {
         declare -a io_time=(0 0)
     fi
 
-    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
@@ -709,7 +709,7 @@ run_real_benchmark () {
 
             reset_apps
 
-            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$PHP_CPU")"
+            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
             echo "---------------------------------------------------------------------------------------"
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
@@ -719,7 +719,7 @@ run_real_benchmark () {
                 read -r "v_context_switches[0]" "n_context_switches[0]" \
                     "minor_page_faults[0]" "major_page_faults[0]" \
                     "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
-                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$PHP_CPU")
+                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
             fi
 
             run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
@@ -729,7 +729,7 @@ run_real_benchmark () {
                 read -r "v_context_switches[1]" "n_context_switches[1]" \
                     "minor_page_faults[1]" "major_page_faults[1]" \
                     "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
-                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$PHP_CPU")
+                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
 
                 print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
             fi
@@ -773,14 +773,14 @@ run_micro_benchmark () {
         declare -a io_time=(0 0)
     fi
 
-    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
     # Benchmark
     for i in $(seq $TEST_ITERATIONS); do
         for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
             load_php_config
 
-            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$PHP_CPU")"
+            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
             echo "---------------------------------------------------------------------------------------"
             echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
@@ -790,7 +790,7 @@ run_micro_benchmark () {
                 read -r "v_context_switches[0]" "n_context_switches[0]" \
                     "minor_page_faults[0]" "major_page_faults[0]" \
                     "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
-                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$PHP_CPU")
+                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
             fi
 
             run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
@@ -800,7 +800,7 @@ run_micro_benchmark () {
                 read -r "v_context_switches[1]" "n_context_switches[1]" \
                     "minor_page_faults[1]" "major_page_faults[1]" \
                     "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
-                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$PHP_CPU")
+                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
 
                 print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
             fi
@@ -877,10 +877,7 @@ run_benchmark () {
     cat "$result_file.md" >> "$final_result_file.md"
 }
 
-CPU_COUNT="$(nproc)"
-PHP_CPU="$(( CPU_COUNT - 1 ))"
-
-CPU_TEMP_TIMEOUT=180
+CPU_TEMP_TIMEOUT=240
 CPU_TEMP_FALLBACK_SLEEP=10
 
 result_base_dir="$PROJECT_ROOT/tmp/results/$RESULT_ROOT_DIR"
