@@ -3,3 +3,6 @@ TEST_ID=micro_bench
 TEST_WARMUP=5
 TEST_ITERATIONS=50
 TEST_REQUESTS=1
+
+TEST_TYPE=micro
+TEST_FILE=app/zend/micro_bench.php

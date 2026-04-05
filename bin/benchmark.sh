@@ -589,49 +589,11 @@ draw_diagram () {
 EOF
 }
 
-reset_original_file () {
-    file="$1"
-
-    if [[ -f "${file}.original" ]]; then
-        mv -f "${file}.original" "$file"
-    fi
-}
-
-reset_symfony () {
-    # Update config based on PHP version
-    reset_original_file "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
-    reset_original_file "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/ProxyHelper.php"
-    reset_original_file "$PROJECT_ROOT/app/symfony/vendor/symfony/dependency-injection/LazyProxy/PhpDumper/LazyServiceDumper.php"
-
-    if git --git-dir="$php_source_path/.git" --work-tree="$php_source_path" merge-base --is-ancestor "315fef2c72d172f4f81420e8f64ab2f3cd9e55b1" HEAD > /dev/null 2>&1; then
-        sed -i.original "s/        enable_lazy_ghost_objects: true/        enable_lazy_ghost_objects: true\n        enable_native_lazy_objects: true/g" "$PROJECT_ROOT/app/symfony/config/packages/doctrine.yaml"
-    else
-        sed -i.original "s/if (\\\\PHP_VERSION_ID < 80400) {/if (\\\\PHP_VERSION_ID <= 80400) {/g" "$PROJECT_ROOT/app/symfony/vendor/symfony/var-exporter/ProxyHelper.php"
-        sed -i.original "s/if (\\\\PHP_VERSION_ID < 80400) {/if (\\\\PHP_VERSION_ID <= 80400) {/g" "$PROJECT_ROOT/app/symfony/vendor/symfony/dependency-injection/LazyProxy/PhpDumper/LazyServiceDumper.php"
-    fi
-
-    # Regenerate cache
-    if [[ -d "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" ]]; then
-        cp -rf "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID" "$PROJECT_ROOT/app/symfony/var/cache"
-    else
-        rm -rf "$PROJECT_ROOT/tmp/app/symfony/cache/prod/Container*"
-        rm -rf "$PROJECT_ROOT/tmp/app/symfony/cache/prod/App_KernelProdContainer*"
-        APP_ENV=prod APP_DEBUG=false APP_SECRET=random $php_source_path/sapi/cli/php "$PROJECT_ROOT/app/symfony/bin/console" "cache:warmup"
-
-        cp -r "$PROJECT_ROOT/app/symfony/var/cache" "$PROJECT_ROOT/tmp/app/symfony/cache-$PHP_ID"
-    fi
-}
-
 reset_apps () {
-    case "$TEST_ID" in
-        symfony_main_*)
-            reset_symfony
-            ;;
-
-        symfony_blog_*)
-            reset_symfony
-            ;;
-    esac
+    reset_script="${PHP_CONFIG_FILE//.ini/_reset.sh}"
+    if [[ -f "$reset_script" ]]; then
+        "$reset_script"
+    fi
 }
 
 postprocess_results () {
@@ -832,33 +794,22 @@ run_benchmark () {
     first_median=""
     first_var=""
 
-    case "$TEST_ID" in
-        laravel_*)
-            run_real_benchmark "app/laravel/public/index.php" "" "production"
+    if [[ -z "$TEST_FILE" ]]; then
+        echo "Empty \"TEST_FILE\" option in $test_config"
+        exit 1
+    fi
+
+    case "$TEST_TYPE" in
+        "real")
+            run_real_benchmark "$TEST_FILE" "$TEST_URL_PATH" "$TEST_ENV"
             ;;
 
-        symfony_main_*)
-            run_real_benchmark "app/symfony/public/index.php" "/" "prod"
-            ;;
-
-        symfony_blog_*)
-            run_real_benchmark "app/symfony/public/index.php" "/en/blog/" "prod"
-            ;;
-
-        wordpress_*)
-            run_real_benchmark "app/wordpress/index.php" "/" "prod"
-            ;;
-
-        bench)
-            run_micro_benchmark "app/zend/bench.php"
-            ;;
-
-        micro_bench)
-            run_micro_benchmark "app/zend/micro_bench.php"
+        "micro")
+            run_micro_benchmark "$TEST_FILE"
             ;;
 
         *)
-            echo "Invalid test ID!"
+            echo "Invalid test type \"$TEST_TYPE\" in $test_config"
             exit 1
             ;;
     esac
@@ -901,22 +852,16 @@ function run_benchmarks () {
         source $test_config
         ((TEST_NUMBER=TEST_NUMBER+1))
 
-        if [[ "$TEST_ID" =~ ^wordpress_.*$ ]]; then
-            sudo systemctl start containerd.service
-            sudo service docker start
-
-            db_container_id="$(docker ps -aqf "name=wordpress_db")"
-            sudo cgexec -g cpuset:mysql \
-                docker start "$db_container_id"
-
-            $PROJECT_ROOT/build/script/wait_for_mysql.sh "wordpress_db" "wordpress" "wordpress" "wordpress" "60"
+        init_script="${test_config//.ini/pre_init.sh}"
+        if [[ -f "$init_script" ]]; then
+            "$init_script"
         fi
 
         run_benchmark
 
-        if [[ "$TEST_ID" =~ ^wordpress_.*$ ]]; then
-            sudo service docker stop
-            sudo systemctl stop containerd.service
+        init_script="${test_config//.ini/post_init.sh}"
+        if [[ -f "$init_script" ]]; then
+            "$init_script"
         fi
     done
 }

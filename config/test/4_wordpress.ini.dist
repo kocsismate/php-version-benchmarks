@@ -3,3 +3,8 @@ TEST_ID=wordpress_6_9
 TEST_ITERATIONS=50
 TEST_WARMUP=20
 TEST_REQUESTS=20
+
+TEST_TYPE=real
+TEST_FILE=app/wordpress/index.php
+TEST_URL_PATH=/
+TEST_ENV=prod

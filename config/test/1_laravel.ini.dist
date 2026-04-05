@@ -3,3 +3,8 @@ TEST_ID=laravel_12_11_0
 TEST_ITERATIONS=50
 TEST_WARMUP=50
 TEST_REQUESTS=100
+
+TEST_TYPE=real
+TEST_FILE=app/laravel/public/index.php
+TEST_URL_PATH=
+TEST_ENV=production

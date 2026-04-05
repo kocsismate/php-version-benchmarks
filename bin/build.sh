@@ -27,8 +27,8 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
 done
 
 if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
-    echo "Checking out apps..."
-    $PROJECT_ROOT/bin/setup.sh
+    echo "Installing apps..."
+    $PROJECT_ROOT/bin/install.sh
 fi
 
 wait

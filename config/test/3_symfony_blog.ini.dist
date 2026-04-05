@@ -3,3 +3,8 @@ TEST_ID=symfony_blog_2_7_0
 TEST_ITERATIONS=50
 TEST_WARMUP=25
 TEST_REQUESTS=50
+
+TEST_TYPE=real
+TEST_FILE=app/symfony/public/index.php
+TEST_URL_PATH=/en/blog/
+TEST_ENV=prod
