@@ -852,15 +852,17 @@ function run_benchmarks () {
         source $test_config
         ((TEST_NUMBER=TEST_NUMBER+1))
 
-        init_script="${test_config//.ini/pre_init.sh}"
+        init_script="${test_config//.ini/_pre_init.sh}"
         if [[ -f "$init_script" ]]; then
+            echo "Executing pre-init script $init_script..."
             "$init_script"
         fi
 
         run_benchmark
 
-        init_script="${test_config//.ini/post_init.sh}"
+        init_script="${test_config//.ini/_post_init.sh}"
         if [[ -f "$init_script" ]]; then
+            echo "Executing post-init script $init_script..."
             "$init_script"
         fi
     done
