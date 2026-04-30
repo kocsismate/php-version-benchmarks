@@ -32,4 +32,6 @@ sed -i "s/if (\\\\PHP_VERSION_ID >= 80400) {/if (\\\\PHP_VERSION_ID > 80400 || (
 sed -i "s/if (\\\\PHP_VERSION_ID >= 80400) {/if (\\\\PHP_VERSION_ID > 80400 || (\\\\PHP_VERSION_ID === 80400 \&\& \\\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$laravel_dir/vendor/symfony/polyfill-php84/bootstrap82.php"
 sed -i "s/if (\\\\PHP_VERSION_ID >= 80500) {/if (\\\\PHP_VERSION_ID > 80500 || (\\\\PHP_VERSION_ID === 80500 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$laravel_dir/vendor/symfony/polyfill-php85/bootstrap.php"
 
+sed -i "s/mb_split('\\\s+',/preg_split('\/\\\\s+\/u',/g" "$laravel_dir/vendor/laravel/framework/src/Illuminate/Support/Str.php"
+
 sudo chmod -R 777 "$laravel_dir/storage"
