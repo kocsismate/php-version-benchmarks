@@ -104,6 +104,10 @@ variable "lock_cpu_frequency" {
   type = bool
 }
 
+variable "cpu_numa_node" {
+  type = string
+}
+
 variable "max_allowed_cpu_temp" {
   type = number
 }

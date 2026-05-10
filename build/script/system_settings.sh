@@ -83,18 +83,16 @@ step="$1"
 
 if [[ "$step" == "step1" ]]; then
 
-    $PROJECT_ROOT/bin/system/storage_nvme.sh "detect"
-    source "$DOT_ENV_FILE"
     $PROJECT_ROOT/bin/system/memory_stack.sh "unlimit"
     $PROJECT_ROOT/bin/system/memory_huge_pages.sh "unlimit"
     stop_unnecessary_services
-    $PROJECT_ROOT/bin/system/cpu_selection.sh "select" "$BENCH_NVME_NUMA"
+    $PROJECT_ROOT/bin/system/cpu_selection.sh "select" "$INFRA_CPU_NUMA_NODE"
     source "$DOT_ENV_FILE"
     reload_kernel
 
 elif [[ "$step" == "step2" ]]; then
 
-    $PROJECT_ROOT/bin/system/storage_nvme.sh "mount" "$BENCH_NVME_NAME" "$BENCH_NVME_DISK" "$BENCH_NVME_MOUNT_DIR"
+    $PROJECT_ROOT/bin/system/storage_nvme.sh "mount" "$INFRA_CPU_NUMA_NODE"
     $PROJECT_ROOT/bin/system/process_cgroup.sh "create" "mysql" "$BENCH_MYSQL_CPU"
 
 elif [[ "$step" == "step3" ]]; then

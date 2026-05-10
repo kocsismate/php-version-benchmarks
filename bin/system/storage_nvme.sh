@@ -1,35 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-detect_nvme () {
-    local nvme_name="$(lsblk -ndo NAME,MODEL | awk '/Instance Storage/ {print $1; exit}')"
-    local nvme_disk="/dev/$nvme_name"
-    local mount_dir="/mnt/nvme"
-
-    if [[ -z "$nvme_name" ]]; then
-      echo "No instance store NVMe found"
-      exit 0
-    fi
-
-    echo "Using instance store: $nvme_disk ($nvme_name)"
-
-    # Get the controller name from the device name: e.g. nvm1n1 -> nvme1
-    local controller_name="${nvme_name%n*}"
-
-    local nvme_numa="$(cat "/sys/class/nvme/$controller_name/device/numa_node")"
-    [[ "$nvme_numa" == "-1" ]] && nvme_numa=0
-    echo "NVMe NUMA node: $nvme_numa"
-
-    echo "export BENCH_NVME_NAME=$nvme_name" >> "$DOT_ENV_FILE"
-    echo "export BENCH_NVME_DISK=$nvme_disk" >> "$DOT_ENV_FILE"
-    echo "export BENCH_NVME_MOUNT_DIR=$mount_dir" >> "$DOT_ENV_FILE"
-    echo "export BENCH_NVME_NUMA=$nvme_numa" >> "$DOT_ENV_FILE"
-}
-
 move_dir () {
     local mount_dir="$1"
     local src="$2"
-    local dest="${mount_dir}$(dirname "$src")"
+    local dest
+    dest="${mount_dir}$(dirname "$src")"
 
     if [[ -L "$src" ]]; then
         echo "[INFO] $src already symlinked, skipping"
@@ -43,14 +19,40 @@ move_dir () {
 }
 
 mount_nvme () {
-    local nvme_name="$1"
-    local nvme_disk="$2"
-    local mount_dir="$3"
+    local target_numa="$1"
+    local mount_dir="/mnt/nvme"
+    local nvme_name=""
+
+    while IFS= read -r candidate; do
+        local candidate_disk="/dev/$candidate"
+
+        if grep -q "^${candidate_disk}" /proc/mounts; then
+            echo "Skipping $candidate_disk: has mounted partitions"
+            continue
+        fi
+
+        if [[ -n "$target_numa" ]]; then
+            local controller_name="${candidate%n*}"
+            local candidate_numa
+            candidate_numa="$(cat "/sys/class/nvme/$controller_name/device/numa_node")"
+            [[ "$candidate_numa" == "-1" ]] && candidate_numa=0
+
+            if [[ "$candidate_numa" != "$target_numa" ]]; then
+                echo "Skipping $candidate_disk: NUMA node $candidate_numa != $target_numa"
+                continue
+            fi
+        fi
+
+        nvme_name="$candidate"
+        break
+    done < <(lsblk -ndo NAME,MODEL | awk '/Instance Storage/ {print $1}')
 
     if [[ -z "$nvme_name" ]]; then
-      echo "No instance store NVMe found"
-      exit 0
+        echo "No instance store NVMe found"
+        exit 0
     fi
+
+    local nvme_disk="/dev/$nvme_name"
 
     echo "Using instance store: $nvme_disk ($nvme_name)"
 
@@ -71,15 +73,9 @@ mount_nvme () {
 subcommand="$1"
 
 case "$subcommand" in
-    "detect")
-        detect_nvme
-        ;;
-
     "mount")
-        nvme_name="$2"
-        nvme_disk="$3"
-        mount_dir="$4"
-        mount_nvme "$nvme_name" "$nvme_disk" "$mount_dir"
+        target_numa="$2"
+        mount_nvme "$target_numa"
         ;;
 
     *)

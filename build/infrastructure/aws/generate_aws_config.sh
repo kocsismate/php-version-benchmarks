@@ -64,6 +64,7 @@ disable_deeper_c_states = $disable_deeper_c_states
 disable_hyper_threading = $disable_hyper_threading
 disable_turbo_boost = $disable_turbo_boost
 lock_cpu_frequency = $lock_cpu_frequency
+cpu_numa_node = "$INFRA_CPU_NUMA_NODE"
 max_allowed_cpu_temp = $INFRA_MAX_ALLOWED_CPU_TEMP
 
 infra_id = "$INFRA_ID"
