@@ -101,7 +101,7 @@ EOF
         extra="| $BENCHMARK_EXTRA_TITLE  |$BENCHMARK_EXTRA_TEXT|\n"
     fi
 
-    printf "| Environment   |%s|\n${instance_type}| Architecture  |%s\n| CPU           |%s|\n${cpu_settings}| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n${job_details}${extra}" \
+    printf "| Environment   |%s|\n${instance_type}| Architecture  |%s|\n| CPU           |%s|\n${cpu_settings}| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n${job_details}${extra}" \
         "$INFRA_ENVIRONMENT" "$architecture" \
         "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW UTC" >> "$1.md"
 }
