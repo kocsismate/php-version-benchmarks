@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+php_target_path="$1"
+php_alignment="$2"
+php_linking_order="$3"
+cpu_count="$4"
+
 # -fno-pic: does not generate position-independent code (for shared libraries).
 # -fno-pie: no runtime indirection from PIE.
 # -O2: predictable, stable optimizations.
@@ -11,15 +16,22 @@ set -e
 # -fno-plt: removes PLT indirection variance.
 # -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
 cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
+if [[ "$php_alignment" -ne "0" ]]; then
+    cflags="$cflags -falign-functions=$php_alignment -falign-loops=$php_alignment -falign-jumps=$php_alignment"
+fi
 cppflags="$cflags"
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # -Wl,-O1: stable section ordering.
 # -no-pie: reinforces non-PIE binary.
 # --build-id=none: removes build ID hash (avoids layout differences).
-ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
+ldflags="-fuse-ld=lld -Wl,-O1 -no-pie -Wl,--build-id=none"
+if [[ "$php_linking_order" -ne "0" ]]; then
+    seed="$(shuf -i 1-9999 -n 1)"
+    ldflags="$ldflags -Wl,--shuffle-sections=.text=$seed"
+fi
 export SOURCE_DATE_EPOCH=0
 
-cd "$PHP_SOURCE_PATH"
+cd "$php_target_path"
 
 ./buildconf
 
@@ -32,8 +44,8 @@ fi
 # --enable-werror \ commenting out due to dynasm errors
 
 CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
-    --with-config-file-path="$PHP_SOURCE_PATH" \
-    --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
+    --with-config-file-path="$php_target_path" \
+    --with-config-file-scan-dir="$php_target_path/conf.d" \
     --enable-option-checking=fatal \
     --disable-debug \
     --enable-mbstring \
@@ -49,20 +61,20 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-zlib \
     --enable-cgi
 
-OPCACHE_FILE_PATH="$PHP_SOURCE_PATH/opcache_files"
+OPCACHE_FILE_PATH="$php_target_path/opcache_files"
 mkdir -p "$OPCACHE_FILE_PATH"
 
-make -j "$1"
+make -j "$cpu_count"
 
-mkdir -p "$PHP_SOURCE_PATH/conf.d/"
-cp "$PROJECT_ROOT/build/custom-php.ini" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+mkdir -p "$php_target_path/conf.d/"
+cp "$PROJECT_ROOT/build/custom-php.ini" "$php_target_path/conf.d/zz-custom-php.ini"
 
-sed -i "s|OPCACHE_FILE_PATH|$OPCACHE_FILE_PATH|g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+sed -i "s|OPCACHE_FILE_PATH|$OPCACHE_FILE_PATH|g" "$php_target_path/conf.d/zz-custom-php.ini"
 
 if [[ "$PHP_JIT" = "1" ]]; then
-    sed -i "s/JIT_MODE/tracing/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
-    sed -i "s/JIT_BUFFER_SIZE/64M/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_MODE/tracing/g" "$php_target_path/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_BUFFER_SIZE/64M/g" "$php_target_path/conf.d/zz-custom-php.ini"
 else
-    sed -i "s/JIT_MODE/disable/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
-    sed -i "s/JIT_BUFFER_SIZE/0/g" "$PHP_SOURCE_PATH/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_MODE/disable/g" "$php_target_path/conf.d/zz-custom-php.ini"
+    sed -i "s/JIT_BUFFER_SIZE/0/g" "$php_target_path/conf.d/zz-custom-php.ini"
 fi
