@@ -159,13 +159,15 @@ print_result_value () {
         first_log_file="$log_file"
     fi
 
-    local memory_result="$(cat "$memory_log_file")"
-
     local n_arr=($results)
     local n="$(echo "${#n_arr[@]}")"
     if [ -z "$first_n" ]; then
         first_n="$n"
     fi
+
+    local memory_results="$(cat "$memory_log_file")"
+    local memory_mean="$(mean "$memory_results")"
+
     local min="$(min "$results")"
     local max="$(max "$results")"
     local mean="$(mean "$results")"
@@ -226,7 +228,7 @@ print_result_value () {
     printf -- "- Std effect size   : %.6f\n" "$effect_size_standardized" | tee -a "$stat_file"
     printf -- "- Common effect size: %.6f\n" "$effect_size_common" | tee -a "$stat_file"
 
-    local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
+    local memory_usage="$(echo "scale=3;${memory_mean}/1024"|bc -l)"
 
     printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
@@ -449,13 +451,19 @@ format_perf_log_file() {
 }
 
 load_php_config () {
+    local php_variation="$1"
+
     source $PHP_CONFIG_FILE
     export PHP_CONFIG_FILE
-    php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
+    php_id_variant="${PHP_ID}"
+    if [[ "$php_variation" -ne "0" ]]; then
+        php_id_variant="$php_id_variant-v$php_variation"
+    fi
+    php_source_path="$PROJECT_ROOT/tmp/$php_id_variant"
 
     log_dir="$result_dir"
     log_file="$log_dir/${PHP_ID}.log"
-    output_file="$log_dir/${PHP_ID}_output.txt"
+    output_file="$log_dir/${php_id_variant}_output.txt"
     memory_log_file="$log_dir/${PHP_ID}_memory.log"
     perf_log_file="$log_dir/${PHP_ID}_perf.log"
     stat_file="$log_dir/${PHP_ID}_stat.log"
@@ -603,7 +611,7 @@ postprocess_results () {
 
     local i=0
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
+        load_php_config "0"
 
         # Format benchmark log
         sed -i "/^[[:space:]]*$/d" "$log_file"
@@ -627,74 +635,85 @@ postprocess_results () {
 }
 
 run_real_benchmark () {
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
-
-        reset_apps
-
-        echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
-        echo "---------------------------------------------------------------------------------------"
-
-        # Verifying output
-        run_cgi "verbose" "0" "1" "$1" "$2" "$3" 2>&1 | tee -a "$output_file"
-        if [ -n "$test_expectation_file" ]; then
-            assert_test_output "$test_expectation_file" "$output_file"
-        fi
-
-        # Measuring memory usage
-        run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
-
-        # Gathering perf metrics
-        run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
-    done
-
-    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-        declare -a v_context_switches=(0 0)
-        declare -a n_context_switches=(0 0)
-        declare -a minor_page_faults=(0 0)
-        declare -a major_page_faults=(0 0)
-        declare -a irqs=(0 0)
-        declare -a soft_irqs=(0 0)
-        declare -a run_queue_length=(0 0)
-        declare -a io_reads=(0 0)
-        declare -a io_writes=(0 0)
-        declare -a io_time=(0 0)
+    php_variation=1
+    linking_order_variation_count="$INFRA_PHP_LINKING_ORDER_VARIATIONS"
+    if [[ -z "$linking_order_variation_count" ]] || [[ "$linking_order_variation_count" -eq 0 ]]; then
+        linking_order_variation_count=1
     fi
+    for php_alignment in $INFRA_PHP_ALIGNMENT_VARIATIONS; do
+        for php_linking_order in $(seq $linking_order_variation_count); do
+            for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+                load_php_config "$php_variation"
 
-    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+                reset_apps
 
-    # Benchmark
-    for i in $(seq $TEST_ITERATIONS); do
-        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-            load_php_config
+                echo "---------------------------------------------------------------------------------------"
+                echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, align: $php_alignment, link order: $php_linking_order)"
+                echo "---------------------------------------------------------------------------------------"
 
-            reset_apps
+                # Verifying output
+                run_cgi "verbose" "0" "1" "$1" "$2" "$3" 2>&1 | tee -a "$output_file"
+                if [ -n "$test_expectation_file" ]; then
+                    assert_test_output "$test_expectation_file" "$output_file"
+                fi
 
-            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
-            echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
-            echo "---------------------------------------------------------------------------------------"
+                # Measuring memory usage
+                run_cgi "memory" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$memory_log_file"
 
-            # Debugging environment - initial state
+                # Gathering perf metrics
+                run_cgi "perf" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$perf_log_file"
+            done
+
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                read -r "v_context_switches[0]" "n_context_switches[0]" \
-                    "minor_page_faults[0]" "major_page_faults[0]" \
-                    "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
-                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+                declare -a v_context_switches=(0 0)
+                declare -a n_context_switches=(0 0)
+                declare -a minor_page_faults=(0 0)
+                declare -a major_page_faults=(0 0)
+                declare -a irqs=(0 0)
+                declare -a soft_irqs=(0 0)
+                declare -a run_queue_length=(0 0)
+                declare -a io_reads=(0 0)
+                declare -a io_writes=(0 0)
+                declare -a io_time=(0 0)
             fi
 
-            run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+            $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
-            # Debugging environment - final state
-            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                read -r "v_context_switches[1]" "n_context_switches[1]" \
-                    "minor_page_faults[1]" "major_page_faults[1]" \
-                    "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
-                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+            # Benchmark
+            for i in $(seq $TEST_ITERATIONS); do
+                for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+                    load_php_config "$php_variation"
 
-                print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
-            fi
+                    reset_apps
+
+                    cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
+                    echo "---------------------------------------------------------------------------------------"
+                    echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, align: $php_alignment, link order: $php_linking_order) - CPU: $cpu_temp"
+                    echo "---------------------------------------------------------------------------------------"
+
+                    # Debugging environment - initial state
+                    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                        read -r "v_context_switches[0]" "n_context_switches[0]" \
+                            "minor_page_faults[0]" "major_page_faults[0]" \
+                            "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
+                            "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+                    fi
+
+                    run_cgi "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1 | tee -a "$log_file"
+
+                    # Debugging environment - final state
+                    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                        read -r "v_context_switches[1]" "n_context_switches[1]" \
+                            "minor_page_faults[1]" "major_page_faults[1]" \
+                            "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
+                            "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+
+                        print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
+                    fi
+                done
+            done
+
+            php_variation="$((php_variation + 1))"
         done
     done
 
@@ -702,70 +721,81 @@ run_real_benchmark () {
 }
 
 run_micro_benchmark () {
-    for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
-
-        echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
-        echo "---------------------------------------------------------------------------------------"
-
-        # Verifying output
-        run_cli "verbose" "0" "1" "$1" 2>&1 | tee -a "$output_file"
-        if [ ! -z "$test_expectation_file" ]; then
-            assert_test_output "$test_expectation_file" "$output_file"
-        fi
-
-        # Measuring memory usage
-        run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
-
-        # Gathering perf metrics
-        run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
-    done
-
-    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-        declare -a v_context_switches=(0 0)
-        declare -a n_context_switches=(0 0)
-        declare -a minor_page_faults=(0 0)
-        declare -a major_page_faults=(0 0)
-        declare -a irqs=(0 0)
-        declare -a soft_irqs=(0 0)
-        declare -a run_queue_length=(0 0)
-        declare -a io_reads=(0 0)
-        declare -a io_writes=(0 0)
-        declare -a io_time=(0 0)
+    php_variation=1
+    linking_order_variation_count="$INFRA_PHP_LINKING_ORDER_VARIATIONS"
+    if [[ -z "$linking_order_variation_count" ]] || [[ "$linking_order_variation_count" -eq 0 ]]; then
+        linking_order_variation_count=1
     fi
+    for php_alignment in $INFRA_PHP_ALIGNMENT_VARIATIONS; do
+        for php_linking_order in $(seq "$linking_order_variation_count"); do
+            for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+                load_php_config "$php_variation"
 
-    $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
+                echo "---------------------------------------------------------------------------------------"
+                echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
+                echo "---------------------------------------------------------------------------------------"
 
-    # Benchmark
-    for i in $(seq $TEST_ITERATIONS); do
-        for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-            load_php_config
+                # Verifying output
+                run_cli "verbose" "0" "1" "$1" 2>&1 | tee -a "$output_file"
+                if [ ! -z "$test_expectation_file" ]; then
+                    assert_test_output "$test_expectation_file" "$output_file"
+                fi
 
-            cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
-            echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
-            echo "---------------------------------------------------------------------------------------"
+                # Measuring memory usage
+                run_cli "memory" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$memory_log_file"
 
-            # Debugging environment - initial state
+                # Gathering perf metrics
+                run_cli "perf" "0" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$perf_log_file"
+            done
+
             if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                read -r "v_context_switches[0]" "n_context_switches[0]" \
-                    "minor_page_faults[0]" "major_page_faults[0]" \
-                    "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
-                    "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+                declare -a v_context_switches=(0 0)
+                declare -a n_context_switches=(0 0)
+                declare -a minor_page_faults=(0 0)
+                declare -a major_page_faults=(0 0)
+                declare -a irqs=(0 0)
+                declare -a soft_irqs=(0 0)
+                declare -a run_queue_length=(0 0)
+                declare -a io_reads=(0 0)
+                declare -a io_writes=(0 0)
+                declare -a io_time=(0 0)
             fi
 
-            run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
+            $PROJECT_ROOT/bin/system/wait_for_cpu_temp.sh "$BENCH_PHP_CPU" "$INFRA_MAX_ALLOWED_CPU_TEMP" "$CPU_TEMP_TIMEOUT" "$CPU_TEMP_FALLBACK_SLEEP"
 
-            # Debugging environment - final state
-            if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
-                read -r "v_context_switches[1]" "n_context_switches[1]" \
-                    "minor_page_faults[1]" "major_page_faults[1]" \
-                    "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
-                    "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+            # Benchmark
+            for i in $(seq $TEST_ITERATIONS); do
+                for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
+                    load_php_config "$php_variation"
 
-                print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
-            fi
+                    cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
+                    echo "---------------------------------------------------------------------------------------"
+                    echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
+                    echo "---------------------------------------------------------------------------------------"
+
+                    # Debugging environment - initial state
+                    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                        read -r "v_context_switches[0]" "n_context_switches[0]" \
+                            "minor_page_faults[0]" "major_page_faults[0]" \
+                            "irqs[0]" "soft_irqs[0]" "run_queue_length[0]" \
+                            "io_reads[0]" "io_writes[0]" "io_time[0]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+                    fi
+
+                    run_cli "quiet" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1 | tee -a "$log_file"
+
+                    # Debugging environment - final state
+                    if [ "$INFRA_DEBUG_ENVIRONMENT" == "1" ]; then
+                        read -r "v_context_switches[1]" "n_context_switches[1]" \
+                            "minor_page_faults[1]" "major_page_faults[1]" \
+                            "irqs[1]" "soft_irqs[1]" "run_queue_length[1]" \
+                            "io_reads[1]" "io_writes[1]" "io_time[1]" < <(collect_environment_metrics "$BENCH_PHP_CPU")
+
+                        print_environment_metrics_diff "$i" | tee -a "$environment_debug_log_file"
+                    fi
+                done
+            done
+
+            php_variation="$((php_variation + 1))"
         done
     done
 
@@ -815,7 +845,7 @@ run_benchmark () {
     esac
 
     for PHP_CONFIG_FILE in $PROJECT_ROOT/config/php/*.ini; do
-        load_php_config
+        load_php_config "0"
 
         format_perf_log_file "$perf_log_file"
 
