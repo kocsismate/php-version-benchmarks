@@ -32,6 +32,7 @@ MYSQL_CPUS="2"
 
 sudo cgexec -g cpuset:mysql \
     docker run \
+    --quiet \
     --name "$mysql_container" \
     --user "$(id -u):$(id -g)" \
     -v $mysql_data_path:/var/lib/mysql \

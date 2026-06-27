@@ -3,7 +3,7 @@ set -e
 
 mkdir -p "$PROJECT_ROOT/tmp/app"
 
-sudo docker build -t setup "$PROJECT_ROOT/app"
+sudo docker build --quiet -t setup "$PROJECT_ROOT/app"
 
 for test_config in $PROJECT_ROOT/config/test/*.ini; do
     source $test_config
