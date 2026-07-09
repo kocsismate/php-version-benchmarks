@@ -28,7 +28,8 @@ else
             git init && \
             git remote add origin "$PHP_REPO" && \
             git fetch origin "${!var}" && \
-            git reset --hard FETCH_HEAD \
+            git reset --hard FETCH_HEAD && \
+            find "$PHP_SOURCE_PATH" -name "*.phpt" -type f -delete \
         )
     else
         echo "Creating source ($PHP_SOURCE_PATH) from base source ($PHP_BASE_SOURCE_PATH)"

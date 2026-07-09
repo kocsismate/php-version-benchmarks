@@ -66,6 +66,8 @@ disable_turbo_boost = $disable_turbo_boost
 lock_cpu_frequency = $lock_cpu_frequency
 cpu_numa_node = "$INFRA_CPU_NUMA_NODE"
 max_allowed_cpu_temp = $INFRA_MAX_ALLOWED_CPU_TEMP
+php_alignment_variations = "$INFRA_PHP_ALIGNMENT_VARIATIONS"
+php_linking_order_variations = $INFRA_PHP_LINKING_ORDER_VARIATIONS
 
 infra_id = "$INFRA_ID"
 infra_name = "$INFRA_NAME"

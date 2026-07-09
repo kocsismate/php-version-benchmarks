@@ -153,6 +153,8 @@ EOF
       "export INFRA_LOCK_CPU_FREQUENCY=\"${var.lock_cpu_frequency ? 1 : 0}\"",
       "export INFRA_CPU_NUMA_NODE=\"${var.cpu_numa_node}\"",
       "export INFRA_MAX_ALLOWED_CPU_TEMP=\"${var.max_allowed_cpu_temp}\"",
+      "export INFRA_PHP_ALIGNMENT_VARIATIONS=\"${var.php_alignment_variations}\"",
+      "export INFRA_PHP_LINKING_ORDER_VARIATIONS=\"${var.php_linking_order_variations}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
       "export INFRA_COLLECT_EXTENDED_PER_STATS=\"${var.collect_extended_perf_stats ? 1 : 0}\"",

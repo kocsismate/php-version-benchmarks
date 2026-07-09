@@ -112,6 +112,14 @@ variable "max_allowed_cpu_temp" {
   type = number
 }
 
+variable "php_alignment_variations" {
+  type = string
+}
+
+variable "php_linking_order_variations" {
+  type = number
+}
+
 variable "infra_id" {
   type = string
 }

@@ -2,6 +2,7 @@
 set -e
 
 sudo dnf install --allowerasing -y \
+    lld \
     util-linux \
     kernel-tools \
     kexec-tools \

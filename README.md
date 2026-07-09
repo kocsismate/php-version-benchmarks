@@ -39,6 +39,27 @@ All the configuration of the benchmark is done via `.ini` files in the `config` 
 are bundled with the benchmark (having `.ini.dist` extension in their names). Feel free to rename them by removing the
 `.dist` suffix in order to take advantage of them.
 
+#### Infrastructure
+
+| Option                             | Description                                                                                                                                                                            |
+|------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| INFRA_ID                           | The ID of the infrastructure configuration to be used in the code.                                                                                                                     |
+| INFRA_NAME                         | The name of the infrastructure configuration which is displayed in the benchmark results.                                                                                              |
+| INFRA_INSTANCE_TYPE                | The AWS EC2 instance type.                                                                                                                                                             |
+| INFRA_ARCHITECTURE                 | Any supported CPU architecture code ("x86_64", "amd64", "arm64").                                                                                                                      |
+| INFRA_DEDICATED_INSTANCE           | Whether the [dedicated instance](https://aws.amazon.com/ec2/pricing/dedicated-instances/) feature is enabled ("0" or "1")                                                              |
+| INFRA_DISABLE_DEEPER_C_STATES      | Whether [deeper CPU C-states](https://docs.aws.amazon.com/linux/al2/ug/processor_state_control.html) are disabled  ("0" or "1").                                                       |
+| INFRA_DISABLE_TURBO_BOOST          | Whether turbo boost is disabled ("0" or "1").                                                                                                                                          |
+| INFRA_DISABLE_HYPER_THREADING      | Whether hyper threading is disabled ("0" or "1").                                                                                                                                      |
+| INFRA_LOCK_CPU_FREQUENCY           | Whether CPU frequency is locked to the base frequency ("0" or "1").                                                                                                                    |
+| INFRA_MAX_ALLOWED_CPU_TEMP         | Maximum allowed CPU temperature in °C before running a test.                                                                                                                           |
+| INFRA_PHP_ALIGNMENT_VARIATIONS     | A list of alignment variations separated by space (e.g. "8 16 32"). Zero means no variation. Each PHP version is compiled against each alignment variation.                            |
+| INFRA_PHP_LINKING_ORDER_VARIATIONS | Linking order variation count. Zero means linking order uses the default settings.                                                                                                     |
+| INFRA_WORKSPACE                    | A unique identifier to use when the same AWS account is reused across different benchmarking environments.                                                                             |
+| INFRA_RUNNER                       | Deprecated option. Only host runner is supported.                                                                                                                                      |
+| INFRA_COLLECT_EXTENDED_PERF_STATS  | Whether to collect extended perf stat events (`LLC-loads`, `LLC-load-misses`, `LLC-stores`, `LLC-store-misses`, `iTLB-load-misses`, `dTLB-load-misses`). Supported values: "0" or "1". |
+| INFRA_DEBUG_ENVIRONMENT            | Whether to collect the environment state for debugging purposes. Supported values: "0" or "1".                                                                                         |
+
 ### Usage on AWS EC2
 
 As a prerequisite, you need the following:
