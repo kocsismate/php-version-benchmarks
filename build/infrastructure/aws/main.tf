@@ -214,7 +214,7 @@ data "aws_ami" "host" {
   filter {
     name   = "name"
     # ID copy pasted from https://docs.aws.amazon.com/linux/al2023/release-notes/relnotes.html
-    values = ["al2023-ami-minimal-2023.11.20260427*"]
+    values = ["al2023-ami-minimal-2023.12.20260727*"]
   }
 
   filter {
