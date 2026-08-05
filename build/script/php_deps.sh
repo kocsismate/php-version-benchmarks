@@ -5,7 +5,7 @@ sudo dnf install --allowerasing -y \
     util-linux \
     kernel-tools \
     kexec-tools \
-    autoconf \
+    autoconf271 \
     git \
     docker \
     file \
