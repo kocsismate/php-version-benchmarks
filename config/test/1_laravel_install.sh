@@ -33,5 +33,8 @@ sed -i "s/if (\\\\PHP_VERSION_ID >= 80400) {/if (\\\\PHP_VERSION_ID > 80400 || (
 sed -i "s/if (\\\\PHP_VERSION_ID >= 80500) {/if (\\\\PHP_VERSION_ID > 80500 || (\\\\PHP_VERSION_ID === 80500 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$laravel_dir/vendor/symfony/polyfill-php85/bootstrap.php"
 
 sed -i "s/mb_split('\\\s+',/preg_split('\/\\\\s+\/u',/g" "$laravel_dir/vendor/laravel/framework/src/Illuminate/Support/Str.php"
+sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/laravel/framework/src/Illuminate/Container/Container.php"
+sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/nesbot/carbon/src/Carbon/Traits/Creator.php"
+sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/nesbot/carbon/src/Carbon/Traits/Date.php"
 
 sudo chmod -R 777 "$laravel_dir/storage"
