@@ -131,6 +131,12 @@ elif [[ "$1" == "bisect" ]]; then
         git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" fetch
     fi
 
+    # Check commits if they are direct anchestors to each other
+    if ! git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "$PHP_BISECT_COMMIT_FROM" "$PHP_BISECT_COMMIT_TO"; then
+        echo "$PHP_BISECT_COMMIT_FROM is not an ancestor of $PHP_BISECT_COMMIT_TO"
+        exit 1
+    fi
+
     # Collect commits (oldest -> newest)
     php_bisect_commits=()
     php_bisect_commits+=("$PHP_BISECT_COMMIT_FROM")
