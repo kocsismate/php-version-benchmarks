@@ -1,42 +1,74 @@
 #!/usr/bin/env bash
 
+create_infra () {
+    terraform init \
+        -backend=true \
+        -get=true \
+        -upgrade \
+        -input=false \
+        -backend-config="$PROJECT_ROOT/build/infrastructure/config/state.config"
+
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    terraform destroy \
+        -auto-approve \
+        -input=false \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
+
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    terraform apply \
+        -auto-approve \
+        -input=false \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
+}
+
+destroy_infra () {
+    set -e
+
+    terraform destroy \
+        -auto-approve \
+        -input=false \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
+        -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
+
+    set +e
+}
+
 $PROJECT_ROOT/build/infrastructure/aws/generate_aws_config.sh
 
-cd $PROJECT_ROOT/build/infrastructure/aws/
+cd "$PROJECT_ROOT/build/infrastructure/aws/"
 
-terraform init \
-    -backend=true \
-    -get=true \
-    -upgrade \
-    -input=false \
-    -backend-config="$PROJECT_ROOT/build/infrastructure/config/state.config"
-if [ $? -ne 0 ]; then
-  exit 1
-fi
+subcommand="$1"
+status_code="0"
 
-terraform destroy \
-    -auto-approve \
-    -input=false \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
-if [ $? -ne 0 ]; then
-  exit 1
-fi
+case "$subcommand" in
+    "create")
+        create_infra
+        status_code="$?"
+        ;;
 
-terraform apply \
-    -auto-approve \
-    -input=false \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
+    "create_destroy")
+        create_infra
+        status_code="$?"
+        destroy_infra
+        ;;
 
-status_code="$?"
+    "destroy")
+        destroy_infra
+        ;;
 
-terraform destroy \
-    -auto-approve \
-    -input=false \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/aws.tfvars" \
-    -var-file="$PROJECT_ROOT/build/infrastructure/config/custom.tfvars"
+    *)
+        echo "Invalid subcommand $subcommand" >&2
+        exit 1
+esac
 
-cd $PROJECT_ROOT
+cd "$PROJECT_ROOT"
 
-exit $status_code
+exit "$status_code"

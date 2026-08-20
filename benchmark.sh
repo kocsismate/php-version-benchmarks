@@ -4,7 +4,9 @@ set -e
 export LC_ALL=C
 export PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [[ "$1" == "run" ]]; then
+command="${1:-}"
+
+if [[ "$command" == "run" || "$command" == "destroy" ]]; then
 
     if [[ "$2" == "aws" ]]; then
         INFRA_ENVIRONMENT="aws"
@@ -12,6 +14,66 @@ if [[ "$1" == "run" ]]; then
         echo "Available environments: aws"
         exit 1
     fi
+
+    shift 2
+
+    N="1"
+    DRY_RUN="0"
+
+    if [[ "$command" == "run" ]]; then
+        provision_subcommand="create_destroy"
+
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --runs)
+                    [[ "$#" -ge 2 ]] || {
+                        echo "Error: --runs requires a value" >&2
+                        exit 1
+                    }
+
+                    N="$2"
+                    shift 2
+                    ;;
+
+                --runs=*)
+                    N="${1#*=}"
+                    shift
+                    ;;
+
+                --dry-run)
+                    DRY_RUN="1"
+                    shift
+                    ;;
+
+                --no-destroy)
+                    provision_subcommand="create"
+                    shift
+                    ;;
+
+                --)
+                    shift
+                    break
+                    ;;
+
+                *)
+                    echo "Unknown option: $1" >&2
+                    exit 1
+                    ;;
+            esac
+        done
+
+    else
+
+        if [[ $# -gt 0 ]]; then
+            echo "The destroy command doesn't support any options" >&2
+            exit 1
+        fi
+
+        provision_subcommand="destroy"
+    fi
+
+    export N
+    export DRY_RUN
 
     infra_count="$(ls 2>/dev/null -Ubad1 -- $PROJECT_ROOT/config/infra/$INFRA_ENVIRONMENT/*.ini | wc -l)"
     infra_count="$(echo "$infra_count" | awk '{$1=$1;print}')"
@@ -34,15 +96,8 @@ if [[ "$1" == "run" ]]; then
         exit 1
     fi
 
-    export N="${3:-1}"
     NOW="$(TZ=UTC date +'%Y-%m-%d %H:%M:%S')"
     export NOW
-
-    DRY_RUN="0";
-    if [[ "$4" == "dry-run" ]]; then
-        DRY_RUN="1"
-    fi
-    export DRY_RUN
 
     RESULT_ROOT_DIR="${NOW//-/_}"
     RESULT_ROOT_DIR="${RESULT_ROOT_DIR// /_}"
@@ -76,11 +131,13 @@ if [[ "$1" == "run" ]]; then
             source "$infra_config"
             export $(cut -d= -f1 $infra_config)
 
-            $PROJECT_ROOT/bin/provision.sh
+            $PROJECT_ROOT/bin/provision.sh "$provision_subcommand"
         done
     done
 
-elif [[ "$1" == "ssh" ]]; then
+elif [[ "$command" == "ssh" ]]; then
+    remote_command="$2"
+
     host_dns_file="$PROJECT_ROOT/tmp/host_dns.txt"
     if [ ! -f "$host_dns_file" ]; then
         echo "Instance is not yet running" >&2
@@ -95,7 +152,7 @@ elif [[ "$1" == "ssh" ]]; then
 
     host_dns="$(cat "$host_dns_file")"
 
-    ssh -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$private_key_file" "ec2-user@$host_dns" "$2"
+    ssh -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$private_key_file" "ec2-user@$host_dns" "$remote_command"
 
 elif [[ "$1" == "bisect" ]]; then
 
@@ -182,15 +239,15 @@ EOF
         git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" checkout --detach "$php_bisect_commit"
     done
 
-elif [[ "$1" == "help" ]]; then
+elif [[ "$command" == "help" ]]; then
 
-    echo "Usage: ./benchmark.sh run [environment] [runs] [dry-run]"
+    echo "Usage: ./benchmark.sh run [environment] [--runs N] [--dry-run] [--no-destroy]"
     echo ""
     echo "Available runners: aws"
 
 else
 
-    echo 'Available subcommands: "run", "ssh", "bisect", "help"!'
+    echo 'Available subcommands: "run", "destroy", "ssh", "bisect", "help"' >&2
     exit 1
 
 fi
