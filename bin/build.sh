@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ "$1" == "$INFRA_ENVIRONMENT" && "$INFRA_ENVIRONMENT" != "local" ]]; then
+environment="$1"
+
+if [[ "$environment" == "local" ]]; then
+    is_local="1"
+else
+    is_local="0"
+fi
+
+if [[ "$is_local" == "0" ]]; then
     sudo service docker start &
 fi
 
@@ -16,24 +24,26 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
         export PHP_BASE_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
     fi
 
-    echo "Checking out source for $PHP_NAME..."
+    if [[ "$is_local" == "0" || -z "$PHP_COMMIT" ]]; then
+        echo "Checking out source for $PHP_NAME..."
 
-    if [ -z "$PHP_BASE_ID" ]; then
-        $PROJECT_ROOT/build/script/php_source.sh "$1" &
-    else
-        wait
-        $PROJECT_ROOT/build/script/php_source.sh "$1"
+        if [ -z "$PHP_BASE_ID" ]; then
+            $PROJECT_ROOT/build/script/php_source.sh "$environment" &
+        else
+            wait
+            $PROJECT_ROOT/build/script/php_source.sh "$environment"
+        fi
     fi
 done
 
-if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
+if [[ "$is_local" == "0" ]]; then
     echo "Installing apps..."
     $PROJECT_ROOT/bin/install.sh
 fi
 
 wait
 
-if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
+if [[ "$is_local" == "0" ]]; then
 
     echo "Default linker file:"
     ld --verbose

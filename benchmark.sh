@@ -121,7 +121,11 @@ if [[ "$command" == "run" || "$command" == "destroy" ]]; then
             export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
         fi
 
-        export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
+        if [[ -z "$PHP_COMMIT" ]]; then
+            export "PHP_COMMITS_$PHP_ID=$(git -C "$PHP_SOURCE_PATH" rev-parse HEAD)"
+        else
+            export "PHP_COMMITS_$PHP_ID=$PHP_COMMIT"
+        fi
     done
 
     for RUN in $(seq "$N"); do
@@ -188,7 +192,7 @@ elif [[ "$1" == "bisect" ]]; then
         git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" fetch
     fi
 
-    # Check commits if they are direct anchestors to each other
+    # Check commits if they are direct ancestors to each other
     if ! git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "$PHP_BISECT_COMMIT_FROM" "$PHP_BISECT_COMMIT_TO"; then
         echo "$PHP_BISECT_COMMIT_FROM is not an ancestor of $PHP_BISECT_COMMIT_TO" >&2
         exit 1
@@ -233,10 +237,6 @@ PHP_JIT=$PHP_JIT
 EOF
 
         echo "Created bisect config \"$PHP_NAME ${i_1}\" for commit $php_bisect_commit"
-        echo "Checking out source..."
-        rm -rf "$PHP_SOURCE_PATH"
-        cp -r "$php_bisect_source_path" "$PHP_SOURCE_PATH"
-        git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" checkout --detach "$php_bisect_commit"
     done
 
 elif [[ "$command" == "help" ]]; then
