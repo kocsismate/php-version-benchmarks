@@ -16,14 +16,14 @@ verify_cpu_isolation () {
     local isolated_cpu_cores="$(cat /sys/devices/system/cpu/isolated)"
     local parsed_isolated_cpu_cores="$(parse_cpu_list "$isolated_cpu_cores")"
     if [[ "$parsed_cpu_list" != "$parsed_isolated_cpu_cores" ]]; then
-        echo "Error: CPU isolation error (\"$parsed_cpu_list\" doesn't match \"$parsed_isolated_cpu_cores\")"
+        echo "Error: CPU isolation error (\"$parsed_cpu_list\" doesn't match \"$parsed_isolated_cpu_cores\")" >&2
         exit 1
     fi
 
     local no_hz_cpu_cores="$(cat /sys/devices/system/cpu/nohz_full)"
     local parsed_no_hz_cpu_cores="$(parse_cpu_list "$no_hz_cpu_cores")"
     if [[ "$parsed_cpu_list" != "$parsed_no_hz_cpu_cores" ]]; then
-        echo "Error: CPU NO HZ isolation error ($parsed_cpu_list doesn't match $parsed_no_hz_cpu_cores)"
+        echo "Error: CPU NO HZ isolation error ($parsed_cpu_list doesn't match $parsed_no_hz_cpu_cores)" >&2
         exit 1
     fi
 
@@ -43,6 +43,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

@@ -11,7 +11,7 @@ verify_c_states_limit () {
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
         local max_c_state="$(cat /sys/module/intel_idle/parameters/max_cstate)"
         if [[ "$max_c_state" != "1" ]]; then
-          echo "Error: CPU C-state is incorrect ($max_c_state)"
+          echo "Error: CPU C-state is incorrect ($max_c_state)" >&2
           exit 1
         fi
 
@@ -31,6 +31,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

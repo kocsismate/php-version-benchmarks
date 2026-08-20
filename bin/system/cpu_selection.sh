@@ -36,7 +36,7 @@ select_cpus () {
 
     local cpu_count="$(nproc)"
     if [[ "$cpu_count" -lt "4" ]]; then
-        echo "At least 4 physical CPU cores are required to run the benchmark ($cpu_count is used)"
+        echo "At least 4 physical CPU cores are required to run the benchmark ($cpu_count is used)" >&2
         exit 1
     fi
 
@@ -80,6 +80,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

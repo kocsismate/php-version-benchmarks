@@ -16,14 +16,14 @@ verify_cpu_turbo_boost () {
         local turbo_file="/sys/devices/system/cpu/intel_pstate/no_turbo"
 
         if [[ ! -f "$turbo_file" ]]; then
-          echo "Error: Turbo boost is enabled"
+          echo "Error: Turbo boost is enabled" >&2
           exit 1
         fi
 
         local turbo_status="$(cat "$turbo_file")"
 
         if [[ "$turbo_status" != "1" ]]; then
-          echo "Error: Turbo boost is enabled"
+          echo "Error: Turbo boost is enabled" >&2
           exit 1
         fi
 
@@ -43,6 +43,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

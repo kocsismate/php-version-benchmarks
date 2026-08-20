@@ -14,6 +14,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

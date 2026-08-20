@@ -23,7 +23,7 @@ verify_cpu_hyper_threading () {
         local physical_cores="$(awk '/physical id/ {phy=$4} /core id/ {print phy"."$4}' /proc/cpuinfo | sort -u | wc -l)"
 
         if (( logical_cpus > physical_cores )); then
-          echo "Error: Hyperthreading is enabled: there are $logical_cpus logical CPUs, and $physical_cores physical ones)"
+          echo "Error: Hyperthreading is enabled: there are $logical_cpus logical CPUs, and $physical_cores physical ones)" >&2
           exit 1
        fi
 
@@ -43,6 +43,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2 >&2
         exit 1
 esac

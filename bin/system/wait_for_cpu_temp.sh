@@ -30,7 +30,7 @@ while true; do
     fi
 
     if (( now - start_time > timeout )); then
-        echo "CPU $cpu temperature didn't drop below $max_allowed_cpu_temp within $timeout seconds"
+        echo "CPU $cpu temperature didn't drop below $max_allowed_cpu_temp within $timeout seconds" >&2
         exit 1
     fi
 

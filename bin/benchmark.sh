@@ -337,7 +337,7 @@ run_cgi () {
                 $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
         fi
     else
-        echo "Invalid php-cgi run mode"
+        echo "Invalid php-cgi run mode" >&2
         exit 1
     fi
 }
@@ -423,7 +423,7 @@ run_cli () {
                 $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
         fi
     else
-        echo "Invalid php-cli run mode"
+        echo "Invalid php-cli run mode" >&2
         exit 1
     fi
 }
@@ -795,7 +795,7 @@ run_benchmark () {
     first_var=""
 
     if [[ -z "$TEST_FILE" ]]; then
-        echo "Empty \"TEST_FILE\" option in $test_config"
+        echo "Empty \"TEST_FILE\" option in $test_config" >&2
         exit 1
     fi
 
@@ -809,7 +809,7 @@ run_benchmark () {
             ;;
 
         *)
-            echo "Invalid test type \"$TEST_TYPE\" in $test_config"
+            echo "Invalid test type \"$TEST_TYPE\" in $test_config" >&2
             exit 1
             ;;
     esac

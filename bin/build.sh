@@ -72,9 +72,9 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
         echo "Verifying compilation of $PHP_NAME..."
 
         if [ ! -f "$PHP_SOURCE_PATH/sapi/cli/php" ]; then
-            echo "Failed to compile PHP"
+            echo "Failed to compile PHP" >&2
             cat "$PHP_SOURCE_PATH/config.log" || true
-            exit 1;
+            exit 1
         fi
 
         if git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
@@ -102,20 +102,20 @@ if [[ "$1" == "$INFRA_ENVIRONMENT" ]]; then
         fi
 
         if [[ "$opcache_enabled" = "0" ]]; then
-            echo "OPCache should be enabled"
+            echo "OPCache should be enabled" >&2
             exit 1
         fi
 
         if [[ "$PHP_JIT" = "1" ]]; then
             if [[ "$jit_enabled" = "0" ]]; then
-                echo "JIT should be enabled"
+                echo "JIT should be enabled" >&2
                 exit 1
             fi
         fi
 
         if [[ "$PHP_JIT" = "0" ]]; then
             if [[ "$jit_enabled" = "1" ]]; then
-                echo "JIT should not be enabled"
+                echo "JIT should not be enabled" >&2
                 exit 1
             fi
         fi

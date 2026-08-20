@@ -23,13 +23,13 @@ verify_cpu_frequency () {
         if echo "$info" | grep -q "The governor \"performance\""; then
             echo "OK: CPU governor is performance"
         else
-            echo "Error: CPU governor isn't performance!"
+            echo "Error: CPU governor isn't performance" >&2
             exit 1
         fi
 
         local policy_line="$(echo "$info" | grep "current policy:" || true)"
         if [ -z "$policy_line" ]; then
-            echo "Error: No CPU governor policy is available"
+            echo "Error: No CPU governor policy is available" >&2
             exit 1
         fi
 
@@ -39,7 +39,7 @@ verify_cpu_frequency () {
         if [ "$cpu_min_frequency" == "$cpu_max_frequency" ]; then
             echo "OK: Minimum and maximum frequency are correct ($cpu_max_frequency)"
         else
-            echo "Error: Minimum and maximum CPU frequency differ ($cpu_min_frequency and $cpu_max_frequency)"
+            echo "Error: Minimum and maximum CPU frequency differ ($cpu_min_frequency and $cpu_max_frequency)" >&2
             exit 1
         fi
     fi
@@ -57,6 +57,6 @@ case "$subcommand" in
         ;;
 
     *)
-        echo "Invalid subcommand $subcommand"
+        echo "Invalid subcommand $subcommand" >&2
         exit 1
 esac

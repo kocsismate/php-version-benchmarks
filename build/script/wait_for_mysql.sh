@@ -21,7 +21,7 @@ while true; do
 
     now="$(date +%s)"
     if (( now - start_time > mysql_timeout )); then
-        echo "Error: MySQL did not become ready within $mysql_timeout seconds"
+        echo "Error: MySQL did not become ready within $mysql_timeout seconds" >&2
         exit 1
     fi
 
