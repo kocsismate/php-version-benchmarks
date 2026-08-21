@@ -214,6 +214,8 @@ elif [[ "$1" == "bisect" ]]; then
     echo "Total php_bisect_commits: $php_bisect_commits_total"
     echo "Generating $PHP_BISECT_PARTS checkpoints"
 
+    rm -f "${php_bisect_template_file}"_*.ini
+
     php_bisect_source_path="$PHP_SOURCE_PATH"
 
     # Evenly distributed index
