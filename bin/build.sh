@@ -25,7 +25,7 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
     fi
 
     if [[ "$is_local" == "0" || -z "$PHP_COMMIT" ]]; then
-        echo "Checking out source for $PHP_NAME..."
+        echo "Checking out source for $PHP_NAME (commit: $PHP_COMMIT)..."
 
         if [ -z "$PHP_BASE_ID" ]; then
             $PROJECT_ROOT/build/script/php_source.sh "$environment" &
@@ -67,7 +67,7 @@ if [[ "$is_local" == "0" ]]; then
             export PHP_BASE_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_BASE_ID"
         fi
 
-        echo "Compiling $PHP_NAME..."
+        echo "Compiling $PHP_NAME (commit: $PHP_COMMIT)..."
 
         $PROJECT_ROOT/build/script/php_compile.sh "$cpu_per_php" &
     done
@@ -79,7 +79,7 @@ if [[ "$is_local" == "0" ]]; then
         export $(cut -d= -f1 $php_config)
         export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
 
-        echo "Verifying compilation of $PHP_NAME..."
+        echo "Verifying compilation of $PHP_NAME (commit: $PHP_COMMIT)..."
 
         if [ ! -f "$PHP_SOURCE_PATH/sapi/cli/php" ]; then
             echo "Failed to compile PHP" >&2
