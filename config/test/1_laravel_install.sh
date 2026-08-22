@@ -24,7 +24,6 @@ sudo docker run --rm \
         composer install --classmap-authoritative --no-interaction --working-dir=/code/app/laravel"
 
 sed -i "s/'lottery' => \\[2, 100\\],/'lottery' => \\[0, 100\\],/g" $laravel_dir/config/session.php
-#sed -i "s#error_reporting(-1);#//error_reporting(-1);#g" $laravel_dir/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php
 
 sed -i "s/if (\\\\PHP_VERSION_ID >= 80300) {/if (\\\\PHP_VERSION_ID > 80300 || (\\\\PHP_VERSION_ID === 80300 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$laravel_dir/vendor/symfony/polyfill-php83/bootstrap.php"
 sed -i "s/if (\\\\PHP_VERSION_ID >= 80300) {/if (\\\\PHP_VERSION_ID > 80300 || (\\\\PHP_VERSION_ID === 80300 \&\& \\\\PHP_EXTRA_VERSION !== '-dev')) {/g" "$laravel_dir/vendor/symfony/polyfill-php83/bootstrap81.php"
@@ -36,5 +35,7 @@ sed -i "s/mb_split('\\\s+',/preg_split('\/\\\\s+\/u',/g" "$laravel_dir/vendor/la
 sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/laravel/framework/src/Illuminate/Container/Container.php"
 sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/nesbot/carbon/src/Carbon/Traits/Creator.php"
 sed -i "s/spl_object_hash(/spl_object_id(/g" "$laravel_dir/vendor/nesbot/carbon/src/Carbon/Traits/Date.php"
+
+cp "$PROJECT_ROOT/app/LaravelCookieSessionHandler.php" "$laravel_dir/vendor/laravel/framework/src/Illuminate/Session/CookieSessionHandler.php"
 
 sudo chmod -R 777 "$laravel_dir/storage"

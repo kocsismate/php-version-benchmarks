@@ -82,7 +82,7 @@ resource "aws_instance" "host" {
       mkdir -p "./tmp/results/${var.result_root_dir}"
 
       tar --exclude="./build/infrastructure/" -czvf ./tmp/archive.tar.gz \
-        ./app/Dockerfile ./app/zend/ ./app/laravel.composer.lock/ \
+        ./app/Dockerfile ./app/zend/ ./app/laravel.composer.lock ./app/LaravelCookieSessionHandler.php \
         ./bin ./build ./config ./tmp/results/${var.result_root_dir}
 EOF
   }
