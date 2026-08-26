@@ -4,7 +4,7 @@ set -e
 source $PROJECT_ROOT/bin/math/lib.sh
 
 print_environment () {
-    printf "URI\tID\tName\tEnvironment\tRunner\tInstance type\tArchitecture\tCPU\tCPU cores\tCPU frequency\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
+    printf "URI\tID\tName\tEnvironment\tRunner\tBinary layout strategy\tInstance type\tArchitecture\tCPU\tCPU cores\tCPU frequency\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
 
 cat << EOF > "$1.md"
 ### $INFRA_NAME
@@ -34,6 +34,24 @@ EOF
     os="${os//\"/}"
     os="$(echo "$os" | awk '{$1=$1;print}')"
     gcc_version="$(gcc -v 2>&1 | grep "gcc version" | awk '{print $3}')"
+
+    case "$INFRA_BINARY_LAYOUT_STRATEGY" in
+        "")
+            binary_layout_strategy="none"
+            ;;
+
+        "bolt")
+            binary_layout_strategy="BOLT"
+            ;;
+
+        "bolt_align")
+            binary_layout_strategy="bolt-align"
+            ;;
+
+        *)
+            echo "Invalid binary layout strategy config value" >&2
+            exit 1
+    esac
 
     cpu_settings=""
     if [[ "$INFRA_DISABLE_DEEPER_C_STATES" == "1" ]]; then
@@ -68,8 +86,8 @@ EOF
         cpu_settings="${cpu_settings:2}"
     fi
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
-        "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_INSTANCE_TYPE" "$architecture" \
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%s\n" \
+        "${RESULT_ROOT_DIR}_${RUN}_${INFRA_ID}" "$INFRA_ID" "$INFRA_NAME" "$INFRA_ENVIRONMENT" "$INFRA_RUNNER" "$INFRA_BINARY_LAYOUT_STRATEGY" "$INFRA_INSTANCE_TYPE" "$architecture" \
         "$cpu" "$BENCH_CPU_COUNT" "$cpu_frequency_mhz" "$ram_gb" "$kernel" "$os" "$gcc_version" "$INFRA_DEDICATED_INSTANCE" "$deeper_c_states" "$turbo_boost" "$hyper_threading" \
         "$NOW" >> "$1.tsv"
 
@@ -101,9 +119,9 @@ EOF
         extra="| $BENCHMARK_EXTRA_TITLE  |$BENCHMARK_EXTRA_TEXT|\n"
     fi
 
-    printf "| Environment   |%s|\n${instance_type}| Architecture  |%s|\n| CPU           |%s|\n${cpu_settings}| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Time          |%s|\n${job_details}${extra}" \
+    printf "| Environment   |%s|\n${instance_type}| Architecture  |%s|\n| CPU           |%s|\n${cpu_settings}| RAM           |%d GB|\n| Kernel        |%s|\n| OS            |%s|\n| GCC           |%s|\n| Binary layout strategy |%s|\n| Time          |%s|\n${job_details}${extra}" \
         "$INFRA_ENVIRONMENT" "$architecture" \
-        "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$NOW UTC" >> "$1.md"
+        "$cpu" "$ram_gb" "$kernel" "$os" "$gcc_version" "$binary_layout_strategy" "$NOW UTC" >> "$1.md"
 }
 
 print_result_tsv_header () {
@@ -285,6 +303,11 @@ run_cgi () {
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
 
+    php_binary="$php_source_path/sapi/cgi/php-cgi"
+    if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" || "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+        php_binary="$php_binary-bolt"
+    fi
+
     if [ "$mode" = "quiet" ]; then
         if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "0" || "$INFRA_DISABLE_DEEPER_C_STATES" == "0" ]]; then
             sleep 0.25
@@ -293,26 +316,26 @@ run_cgi () {
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "verbose" ]; then
        sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$4"
     elif [ "$mode" = "memory" ]; then
         sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
-            /usr/bin/time -v $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            /usr/bin/time -v $php_binary $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
     elif [ "$mode" = "perf" ]; then
         sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+            $php_binary $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
         if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
             sudo cgexec -g cpuset:php \
@@ -320,22 +343,45 @@ run_cgi () {
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+                $php_binary $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
             sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+                $php_binary $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
 
             sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
+                $php_binary $opcache -q -T "$warmup,$requests" "$PROJECT_ROOT/$4" > /dev/null
         fi
+    elif [ "$mode" = "bolt" ]; then
+        set +e
+        sudo cgexec -g cpuset:php \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
+            perf record -e cycles:u -j any,u -o "$PROJECT_ROOT/tmp/perf.data" -- \
+                timeout 30 bash -c "while true; do \
+                    $php_source_path/sapi/cgi/php-cgi $opcache -T '$warmup,$requests' '$PROJECT_ROOT/$4' > /dev/null; \
+                done"
+        set -e
+
+        /usr/local/bin/perf2bolt -p "$PROJECT_ROOT/tmp/perf.data" -o "$PROJECT_ROOT/tmp/perf-bolt.data" -ba "$php_source_path/sapi/cgi/php-cgi"
+
+        /usr/local/bin/llvm-bolt "$php_source_path/sapi/cgi/php-cgi" -o "$php_binary" \
+             -data="$PROJECT_ROOT/tmp/perf-bolt.data" \
+             -reorder-blocks=ext-tsp \
+             -reorder-functions=cdsort \
+             -split-all-cold \
+             -split-eh \
+             -dyno-stats
+
+         $PROJECT_ROOT/bin/system/binary_layout.sh "display" "$php_source_path/sapi/cgi/php-cgi-bolt" "$PHP_NAME" "$PHP_COMMIT"
     else
         echo "Invalid php-cgi run mode" >&2
         exit 1
@@ -369,6 +415,11 @@ run_cli () {
     # export LD_PRELOAD=/usr/lib64/libjemalloc.so.2
     # export MALLOC_CONF="narenas:1,dirty_decay_ms:2000,muzzy_decay_ms:2000,background_thread:false"
 
+    php_binary="$php_source_path/sapi/cgi/php-cgi"
+    if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" || "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+        php_binary="$php_binary-bolt"
+    fi
+
     if [ "$mode" = "quiet" ]; then
         if [[ "$INFRA_LOCK_CPU_FREQUENCY" == "0" || "$INFRA_DISABLE_DEEPER_C_STATES" == "0" ]]; then
             sleep 0.5
@@ -378,27 +429,27 @@ run_cli () {
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "verbose" ]; then
         sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script"
     elif [ "$mode" = "memory" ]; then
         sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             /usr/bin/time -v \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
     elif [ "$mode" = "perf" ]; then
         sudo cgexec -g cpuset:php \
             nice -n -20 ionice -c 1 -n 0 \
             sudo -u "$USER" \
             env -i -S "${php_env_var_list[*]}" \
             perf stat -e instructions,cycles,branches,branch-misses,page-faults --repeat=5 \
-            $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+            $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
         if [[ "$INFRA_COLLECT_EXTENDED_PERF_STATS" == "1" ]]; then
             sudo cgexec -g cpuset:php \
@@ -406,22 +457,45 @@ run_cli () {
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-loads,LLC-load-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+                $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
             sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e LLC-stores,LLC-store-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+                $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
 
             sudo cgexec -g cpuset:php \
                 nice -n -20 ionice -c 1 -n 0 \
                 sudo -u "$USER" \
                 env -i -S "${php_env_var_list[*]}" \
                 perf stat -e iTLB-load-misses,dTLB-load-misses --repeat=5 \
-                $php_source_path/sapi/cgi/php-cgi $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
+                $php_binary $opcache -T "$warmup,$requests" "$PROJECT_ROOT/$script" > /dev/null
         fi
+    elif [ "$mode" = "bolt" ]; then
+        set +e
+        sudo cgexec -g cpuset:php \
+            nice -n -20 ionice -c 1 -n 0 \
+            sudo -u "$USER" \
+            env -i -S "${php_env_var_list[*]}" \
+            perf record -e cycles:u -j any,u -o "$PROJECT_ROOT/tmp/perf.data" -- \
+                timeout 30 bash -c "while true; do \
+                    $php_source_path/sapi/cgi/php-cgi $opcache -T '$warmup,$requests' '$PROJECT_ROOT/$script' > /dev/null; \
+                done"
+        set -e
+
+        /usr/local/bin/perf2bolt -p "$PROJECT_ROOT/tmp/perf.data" -o "$PROJECT_ROOT/tmp/perf-bolt.data" -ba "$php_source_path/sapi/cgi/php-cgi"
+
+        /usr/local/bin/llvm-bolt "$php_source_path/sapi/cgi/php-cgi" -o "$php_binary" \
+             -data="$PROJECT_ROOT/tmp/perf-bolt.data" \
+             -reorder-blocks=ext-tsp \
+             -reorder-functions=cdsort \
+             -split-all-cold \
+             -split-eh \
+             -dyno-stats
+
+        $PROJECT_ROOT/bin/system/binary_layout.sh "display" "$php_source_path/sapi/cgi/php-cgi-bolt" "$PHP_NAME" "$PHP_COMMIT"
     else
         echo "Invalid php-cli run mode" >&2
         exit 1
@@ -636,6 +710,10 @@ run_real_benchmark () {
         echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
 
+        if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" ]]; then
+            run_cgi "bolt" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" "$2" "$3" 2>&1
+        fi
+
         # Verifying output
         run_cgi "verbose" "0" "1" "$1" "$2" "$3" 2>&1 | tee -a "$output_file"
         if [ -n "$test_expectation_file" ]; then
@@ -708,6 +786,10 @@ run_micro_benchmark () {
         echo "---------------------------------------------------------------------------------------"
         echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
         echo "---------------------------------------------------------------------------------------"
+
+        if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" ]]; then
+            run_cli "bolt" "$TEST_WARMUP" "$TEST_REQUESTS" "$1" 2>&1
+        fi
 
         # Verifying output
         run_cli "verbose" "0" "1" "$1" 2>&1 | tee -a "$output_file"

@@ -128,6 +128,10 @@ variable "runner" {
   type = string
 }
 
+variable "binary_layout_strategy" {
+  type = string
+}
+
 variable "collect_extended_perf_stats" {
   type = bool
 }

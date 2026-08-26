@@ -59,10 +59,51 @@ uname="$(uname -r)"
 kernel_support="$(grep "CONFIG_X86_CPU_RESCTRL=y" "/boot/config-$uname" || true)"
 if [[ -n "$cpu_rdt_support" && -n "$kernel_support" ]]; then
     echo "Installing intel-cmt-cat..."
-    git clone https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
-    git --git-dir=/tmp/intel-cmt-cat/.git --work-tree=/tmp/intel-cmt-cat checkout v25.04
+    git clone --depth 1 -b v25.04 https://github.com/intel/intel-cmt-cat.git "/tmp/intel-cmt-cat"
     (cd /tmp/intel-cmt-cat && make CC=gcc14-gcc && sudo make install)
 
     echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/local.conf
     sudo ldconfig
+fi
+
+if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" || "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+    sudo dnf install --allowerasing -y \
+        lld \
+        clang \
+        cmake \
+        llvm18 \
+        ninja-build
+
+    git clone --depth 1 -b bolt-align-fix https://github.com/kocsismate/llvm-project "/tmp/llvm-project"
+
+    mkdir /tmp/build
+    cd /tmp/build
+
+    if [[ "$INFRA_ARCHITECTURE" == "x86_64" ]]; then
+        llvm_target="X86"
+    elif [[ "$INFRA_ARCHITECTURE" == "arm64" ]]; then
+        llvm_target="AArch64"
+    else
+        echo "Unsupported architecture $INFRA_ARCHITECTURE for compiling LLVM" >&2
+        exit 1
+    fi
+
+    cmake -G Ninja ../llvm-project/llvm \
+        -DLLVM_ENABLE_PROJECTS="bolt" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DLLVM_TARGETS_TO_BUILD="$llvm_target" \
+        -DLLVM_USE_LINKER=lld \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++
+
+    ninja -t targets all | grep -i bolt
+
+    sudo ninja -j$(nproc) install-bolt-stripped
+
+    ls -la /usr/local
+
+    llvm-bolt --version
+    perf2bolt --version
+    llvm-bolt-align --version
 fi
