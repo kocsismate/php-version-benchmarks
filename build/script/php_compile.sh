@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 set -e
 
-# -fno-pic: does not generate position-independent code (for shared libraries).
-# -fno-pie: no runtime indirection from PIE.
-# -O2: predictable, stable optimizations.
-# -fno-asynchronous-unwind-tables: no runtime metadata noise.
-
-# Other options tried out:
-# -fno-stack-protector: no canaries (consistent stack layout).
-# -fno-plt: removes PLT indirection variance.
-# -fexcess-precision=standard / -ffp-contract=off: FP operations consistent across runs.
-cflags="-fno-pic -fno-pie -O2 -fno-asynchronous-unwind-tables -frandom-seed=1"
-cppflags="$cflags"
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# -Wl,-O1: stable section ordering.
-# -no-pie: reinforces non-PIE binary.
-# --build-id=none: removes build ID hash (avoids layout differences).
-ldflags="-Wl,-O1 -no-pie -Wl,--build-id=none"
-export SOURCE_DATE_EPOCH=0
-
 cd "$PHP_SOURCE_PATH"
+
+cflags="-O2 -frandom-seed=1"
+ldflags="-Wl,-O1 -Wl,--build-id=sha1"
+if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" || "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+    cflags="$cflags -fpic -fpie -fno-reorder-blocks-and-partition"
+    ldflags="$ldflags -pie -Wl,--emit-relocs"
+
+    if git merge-base --is-ancestor "13b83a46cfb810418ed15be89f24d45de884c082" HEAD > /dev/null 2>&1; then
+        pic_option="--enable-pic=yes"
+    else
+        pic_option="--with-pic=yes"
+    fi
+else
+    cflags="$cflags -fno-pic -fno-pie -fno-asynchronous-unwind-tables"
+    ldflags="$ldflags -no-pie"
+    pic_option=""
+fi
+
+cppflags="$cflags"
+
+export SOURCE_DATE_EPOCH=0
 
 ./buildconf
 
@@ -36,6 +39,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
     --enable-option-checking=fatal \
     --disable-debug \
+    $pic_option \
     --enable-mbstring \
     --enable-intl \
     --with-mysqli=mysqlnd  \

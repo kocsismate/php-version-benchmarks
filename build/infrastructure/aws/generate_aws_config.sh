@@ -72,6 +72,7 @@ infra_name = "$INFRA_NAME"
 environment = "$INFRA_ENVIRONMENT"
 workspace = "$INFRA_WORKSPACE"
 runner = "$INFRA_RUNNER"
+binary_layout_strategy = "$INFRA_BINARY_LAYOUT_STRATEGY"
 collect_extended_perf_stats = "$collect_extended_perf_stats"
 debug_environment = "$debug_environment"
 EOF

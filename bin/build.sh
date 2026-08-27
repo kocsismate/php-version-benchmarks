@@ -74,6 +74,8 @@ if [[ "$is_local" == "0" ]]; then
 
     wait
 
+    baseline_php_source_path=""
+
     for php_config in $PROJECT_ROOT/config/php/*.ini; do
         source "$php_config"
         export $(cut -d= -f1 $php_config)
@@ -130,6 +132,31 @@ if [[ "$is_local" == "0" ]]; then
             fi
         fi
 
-        size $PHP_SOURCE_PATH/sapi/cgi/php-cgi --format=SysV
+        if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+            echo "Running bolt-align for $PHP_NAME (commit: $PHP_COMMIT)..."
+
+            if [[ -z "$baseline_php_source_path" ]]; then
+                baseline_php_source_path="$PHP_SOURCE_PATH"
+                cp "$PHP_SOURCE_PATH/sapi/cgi/php-cgi" "$PHP_SOURCE_PATH/sapi/cgi/php-cgi-bolt"
+            else
+                llvm-bolt-align \
+                    "$baseline_php_source_path/sapi/cgi/php-cgi" \
+                    "$PHP_SOURCE_PATH/sapi/cgi/php-cgi" \
+                    -o-a "$baseline_php_source_path/sapi/cgi/php-cgi-bolt" \
+                    -o-b "$PHP_SOURCE_PATH/sapi/cgi/php-cgi-bolt"
+            fi
+        fi
+    done
+
+    for php_config in $PROJECT_ROOT/config/php/*.ini; do
+        source "$php_config"
+        export $(cut -d= -f1 $php_config)
+        export PHP_SOURCE_PATH="$PROJECT_ROOT/tmp/$PHP_ID"
+
+        if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "" ]]; then
+            $PROJECT_ROOT/bin/system/binary_layout.sh "display" "$PHP_SOURCE_PATH/sapi/cgi/php-cgi" "$PHP_NAME" "$PHP_COMMIT"
+        elif [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt_align" ]]; then
+            $PROJECT_ROOT/bin/system/binary_layout.sh "display" "$PHP_SOURCE_PATH/sapi/cgi/php-cgi-bolt" "$PHP_NAME" "$PHP_COMMIT"
+        fi
     done
 fi

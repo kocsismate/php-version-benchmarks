@@ -102,6 +102,7 @@ EOF
       "export INFRA_DISABLE_DEEPER_C_STATES=\"${var.disable_deeper_c_states ? 1 : 0}\"",
       "export INFRA_DISABLE_HYPER_THREADING=\"${var.disable_hyper_threading ? 1 : 0}\"",
       "export INFRA_CPU_NUMA_NODE=\"${var.cpu_numa_node}\"",
+      "export INFRA_BINARY_LAYOUT_STRATEGY=\"${var.binary_layout_strategy}\"",
 
       "# Update permissions",
       "sudo mkdir -p ${var.remote_project_root}",
@@ -155,6 +156,7 @@ EOF
       "export INFRA_MAX_ALLOWED_CPU_TEMP=\"${var.max_allowed_cpu_temp}\"",
       "export INFRA_ENVIRONMENT=\"${var.environment}\"",
       "export INFRA_RUNNER=\"${var.runner}\"",
+      "export INFRA_BINARY_LAYOUT_STRATEGY=\"${var.binary_layout_strategy}\"",
       "export INFRA_COLLECT_EXTENDED_PER_STATS=\"${var.collect_extended_perf_stats ? 1 : 0}\"",
       "export INFRA_DEBUG_ENVIRONMENT=\"${var.debug_environment ? 1 : 0}\"",
       "export GITHUB_TOKEN=\"${var.github_token}\"",
