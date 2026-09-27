@@ -23,6 +23,8 @@ fi
 cppflags="$cflags"
 
 export SOURCE_DATE_EPOCH=0
+export PHP_AUTOCONF="/usr/bin/autoconf2.71"
+export PHP_AUTOHEADER="/usr/bin/autoheader2.71"
 
 ./buildconf
 
