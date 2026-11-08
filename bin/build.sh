@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 set -e
 
+wait_for_processes() {
+    local status=0
+    local pid
+
+    for pid in "$@"; do
+        wait "$pid" || status=$?
+    done
+
+    return "$status"
+}
+
 environment="$1"
+source_pids=()
 
 if [[ "$environment" == "local" ]]; then
     is_local="1"
@@ -10,7 +22,7 @@ else
 fi
 
 if [[ "$is_local" == "0" ]]; then
-    sudo service docker start &
+    sudo service docker start
 fi
 
 for php_config in $PROJECT_ROOT/config/php/*.ini; do
@@ -29,8 +41,10 @@ for php_config in $PROJECT_ROOT/config/php/*.ini; do
 
         if [ -z "$PHP_BASE_ID" ]; then
             $PROJECT_ROOT/build/script/php_source.sh "$environment" &
+            source_pids+=("$!")
         else
-            wait
+            wait_for_processes "${source_pids[@]}"
+            source_pids=()
             $PROJECT_ROOT/build/script/php_source.sh "$environment"
         fi
     fi
@@ -41,7 +55,7 @@ if [[ "$is_local" == "0" ]]; then
     $PROJECT_ROOT/bin/install.sh
 fi
 
-wait
+wait_for_processes "${source_pids[@]}"
 
 if [[ "$is_local" == "0" ]]; then
 
@@ -57,6 +71,7 @@ if [[ "$is_local" == "0" ]]; then
     echo "php.ini count: $php_ini_count"
     echo "CPU per php.ini count: $cpu_per_php"
 
+    compile_pids=()
     for php_config in $PROJECT_ROOT/config/php/*.ini; do
         source "$php_config"
         export $(cut -d= -f1 $php_config)
@@ -70,9 +85,10 @@ if [[ "$is_local" == "0" ]]; then
         echo "Compiling $PHP_NAME (commit: $PHP_COMMIT)..."
 
         $PROJECT_ROOT/build/script/php_compile.sh "$cpu_per_php" &
+        compile_pids+=("$!")
     done
 
-    wait
+    wait_for_processes "${compile_pids[@]}"
 
     baseline_php_source_path=""
 
