@@ -113,6 +113,8 @@ EOF
       "# Unzip the source code archive",
       "tar -xf /tmp/archive.tar.gz && sudo chmod -R 775 ${var.remote_project_root} && sudo chown -R root:${var.image_user} ${var.remote_project_root}",
 
+      "ls -la ${var.remote_project_root}/build/infrastructure/",
+
       "# Create env file to store state and variables",
       "export DOT_ENV_FILE=\"${var.remote_project_root}/.env\"",
       "touch \"$DOT_ENV_FILE\"",
