@@ -43,7 +43,7 @@ fi
 
 php_commits=""
 for php_config in $PROJECT_ROOT/config/php/*.ini; do
-    source $php_config
+    source "$php_config"
     var="PHP_COMMITS_$PHP_ID"
     php_commits="${php_commits}export $var=${!var};"
 done

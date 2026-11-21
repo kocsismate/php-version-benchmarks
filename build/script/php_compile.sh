@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
+case "$PHP_ZTS" in
+    0) zts_option="--disable-zts" ;;
+    1) zts_option="--enable-zts" ;;
+    *)
+        echo "Error: Invalid PHP_ZTS '$PHP_ZTS'; expected 0 or 1" >&2
+        exit 1
+        ;;
+esac
+
 cd "$PHP_SOURCE_PATH"
 
 cflags="-O2 -frandom-seed=1"
@@ -41,6 +50,7 @@ CFLAGS=$cflags CPPFLAGS=$cppflags LDFLAGS=$ldflags ./configure \
     --with-config-file-scan-dir="$PHP_SOURCE_PATH/conf.d" \
     --enable-option-checking=fatal \
     --disable-debug \
+    "$zts_option" \
     $pic_option \
     --enable-mbstring \
     --enable-intl \

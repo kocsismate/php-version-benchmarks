@@ -62,15 +62,16 @@ are bundled with the benchmark (having `.ini.dist` extension in their names). Fe
 
 #### PHP
 
-| Option          | Description                                                                 | Supported values                                                 |
-|-----------------|-----------------------------------------------------------------------------|------------------------------------------------------------------|
-| PHP_ID          | The ID of the PHP version to be used in the benchmark code                  | String                                                           |
-| PHP_NAME        | The name of the PHP version which is displayed in the benchmark results     | String                                                           |
-| PHP_BASE_ID     | Refers to a `PHP_ID`                                                        | An existing `PHP_ID` value                                       |
-| PHP_REPO        | The name of the git repository where the PHP version is available           | An existing git URL containing the PHP source code               |
-| PHP_BRANCH      | The branch within the `PHP_REPO` to be benchmarked                          | An existing branch name                                          |
-| PHP_COMMIT      | The commit within the `PHP_BRANCH` to be benchmarked                        | An existing long commit SHA, or empty string to use the `HEAD`   |
-| PHP_JIT         | Whether to enable tracing JIT                                               | Boolean, either "0" or "1"                                       |
+| Option             | Description                                                                 | Supported values                                                 |
+|--------------------|-----------------------------------------------------------------------------|------------------------------------------------------------------|
+| PHP_ID             | The ID of the PHP version to be used in the benchmark code                  | String                                                           |
+| PHP_NAME           | The name of the PHP version which is displayed in the benchmark results     | String                                                           |
+| PHP_BASE_ID        | Refers to a `PHP_ID`                                                        | An existing `PHP_ID` value                                       |
+| PHP_REPO           | The name of the git repository where the PHP version is available           | An existing git URL containing the PHP source code               |
+| PHP_BRANCH         | The branch within the `PHP_REPO` to be benchmarked                          | An existing branch name                                          |
+| PHP_COMMIT         | The commit within the `PHP_BRANCH` to be benchmarked                        | An existing long commit SHA, or empty string to use the `HEAD`   |
+| PHP_JIT            | Whether to enable tracing JIT                                               | Boolean, either "0" or "1"                                       |
+| PHP_ZTS            | Whether to build PHP with thread safety                                     | Boolean: either "0" (NTS) or "1" (ZTS)                           |
 
 #### Test
 

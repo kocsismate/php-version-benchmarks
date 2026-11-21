@@ -105,6 +105,12 @@ if [[ "$is_local" == "0" ]]; then
             exit 1
         fi
 
+        actual_zts="$("$PHP_SOURCE_PATH/sapi/cli/php" -n -r 'echo (int) PHP_ZTS;')"
+        if [[ "$actual_zts" != "$PHP_ZTS" ]]; then
+            echo "Expected PHP_ZTS=$PHP_ZTS for $PHP_NAME, got $actual_zts" >&2
+            exit 1
+        fi
+
         if git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
             opcache=""
         else

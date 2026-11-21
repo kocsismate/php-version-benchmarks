@@ -236,6 +236,7 @@ PHP_BRANCH=$PHP_BRANCH
 PHP_COMMIT=$php_bisect_commit
 
 PHP_JIT=$PHP_JIT
+PHP_ZTS=$PHP_ZTS
 EOF
 
         echo "Created bisect config \"$PHP_NAME ${i_1}\" for commit $php_bisect_commit"

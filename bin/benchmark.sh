@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-source $PROJECT_ROOT/bin/math/lib.sh
+source "$PROJECT_ROOT/bin/math/lib.sh"
 
 print_environment () {
     printf "URI\tID\tName\tEnvironment\tRunner\tBinary layout strategy\tInstance type\tArchitecture\tCPU\tCPU cores\tCPU frequency\tRAM\tKernel\tOS\tGCC\tDedicated instance\tDeeper C-states\tTurbo boost\tHyper-threading\tTime\n" > "$1.tsv"
@@ -125,7 +125,7 @@ EOF
 }
 
 print_result_tsv_header () {
-    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tZ-stat\tP-value\tMemory usage\n" >> "$1.tsv"
+    printf "Test name\tTest warmup\tTest iterations\tTest requests\tPHP\tPHP Commit hash\tPHP Commit URL\tPHP JIT\tPHP ZTS\tMin\tMax\tStd dev\tRel std dev %%\tMean\tMean diff %%\tMedian\tMedian diff %%\tSkewness\tZ-stat\tP-value\tMemory usage\n" >> "$1.tsv"
 }
 
 print_result_md_header () {
@@ -246,9 +246,9 @@ print_result_value () {
 
     local memory_usage="$(echo "scale=3;${memory_result}/1024"|bc -l)"
 
-    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f\t%.2f\n" \
+    printf "%s\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.2f\t%.5f\t%.2f\t%.3f\t%.3f\t%.3f\t%.2f\n" \
         "$TEST_NAME" "$TEST_WARMUP" "$TEST_ITERATIONS" "$TEST_REQUESTS" \
-        "$PHP_NAME" "$commit_hash" "$url" \
+        "$PHP_NAME" "$commit_hash" "$url" "$PHP_JIT" "$PHP_ZTS" \
         "$min" "$max" "$std_dev" "$relative_std_dev" "$mean" "$mean_diff" "$median" "$median_diff" "$skewness" "$wilcoxon_z_stat" "$wilcoxon_p_value" "$memory_usage" | tee -a "$result_file.tsv" "$final_result_file.tsv" > /dev/null
 
     printf "|[%s]($url)|%.5f|%.5f|%.5f|%.2f%%|%.5f|%.2f%%|%.5f|%.2f%%|%.3f|%.3f|%.3f|%.2f MB|\n" \
@@ -523,7 +523,7 @@ format_perf_log_file() {
 }
 
 load_php_config () {
-    source $PHP_CONFIG_FILE
+    source "$PHP_CONFIG_FILE"
     export PHP_CONFIG_FILE
     php_source_path="$PROJECT_ROOT/tmp/$PHP_ID"
 
@@ -707,7 +707,7 @@ run_real_benchmark () {
         reset_apps
 
         echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, ZTS: $PHP_ZTS)"
         echo "---------------------------------------------------------------------------------------"
 
         if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" ]]; then
@@ -751,7 +751,7 @@ run_real_benchmark () {
 
             cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, ZTS: $PHP_ZTS) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
             # Debugging environment - initial state
@@ -784,7 +784,7 @@ run_micro_benchmark () {
         load_php_config
 
         echo "---------------------------------------------------------------------------------------"
-        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT)"
+        echo "$TEST_NAME PERF STATS - $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, ZTS: $PHP_ZTS)"
         echo "---------------------------------------------------------------------------------------"
 
         if [[ "$INFRA_BINARY_LAYOUT_STRATEGY" == "bolt" ]]; then
@@ -826,7 +826,7 @@ run_micro_benchmark () {
 
             cpu_temp="$($PROJECT_ROOT/bin/system/cpu_temp_pretty.sh "$BENCH_PHP_CPU")"
             echo "---------------------------------------------------------------------------------------"
-            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT) - CPU: $cpu_temp"
+            echo "$TEST_NAME BENCHMARK $i/$TEST_ITERATIONS - run $RUN/$N - $INFRA_NAME - $PHP_NAME (JIT: $PHP_JIT, ZTS: $PHP_ZTS) - CPU: $cpu_temp"
             echo "---------------------------------------------------------------------------------------"
 
             # Debugging environment - initial state
@@ -931,7 +931,7 @@ cat "$environment_file.md" >> "$final_result_file.md"
 function run_benchmarks () {
     TEST_NUMBER=0
     for test_config in $PROJECT_ROOT/config/test/*.ini; do
-        source $test_config
+        source "$test_config"
         ((TEST_NUMBER=TEST_NUMBER+1))
 
         init_script="${test_config//.ini/_pre_init.sh}"

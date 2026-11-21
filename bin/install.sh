@@ -8,7 +8,7 @@ sudo docker build --quiet -t setup "$PROJECT_ROOT/app"
 install_pids=()
 
 for test_config in $PROJECT_ROOT/config/test/*.ini; do
-    source $test_config
+    source "$test_config"
 
     install_script="${test_config//.ini/_install.sh}"
     if [[ -f "$install_script" ]]; then
