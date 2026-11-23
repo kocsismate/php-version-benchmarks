@@ -57,7 +57,7 @@ resource "aws_instance" "host" {
     {
       Name: "php-version-benchmark-${var.workspace}"
     },
-    {(var.scheduler_tag["key"]) = var.scheduler_tag["value"]}
+    {(var.scheduler_tag["key"]) = local.scheduler_tag_value}
   )
 
   connection {
@@ -364,13 +364,15 @@ resource "aws_lambda_function" "this" {
       AWS_REGIONS                     = var.region
       SCHEDULE_ACTION                 = "stop"
       TAG_KEY                         = var.scheduler_tag["key"]
-      TAG_VALUE                       = var.scheduler_tag["value"]
+      TAG_VALUE                       = local.scheduler_tag_value
       EC2_SCHEDULE                    = "true"
     }
   }
 }
 
 locals {
+  scheduler_tag_value = "${var.scheduler_tag["value"]}-${var.workspace}"
+
   rfc_3339_now = "${replace(var.now, " ", "T")}Z"
   termination_time = timeadd(local.rfc_3339_now, "${var.termination_timeout_in_min}m")
   termination_hour = formatdate("h", local.termination_time)
