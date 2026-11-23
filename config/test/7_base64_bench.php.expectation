@@ -1,0 +1,23 @@
+X-Powered-By: PHP/%v
+Content-type: text/html; charset=UTF-8
+
+encode 16 B                 %f
+decode 16 B                 %f
+encode 32 B                 %f
+decode 32 B                 %f
+decode 32 B (strict)        %f
+encode 1 KiB                %f
+decode 1 KiB                %f
+decode 1 KiB (strict)       %f
+encode 64 KiB               %f
+decode 64 KiB               %f
+decode 64 KiB (MIME, CRLF)  %f
+encode 1 MiB                %f
+decode 1 MiB (strict)       %f
+encode mixed 1 B-8 KiB      %f
+decode mixed 1 B-8 KiB      %f
+JWT decode (base64url)      %f
+data URI round trip         %f
+------------------------------------
+Total                       %f
+Sanity check: ok
