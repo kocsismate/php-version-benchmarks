@@ -105,12 +105,6 @@ if [[ "$is_local" == "0" ]]; then
             exit 1
         fi
 
-        actual_zts="$("$PHP_SOURCE_PATH/sapi/cli/php" -n -r 'echo (int) PHP_ZTS;')"
-        if [[ "$actual_zts" != "$PHP_ZTS" ]]; then
-            echo "Expected PHP_ZTS=$PHP_ZTS for $PHP_NAME, got $actual_zts" >&2
-            exit 1
-        fi
-
         if git --git-dir="$PHP_SOURCE_PATH/.git" --work-tree="$PHP_SOURCE_PATH" merge-base --is-ancestor "7b4c14dc10167b65ce51371507d7b37b74252077" HEAD > /dev/null 2>&1; then
             opcache=""
         else
@@ -120,19 +114,26 @@ if [[ "$is_local" == "0" ]]; then
         php_cli_executable="$PHP_SOURCE_PATH/sapi/cli/php $opcache"
 
         $php_cli_executable -m
-        $php_cli_executable -i
+        php_info="$($php_cli_executable -i)"
+        printf '%s\n' "$php_info"
 
-        if $php_cli_executable -i | grep -q "opcache.enable => On"; then
+        if grep -q "opcache.enable => On" <<< "$php_info"; then
             opcache_enabled=1
         else
             opcache_enabled=0
         fi
 
         jit_enabled=0
-        if $php_cli_executable -i | grep -q "opcache.jit => tracing"; then
-            if $php_cli_executable -i | grep -q "opcache.jit_buffer_size => 64"; then
+        if grep -q "opcache.jit => tracing" <<< "$php_info"; then
+            if grep -q "opcache.jit_buffer_size => 64" <<< "$php_info"; then
                 jit_enabled=1
             fi
+        fi
+
+        if grep -q "^Thread Safety => enabled$" <<< "$php_info"; then
+            zts_enabled=1
+        else
+            zts_enabled=0
         fi
 
         if [[ "$opcache_enabled" = "0" ]]; then
@@ -150,6 +151,20 @@ if [[ "$is_local" == "0" ]]; then
         if [[ "$PHP_JIT" = "0" ]]; then
             if [[ "$jit_enabled" = "1" ]]; then
                 echo "JIT should not be enabled" >&2
+                exit 1
+            fi
+        fi
+
+        if [[ "$PHP_ZTS" = "1" ]]; then
+            if [[ "$zts_enabled" = "0" ]]; then
+                echo "ZTS should be enabled" >&2
+                exit 1
+            fi
+        fi
+
+        if [[ "$PHP_ZTS" = "0" ]]; then
+            if [[ "$zts_enabled" = "1" ]]; then
+                echo "ZTS should not be enabled" >&2
                 exit 1
             fi
         fi
